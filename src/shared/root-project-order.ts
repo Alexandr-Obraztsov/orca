@@ -4,7 +4,9 @@ import { getEffectiveProjectGroupManualRank } from './project-groups'
 import { getLogicalRepoOrderRankById } from './project-section-order'
 import { compareCodePoints, compareSidebarText } from './sidebar-list/sorting/text-order'
 
-export type RootProjectEntry = { kind: 'group'; group: ProjectGroup } | { kind: 'repo'; repo: Repo }
+export type RootProjectEntry =
+  | { kind: 'group'; group: ProjectGroup }
+  | { kind: 'repo'; repo: Pick<Repo, 'id' | 'projectGroupOrder'> }
 
 export function getRootProjectEntryKey(entry: RootProjectEntry): string {
   return entry.kind === 'group' ? `group:${entry.group.id}` : `repo:${entry.repo.id}`
