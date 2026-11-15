@@ -38,7 +38,10 @@ export class OffscreenBrowserBackend implements BrowserBackend {
   constructor(
     private readonly browserManager: BrowserManager,
     private readonly options: {
-      getAgentBrowserBridge?: () => Pick<AgentBrowserBridge, 'onPageClosed' | 'isRoutedPage'> | null
+      getAgentBrowserBridge?: () => Pick<
+        AgentBrowserBridge,
+        'onPageClosed' | 'isRoutedPage' | 'holdsPageNetworkState'
+      > | null
       onPageNavigated?: (page: ServeBrowserPageState) => void
       /** Pages whose tab is saved are freed after ORCA_SERVE_BROWSER_TAB_IDLE_MINUTES unused;
        * their next use restores them from that saved tab. */
@@ -180,11 +183,14 @@ export class OffscreenBrowserBackend implements BrowserBackend {
       return
     }
     const isSaved = this.options.isPageSaved
-    // Freeing a routed page would retarget page-less commands; freeing an opener closes its popups.
+    const bridge = this.options.getAgentBrowserBridge?.()
+    // Freeing would retarget page-less commands to another page, close the page's popups, or drop
+    // the agent's request routes and HAR capture.
     if (
       !isSaved?.({ browserPageId, worktreeId }) ||
       this.browserManager.isAgentUsingPage(browserPageId) ||
-      this.options.getAgentBrowserBridge?.()?.isRoutedPage(win.webContents.id) === true ||
+      bridge?.isRoutedPage(win.webContents.id) === true ||
+      bridge?.holdsPageNetworkState(browserPageId) === true ||
       this.browserManager
         .getPopupPages()
         .some((popup) => popup.openerBrowserPageId === browserPageId)

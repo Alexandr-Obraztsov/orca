@@ -1,14 +1,19 @@
 import type { WebContents } from 'electron'
 import { rendererPublicationThrottle } from '../../window/visibility/renderer-publication-throttle'
 
-export const SERVE_BROWSER_TAB_IDLE_MINUTES_ENV = 'ORCA_SERVE_BROWSER_TAB_IDLE_MINUTES'
+const SERVE_BROWSER_TAB_IDLE_MINUTES_ENV = 'ORCA_SERVE_BROWSER_TAB_IDLE_MINUTES'
 const DEFAULT_IDLE_MINUTES = 30
+const MAX_TIMER_MS = 2_147_483_647
 
 /** How long a serve page may go unused before its renderer is freed; 0 keeps every page. */
 export function resolveServeBrowserTabIdleMs(env: NodeJS.ProcessEnv = process.env): number {
   const raw = env[SERVE_BROWSER_TAB_IDLE_MINUTES_ENV]?.trim()
   const minutes = raw ? Number(raw) : DEFAULT_IDLE_MINUTES
-  return Number.isFinite(minutes) && minutes >= 0 ? minutes * 60_000 : DEFAULT_IDLE_MINUTES * 60_000
+  if (!Number.isFinite(minutes) || minutes < 0) {
+    return DEFAULT_IDLE_MINUTES * 60_000
+  }
+  // setTimeout fires at once past this, so a "practically never" value must mean never.
+  return minutes * 60_000 > MAX_TIMER_MS ? 0 : minutes * 60_000
 }
 
 /** Fires once a page has gone the idle time without a command, capture or viewer lease. */
