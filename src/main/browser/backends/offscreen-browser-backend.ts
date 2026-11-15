@@ -8,7 +8,10 @@ import type { BrowserBackend, BrowserBackendCreateTab } from '../browser-backend
 import type { BrowserManager } from '../guest-lifecycle/manager/browser-manager'
 import type { AgentBrowserBridge } from '../agent-browser/agent-browser-bridge'
 import { browserSessionRegistry } from '../sessions/profiles/browser-session-registry'
-import { installBrowserJavaScriptDialogs } from '../guest-lifecycle/prompts/browser-javascript-dialogs'
+import {
+  getBrowserJavaScriptDialog,
+  installBrowserJavaScriptDialogs
+} from '../guest-lifecycle/prompts/browser-javascript-dialogs'
 import type { ServeBrowserPageState } from '../../runtime/browser/headless/serve-browser-tab-layout'
 import { OffscreenPageIdleClock, resolveServeBrowserTabIdleMs } from './offscreen-page-idle-clock'
 
@@ -184,13 +187,14 @@ export class OffscreenBrowserBackend implements BrowserBackend {
     }
     const isSaved = this.options.isPageSaved
     const bridge = this.options.getAgentBrowserBridge?.()
-    // Freeing would retarget page-less commands to another page, close the page's popups, or drop
-    // the agent's request routes and HAR capture.
+    // Freeing would retarget page-less commands to another page, or drop the agent's request
+    // routes, HAR capture, unanswered dialog or the page's popups.
     if (
       !isSaved?.({ browserPageId, worktreeId }) ||
       this.browserManager.isAgentUsingPage(browserPageId) ||
       bridge?.isRoutedPage(win.webContents.id) === true ||
       bridge?.holdsPageNetworkState(browserPageId) === true ||
+      getBrowserJavaScriptDialog(win.webContents.id) !== null ||
       this.browserManager
         .getPopupPages()
         .some((popup) => popup.openerBrowserPageId === browserPageId)
