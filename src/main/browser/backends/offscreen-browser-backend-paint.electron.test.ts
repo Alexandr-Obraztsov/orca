@@ -8,6 +8,7 @@ import { build } from 'vite'
 import { resolveElectronProbeLaunch } from '../electron-fixtures/electron-probe-display-launch'
 
 describe('offscreen browser page painting', () => {
+  // Builds a fixture bundle and launches real Electron, which is slow on CI runners.
   it('keeps unwatched pages hidden and paints leased pages across a site swap', async () => {
     const root = await mkdtemp(join(tmpdir(), 'orca-offscreen-paint-'))
     try {
