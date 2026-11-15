@@ -18,6 +18,10 @@ const DEFAULT_VIEWPORT_WIDTH = 1280
 const DEFAULT_VIEWPORT_HEIGHT = 800
 const LOAD_TIMEOUT_MS = 30_000
 const OWNER_RETIREMENT_CONCURRENCY = 4
+// Unwatched pages stay hidden and stop painting until a command, capture or screencast lease
+// lifts throttling. Electron reads this undocumented key as the page's initial visibility;
+// paintWhenInitiallyHidden:false would also drop the macOS headless compositor captures need.
+const PAGE_STARTS_HIDDEN = { show: false }
 
 export class OffscreenBrowserBackend implements BrowserBackend {
   private readonly windowsByPageId = new Map<string, BrowserWindow>()
@@ -58,7 +62,8 @@ export class OffscreenBrowserBackend implements BrowserBackend {
         contextIsolation: true,
         nodeIntegration: false,
         // Sandboxed and without Node, this only runs the session's preloads in iframes too.
-        nodeIntegrationInSubFrames: true
+        nodeIntegrationInSubFrames: true,
+        ...PAGE_STARTS_HIDDEN
       }
     })
 
