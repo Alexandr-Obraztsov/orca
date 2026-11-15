@@ -10,6 +10,17 @@ const ANIMATION_FRAME_WITHIN_DEADLINE = `new Promise((resolve) => {
   setTimeout(() => resolve(false), 3000)
 })`
 
+async function reserveClosedPort(): Promise<number> {
+  const probe = createServer()
+  await new Promise<void>((resolve) => probe.listen(0, '127.0.0.1', resolve))
+  const address = probe.address()
+  await new Promise((resolve) => probe.close(resolve))
+  if (!address || typeof address === 'string') {
+    throw new Error('Probe server has no port')
+  }
+  return address.port
+}
+
 async function run(): Promise<void> {
   // Serve must survive with no page open; keep Electron alive after last-window close.
   app.on('window-all-closed', () => {})
@@ -24,6 +35,7 @@ async function run(): Promise<void> {
     throw new Error('Fixture server has no port')
   }
   const { port } = address
+  const closedPort = await reserveClosedPort()
   const browserManager = {
     registerOffscreenGuest: () => true,
     unregisterGuest: () => {}
@@ -48,12 +60,21 @@ async function run(): Promise<void> {
   const paintsAfterSiteSwap: unknown = await guest.executeJavaScript(
     ANIMATION_FRAME_WITHIN_DEADLINE
   )
+  // A refused load commits Chromium's error page in yet another widget.
+  await guest.loadURL(`http://127.0.0.1:${closedPort}/`).catch(() => {})
+  const paintsOnErrorPage: unknown = await guest.executeJavaScript(ANIMATION_FRAME_WITHIN_DEADLINE)
   release()
 
   await backend.closeTab(browserPageId)
   server.close()
   console.log(
-    JSON.stringify({ unwatchedVisibility, leasedPaints, swappedProcess, paintsAfterSiteSwap })
+    JSON.stringify({
+      unwatchedVisibility,
+      leasedPaints,
+      swappedProcess,
+      paintsAfterSiteSwap,
+      paintsOnErrorPage
+    })
   )
   app.exit(0)
 }

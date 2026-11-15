@@ -49,7 +49,8 @@ describe('offscreen browser page painting', () => {
         unwatchedVisibility: 'hidden',
         leasedPaints: true,
         swappedProcess: true,
-        paintsAfterSiteSwap: true
+        paintsAfterSiteSwap: true,
+        paintsOnErrorPage: true
       })
     } finally {
       await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
