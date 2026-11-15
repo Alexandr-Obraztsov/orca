@@ -43,7 +43,7 @@ export async function runElectronFixture(
       program: executable,
       args,
       env: { ...inherited, ...env, ORCA_BACKGROUND_LAUNCH: '1' },
-      timeoutMs: 45_000
+      timeoutMs: 120_000
     })
     let output: unknown = null
     try {
