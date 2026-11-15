@@ -38,6 +38,7 @@ import { getCanonicalUserDataPath } from '../../../persistence/loading-store/use
 import { markBrowserIdentityMigrationNoticePending } from '../../identity/mode/browser-identity-mode-store'
 import { forgetBrowserProfileOwnedStores } from './browser-profile-owned-stores'
 import { attachBrowserExtensionsToProfileSession } from '../../extensions/profile-sessions/browser-extension-session-loader'
+import { trackBrowserSessionCookies } from '../../cookies/session-restore/browser-session-cookie-restore'
 
 type ExtensionIdListKey = 'enabledExtensionIdsByProfileId' | 'pinnedExtensionIdsByProfileId'
 type ExtensionIdListUpdate = (byProfile: Record<string, string[]>) => Record<string, string[]>
@@ -261,6 +262,7 @@ class BrowserSessionRegistry {
     this.profiles.set(id, profile)
     this.persistProfiles()
     this.attachExtensions(profile)
+    trackBrowserSessionCookies(profile)
     this.onProfilesChanged?.()
     return profile
   }

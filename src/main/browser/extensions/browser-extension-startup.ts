@@ -1,6 +1,6 @@
 import { removeRetiredBrowserExtensionProfileStorage } from './profile-storage/browser-extension-retired-profile-storage'
 import { app, webContents } from 'electron'
-import { isBrowserExtensionNativePage } from './api-runtime/browser-extension-native-page'
+import { isHiddenHelperContents } from '../hidden-helper-window'
 import { BROWSER_EXTENSIONS_CHANGED_CHANNEL } from '../../../shared/browser/extensions/browser-extension-types'
 import {
   installBrowserExtensionApiHost,
@@ -121,7 +121,7 @@ function observeExtensionContents(contents: Electron.WebContents): void {
   const type = contents.getType()
   if (
     (type !== 'webview' && type !== 'window') ||
-    isBrowserExtensionNativePage(contents) ||
+    isHiddenHelperContents(contents) ||
     observedContents.has(contents) ||
     !getBrowserExtensionProfileIdForSession(contents.session)
   ) {
