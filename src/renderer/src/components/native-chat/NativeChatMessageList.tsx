@@ -4,6 +4,7 @@ import {
   NATIVE_CHAT_TRANSCRIPT_COLUMN_CLASS
 } from './appearance/native-chat-appearance-style'
 import { NativeChatJumpToLatest } from './viewport/scroll/NativeChatJumpToLatest'
+import { useNativeChatMessageRevealAnswer } from './composer/reply/native-chat-reply-context'
 import { NativeChatNewRowsAnnouncement } from './viewport/new-rows/NativeChatNewRowsMarker'
 import { useNativeChatNewRowsMarker } from './viewport/new-rows/native-chat-new-rows-marker'
 import { withoutPullRequestEventRows } from '../../../../shared/native-chat/native-chat-pull-request-event'
@@ -310,7 +311,8 @@ export function NativeChatMessageList({
     readerLeavesEnd,
     scrollToBottom
   })
-  const { beginNavigation, jumpToLatest } = navigation
+  const { beginNavigation, jumpToLatest, revealMessage } = navigation
+  useNativeChatMessageRevealAnswer(scrollRef, subagentId === null ? revealMessage : null)
   const { railRef, wake: wakeRail, sustain: sustainRail } = useNativeChatRailWake()
   const onTranscriptScroll = useCallback(
     (event: React.UIEvent<HTMLDivElement>) => {

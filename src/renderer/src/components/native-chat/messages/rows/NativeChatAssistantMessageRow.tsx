@@ -82,6 +82,7 @@ export function NativeChatAssistantMessageRow({
       ref={rowRef}
       // The context menu offers Copy message only where the row's controls offer Copy.
       data-native-chat-message-id={showControls && words.length > 0 ? message.id : undefined}
+      data-native-chat-message-author={message.role === 'assistant' ? 'agent' : undefined}
       data-native-chat-message-tone={isSystem ? 'faint' : undefined}
       className={cn(
         'group relative max-w-full select-text text-sm leading-relaxed text-chat-foreground',
@@ -111,6 +112,7 @@ export function NativeChatAssistantMessageRow({
       {showControls ? (
         <NativeChatAgentControls
           markdown={words}
+          messageId={message.role === 'assistant' ? message.id : undefined}
           timestamp={message.timestamp}
           onScrollToTop={scrollToTop}
           action={

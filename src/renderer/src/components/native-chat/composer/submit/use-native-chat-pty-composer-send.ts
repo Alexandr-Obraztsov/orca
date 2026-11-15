@@ -1,6 +1,11 @@
 import { readNativeChatComposerDraft } from '../../drafts/native-chat-composer-draft-store'
 import { serializeNativeChatAgentReferences } from '../pickers/native-chat-agent-reference-send'
 import {
+  clearNativeChatReplyTarget,
+  readNativeChatReplyTarget,
+  withNativeChatReplyContext
+} from '../reply/native-chat-reply-target'
+import {
   admitNativeChatPastedText,
   resolveNativeChatPastedText
 } from '../../paste/native-chat-composer-pasted-text-references'
@@ -86,6 +91,12 @@ export function useNativeChatPtyComposerSend(args: {
       text = retry
         ? resolveNativeChatPastedText(args.draftScopeKey, text)
         : serializeNativeChatAgentReferences(text, submitted.document, submitted.pastedTextFiles)
+      // Quoted once into the sent text; a retry resends that text and never reads the current reply.
+      const reply =
+        !retry && classification === 'chat' ? readNativeChatReplyTarget(args.draftScopeKey) : null
+      if (reply) {
+        text = withNativeChatReplyContext(text, reply)
+      }
       const { sendOptions: launchSendOptions } = resolveNativeChatLaunchDraftSend({
         launchDraft: args.launchDraft,
         launchDraftResolved: args.launchDraftResolved,
@@ -163,6 +174,9 @@ export function useNativeChatPtyComposerSend(args: {
       })
       args.onSubmitted?.()
       if (!retry) {
+        if (reply) {
+          clearNativeChatReplyTarget(args.draftScopeKey, reply.id)
+        }
         args.setDraft('')
         args.setCaret(0)
         args.clearSkillOrigin()

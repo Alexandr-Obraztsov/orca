@@ -1,5 +1,10 @@
 import { serializeNativeChatAgentReferences } from '../pickers/native-chat-agent-reference-send'
 import {
+  clearNativeChatReplyTarget,
+  readNativeChatReplyTarget,
+  withNativeChatReplyContext
+} from '../reply/native-chat-reply-target'
+import {
   hasNativeChatStagedFiles,
   captureNativeChatStagedInput
 } from '../../drafts/native-chat-draft-attachment-staging'
@@ -135,6 +140,11 @@ export function useNativeChatStructuredComposerSend({
           hostCommand ? 'goal' : 'message'
         )
       }
+      // A reply is part of the message, quoted once here; commands never carry one.
+      const reply = hostCommand ? null : readNativeChatReplyTarget(draftScopeKey)
+      if (reply) {
+        text = withNativeChatReplyContext(text, reply)
+      }
       const submission = captureNativeChatComposerSubmission(draftScopeKey)
       let consumed = false
       let completeAddition = false
@@ -160,6 +170,10 @@ export function useNativeChatStructuredComposerSend({
           return
         }
         consumed = true
+        // Only the reply this send captured; a newer Reply picked meanwhile stays.
+        if (reply) {
+          clearNativeChatReplyTarget(draftScopeKey, reply.id)
+        }
         const left = nativeChatComposerDraftLeftAfterSend(
           readNativeChatComposerDraft(draftScopeKey),
           submitted

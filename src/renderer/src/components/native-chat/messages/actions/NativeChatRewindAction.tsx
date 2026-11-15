@@ -1,4 +1,4 @@
-import { Undo2 } from 'lucide-react'
+import { History } from 'lucide-react'
 import { useConfirmationDialog } from '@/components/confirmation-dialog-context'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useTranslate } from '@/i18n/use-translate'
@@ -29,7 +29,7 @@ export function NativeChatRewindAction({
             }
           }}
         >
-          <Undo2 className="size-3.5" />
+          <History className="size-3.5" />
         </button>
       </TooltipTrigger>
       <TooltipContent side="top" sideOffset={4}>

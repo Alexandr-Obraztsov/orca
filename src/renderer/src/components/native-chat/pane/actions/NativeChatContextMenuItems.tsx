@@ -1,4 +1,5 @@
-import { Copy, ExternalLink, FileText, Globe, Quote, Search, Undo2 } from 'lucide-react'
+import { Copy, ExternalLink, FileText, Globe, History, Quote, Reply, Search } from 'lucide-react'
+import { startNativeChatReply } from '../../composer/reply/native-chat-reply-context'
 import { DropdownMenuItem, DropdownMenuShortcut } from '@/components/ui/dropdown-menu'
 import { formatOptionalPrimaryShortcutLabel } from '@/hooks/useShortcutLabel'
 import { useAppStore } from '@/store'
@@ -24,7 +25,7 @@ export function NativeChatContextMenuTargetItems({
   rewind: NativeChatRewindSurface | undefined
 }): React.JSX.Element {
   const t = useTranslate()
-  const { quoteText, link, codeText, messageText, rewindItemId } = target
+  const { quoteText, link, codeText, messageText, rewindItemId, replyTo } = target
   const linkRows = link ? [link.primary, link.alternate, ...(link.secondaryActions ?? [])] : []
   return (
     <>
@@ -62,6 +63,12 @@ export function NativeChatContextMenuTargetItems({
           {t('components.native-chat.copyMessage.copy', 'Copy message')}
         </DropdownMenuItem>
       ) : null}
+      {replyTo ? (
+        <DropdownMenuItem onSelect={() => startNativeChatReply(replyTo.from, replyTo.source)}>
+          <Reply />
+          {t('components.native-chat.reply.action', 'Reply')}
+        </DropdownMenuItem>
+      ) : null}
       {rewindItemId && rewind ? (
         <NativeChatRewindMenuItem itemId={rewindItemId} rewind={rewind} />
       ) : null}
@@ -97,7 +104,7 @@ function NativeChatRewindMenuItem({
       disabled={Boolean(rewind.disabledReason)}
       onSelect={() => void rewind.request(itemId, confirm)}
     >
-      <Undo2 />
+      <History />
       <span className="grid min-w-0">
         {t('components.native-chat.rewind.action', 'Rewind to here')}
         {/* A disabled row cannot show the button's tooltip, so its reason sits under the label. */}

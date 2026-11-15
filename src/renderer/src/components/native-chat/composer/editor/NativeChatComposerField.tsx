@@ -11,6 +11,7 @@ import { NativeChatMentionMenu, NativeChatPickerMenu } from '../pickers/NativeCh
 import type { NativeChatMentionFiles } from '../pickers/use-native-chat-mention-files'
 import { NativeChatComposerActions } from '../controls/NativeChatComposerActions'
 import { NativeChatComposerNotices } from '../controls/NativeChatComposerNotices'
+import { NativeChatReplyStrip } from '../reply/NativeChatReplyStrip'
 import type { NativeChatComposerNotice } from '../controls/native-chat-composer-notice'
 import type { NativeChatContextUsageSummary } from '../../../../../../shared/native-chat/native-chat-context-usage-summary'
 import { nativeChatComposerPlaceholder } from '../controls/native-chat-composer-placeholder'
@@ -317,6 +318,7 @@ export function NativeChatComposerField({
               '[contain:paint]'
             )}
           >
+            <NativeChatReplyStrip scopeKey={draftScopeKey} agent={agent} onDone={focusComposer} />
             {imageAttachments.length > 0 ? (
               <div className="mb-2 flex flex-wrap gap-2 px-1 pt-1.5">
                 {imageAttachments.map((attachment, index) => (

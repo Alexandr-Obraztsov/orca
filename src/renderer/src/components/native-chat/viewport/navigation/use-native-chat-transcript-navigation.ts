@@ -151,6 +151,21 @@ export function useNativeChatNavigation({
     beginNavigation()
     scrollToBottom()
   }, [beginNavigation, scrollToBottom])
+  // Any loaded message, not only a rail prompt: the window keeps its slot drawn until the jump lands.
+  const revealMessage = useCallback(
+    (messageId: string, probe: boolean): boolean => {
+      if (nativeChatSlotIndexOf(slots, messageId) < 0) {
+        return false
+      }
+      if (!probe) {
+        beginNavigation()
+        readerLeavesEnd()
+        issue({ kind: 'rail', messageId, requestId: nextRequestId() })
+      }
+      return true
+    },
+    [beginNavigation, issue, nextRequestId, readerLeavesEnd, slots]
+  )
   useNativeChatRailJumpLanding({
     railJump: request.railJump,
     slots,
@@ -164,6 +179,7 @@ export function useNativeChatNavigation({
     selectRailItem,
     revealDiff,
     jumpToLatest,
+    revealMessage,
     pendingRailId: historyJump.pending?.kind === 'rail' ? historyJump.pending.id : null
   }
 }
