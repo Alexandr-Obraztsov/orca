@@ -48,7 +48,9 @@ export const TUI_AGENT_AUTO_PICK_ORDER = [
   'devin',
   'openclaw',
   'codebuddy',
-  'jcode'
+  'jcode',
+  'nessy',
+  'tclaude'
 ] as const satisfies readonly TuiAgent[]
 
 // Fresh installs show Agent Teams; the migration separately preserves legacy hidden defaults.
