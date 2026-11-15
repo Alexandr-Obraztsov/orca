@@ -1,4 +1,5 @@
 import { app, webContents } from 'electron'
+import { settleFirstWindow } from '../../electron-fixtures/electron-first-window'
 import { createServer } from 'node:http'
 import { rendererPublicationThrottle } from '../../../window/visibility/renderer-publication-throttle'
 import type { BrowserManager } from '../../guest-lifecycle/manager/browser-manager'
@@ -16,6 +17,7 @@ async function run(): Promise<void> {
   // Serve must survive with no page open; keep Electron alive after last-window close.
   app.on('window-all-closed', () => {})
   await app.whenReady()
+  await settleFirstWindow()
   const server = createServer((request, response) => {
     response.setHeader('content-type', 'text/html')
     response.end(`<h1>${request.url}</h1>`)

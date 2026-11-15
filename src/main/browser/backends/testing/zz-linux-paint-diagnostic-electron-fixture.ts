@@ -60,7 +60,7 @@ async function run(): Promise<void> {
   const port = address && typeof address !== 'string' ? address.port : 0
   const results: unknown[] = []
   for (const preloadBlank of [true, false]) {
-    for (const mode of ['control', 'fix', 'control', 'fix']) {
+    for (const mode of ['fix', 'control', 'fix', 'control']) {
       results.push(await probe(mode, port, preloadBlank))
     }
   }
