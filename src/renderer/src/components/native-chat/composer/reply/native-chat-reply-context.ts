@@ -57,7 +57,8 @@ export function useNativeChatMessageRevealAnswer(
       return
     }
     const onReveal = (event: Event): void => {
-      const detail = (event as CustomEvent<RevealMessageDetail>).detail
+      const detail: RevealMessageDetail | undefined =
+        event instanceof CustomEvent ? event.detail : undefined
       if (detail && !detail.found) {
         detail.found = reveal(detail.messageId, detail.probe)
       }

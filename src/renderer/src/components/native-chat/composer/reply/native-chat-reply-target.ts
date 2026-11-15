@@ -24,15 +24,17 @@ let loaded = false
 let sequence = 0
 
 function isTarget(value: unknown): value is NativeChatReplyTarget {
-  if (!value || typeof value !== 'object') {
-    return false
-  }
-  const target = value as Record<string, unknown>
   return (
-    typeof target.id === 'string' &&
-    typeof target.messageId === 'string' &&
-    (target.author === 'agent' || target.author === 'user') &&
-    typeof target.excerpt === 'string'
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    typeof value.id === 'string' &&
+    'messageId' in value &&
+    typeof value.messageId === 'string' &&
+    'author' in value &&
+    (value.author === 'agent' || value.author === 'user') &&
+    'excerpt' in value &&
+    typeof value.excerpt === 'string'
   )
 }
 

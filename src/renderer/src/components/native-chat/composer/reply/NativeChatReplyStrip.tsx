@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Reply, X } from 'lucide-react'
 import { cn } from '@/lib/class-names'
 import { useTranslate } from '@/i18n/use-translate'
-import { structuredAgentLabel } from '@/lib/agent-session/launch/structured-agent-session-launch-label'
+import { formatAgentTypeLabel } from '../../../../../../shared/agent-status/presentation/agent-type-label'
 import {
   clearNativeChatReplyTarget,
   useNativeChatReplyTarget,
@@ -80,14 +80,11 @@ function ReplyStripRow({
   }, [scopeKey, target.id])
   const label =
     target.author === 'agent'
-      ? structuredAgentLabel(agent ?? '')
+      ? formatAgentTypeLabel(agent)
       : t('components.native-chat.reply.you', 'You')
   const snippet = target.excerpt.split(/\r?\n/).find((line) => line.trim()) ?? ''
   const showOriginal = t('components.native-chat.reply.showOriginal', 'Show the original message')
-  const unavailable = t(
-    'components.native-chat.reply.originalUnavailable',
-    'Original message unavailable'
-  )
+  const unavailable = t('components.native-chat.reply.originalUnavailable', 'Message unavailable')
   const cancelLabel = t('components.native-chat.reply.cancel', 'Cancel reply')
   return (
     <div
@@ -124,10 +121,10 @@ function ReplyStripRow({
           <ArrowUpRight aria-hidden className="size-3 shrink-0 opacity-70" />
         </button>
       ) : (
-        // The cue leads, so truncation only shortens the snippet.
-        <span className="min-w-0 flex-1 truncate" title={unavailable}>
-          <span className="italic">{unavailable}</span>
-          {snippet ? ` · ${snippet}` : null}
+        // The cue never truncates; only the snippet after it does.
+        <span className="flex min-w-0 flex-1 items-center gap-1" title={unavailable}>
+          <span className="shrink-0 italic">{unavailable}</span>
+          {snippet ? <span className="min-w-0 truncate">· {snippet}</span> : null}
         </span>
       )}
       <button
