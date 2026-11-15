@@ -1,45 +1,60 @@
 import { app, webContents } from 'electron'
+import { createServer } from 'node:http'
 import { rendererPublicationThrottle } from '../../../window/visibility/renderer-publication-throttle'
 import type { BrowserManager } from '../../guest-lifecycle/manager/browser-manager'
 import { OffscreenBrowserBackend } from '../offscreen-browser-backend'
+
+// Hidden pages never run animation frames; only a painting page answers before the deadline.
+const ANIMATION_FRAME_WITHIN_DEADLINE = `new Promise((resolve) => {
+  requestAnimationFrame(() => resolve(true))
+  setTimeout(() => resolve(false), 3000)
+})`
 
 async function run(): Promise<void> {
   // Serve must survive with no page open; keep Electron alive after last-window close.
   app.on('window-all-closed', () => {})
   await app.whenReady()
+  const server = createServer((_request, response) => {
+    response.setHeader('content-type', 'text/html')
+    response.end('<h1>Offscreen page</h1>')
+  })
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  if (!address || typeof address === 'string') {
+    throw new Error('Fixture server has no port')
+  }
+  const { port } = address
   const browserManager = {
     registerOffscreenGuest: () => true,
     unregisterGuest: () => {}
   }
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: createTab and closeTab only call these two members.
   const backend = new OffscreenBrowserBackend(browserManager as unknown as BrowserManager)
-  const { browserPageId } = await backend.createTab({
-    url: 'data:text/html,<body style="background:rgb(0,128,128)"><h1>Offscreen page</h1></body>'
-  })
+  const { browserPageId } = await backend.createTab({ url: 'about:blank' })
   const guest = webContents.fromId(backend.getWebContentsId(browserPageId) ?? -1)
   if (!guest) {
     throw new Error('Offscreen page has no WebContents')
   }
-  if (guest.isLoading()) {
-    await new Promise((resolve) => guest.once('did-stop-loading', resolve))
-  }
+  await guest.loadURL(`http://127.0.0.1:${port}/`)
   const unwatchedVisibility: unknown = await guest.executeJavaScript('document.visibilityState')
 
-  // Agent screenshots hold this lease around CDP capture; it must still draw a hidden page.
+  // Agent commands, captures and screencasts hold this lease while they need frames.
   const release = rendererPublicationThrottle.acquire(guest)
-  guest.debugger.attach('1.3')
-  const capture: unknown = await guest.debugger.sendCommand('Page.captureScreenshot', {
-    format: 'png'
-  })
-  guest.debugger.detach()
+  const leasedPaints: unknown = await guest.executeJavaScript(ANIMATION_FRAME_WITHIN_DEADLINE)
+  const processBefore = guest.getOSProcessId()
+  // A different site swaps in a new renderer process and widget under the same lease.
+  await guest.loadURL(`http://localhost:${port}/`)
+  const swappedProcess = guest.getOSProcessId() !== processBefore
+  const paintsAfterSiteSwap: unknown = await guest.executeJavaScript(
+    ANIMATION_FRAME_WITHIN_DEADLINE
+  )
   release()
-  const leasedCaptureBytes =
-    typeof capture === 'object' && capture !== null && 'data' in capture
-      ? Buffer.from(String(capture.data), 'base64').length
-      : 0
 
   await backend.closeTab(browserPageId)
-  console.log(JSON.stringify({ unwatchedVisibility, leasedCaptureBytes }))
+  server.close()
+  console.log(
+    JSON.stringify({ unwatchedVisibility, leasedPaints, swappedProcess, paintsAfterSiteSwap })
+  )
   app.exit(0)
 }
 

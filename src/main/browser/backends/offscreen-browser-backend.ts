@@ -70,6 +70,13 @@ export class OffscreenBrowserBackend implements BrowserBackend {
     this.windowsByPageId.set(browserPageId, win)
     // Server pages have no window to ask in; agents and phones answer their dialogs.
     installBrowserJavaScriptDialogs(win.webContents, () => null)
+    // Electron starts a cross-site navigation's new widget hidden even while a lease holds
+    // throttling off; re-applying the leased state shows it again.
+    win.webContents.on('did-navigate', () => {
+      if (!win.webContents.getBackgroundThrottling()) {
+        win.webContents.setBackgroundThrottling(false)
+      }
+    })
 
     // Do not wait for navigation: slow or failed loads must leave an operable tab.
     const registered = this.browserManager.registerOffscreenGuest({

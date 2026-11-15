@@ -8,7 +8,7 @@ import { build } from 'vite'
 import { resolveElectronProbeLaunch } from '../electron-fixtures/electron-probe-display-launch'
 
 describe('offscreen browser page painting', () => {
-  it('keeps unwatched pages hidden while leased captures still draw them', async () => {
+  it('keeps unwatched pages hidden and paints leased pages across a site swap', async () => {
     const root = await mkdtemp(join(tmpdir(), 'orca-offscreen-paint-'))
     try {
       await build({
@@ -47,7 +47,9 @@ describe('offscreen browser page painting', () => {
       const output: unknown = JSON.parse(result.stdout.trim().split('\n').at(-1) ?? '')
       expect(output).toEqual({
         unwatchedVisibility: 'hidden',
-        leasedCaptureBytes: expect.toSatisfy((bytes: number) => bytes > 0)
+        leasedPaints: true,
+        swappedProcess: true,
+        paintsAfterSiteSwap: true
       })
     } finally {
       await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
