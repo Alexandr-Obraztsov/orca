@@ -44,3 +44,5 @@ export type TuiAgent =
   | 'prime-agent' // Prime Agent (Prime Intellect)
   | 'dsh' // DeepSeek Harness (`dsh`, launched through its `dsh-tui` terminal profile)
   | 'jcode'
+  | 'nessy' // Nessy CLI (T-Bank corporate agent; ACP-compatible via `nessy --acp`)
+  | 'tclaude' // tclaude (T-Bank wrapper over Claude Code; headless `-p --output-format stream-json`)
