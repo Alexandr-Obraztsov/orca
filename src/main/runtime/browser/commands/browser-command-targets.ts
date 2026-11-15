@@ -40,9 +40,11 @@ export class RuntimeBrowserCommandTargets {
   }
 
   retireGhostBrowserSessionRow(worktreeId: string | undefined, browserPageId: string): boolean {
+    // A freed or not-yet-restarted serve page is closed by its saved tab, even when only the page is named.
+    const owner = worktreeId ?? this.host.serveBrowserTabs?.savedWorktreeOf(browserPageId)
     return (
-      worktreeId !== undefined &&
-      this.host.retireRuntimeOwnedBrowserSessionTab?.(worktreeId, browserPageId) === true
+      owner !== undefined &&
+      this.host.retireRuntimeOwnedBrowserSessionTab?.(owner, browserPageId) === true
     )
   }
 
@@ -99,7 +101,8 @@ export class RuntimeBrowserCommandTargets {
   }
 
   async resolveBrowserCommandTarget(
-    params: BrowserCommandTargetParams
+    params: BrowserCommandTargetParams,
+    options: { waitForFirstLoad?: boolean } = {}
   ): Promise<ResolvedBrowserCommandTarget> {
     const browserPageId =
       typeof params.page === 'string' && params.page.length > 0 ? params.page : undefined
@@ -120,7 +123,7 @@ export class RuntimeBrowserCommandTargets {
       !this.hasLiveRegisteredBrowserPage(bridge, worktreeId, browserPageId)
     ) {
       try {
-        await this.ensureBrowserPageActive(worktreeId, browserPageId)
+        await this.ensureBrowserPageActive(worktreeId, browserPageId, options)
       } catch {}
     }
     return {
@@ -176,12 +179,13 @@ export class RuntimeBrowserCommandTargets {
     browserPageId: string,
     options: { waitForFirstLoad?: boolean } = {}
   ): Promise<void> {
-    if (!(await this.host.serveBrowserTabs?.start(worktreeId, browserPageId))) {
+    const startedSavedPage = await this.host.serveBrowserTabs?.start(worktreeId, browserPageId)
+    if (!startedSavedPage) {
       await this.sendActivateView(worktreeId ? { worktreeId, browserPageId } : { browserPageId })
       await waitForTabRegistration(browserPageId)
     }
-    // Why opt-in: a switched-to tab should read like one open all along, but streaming panes must not wait.
-    if (options.waitForFirstLoad) {
+    // A switched-to tab or a woken serve page should read like one open all along; streaming panes must not wait.
+    if (options.waitForFirstLoad ?? startedSavedPage === true) {
       await waitForTabFirstLoad(browserPageId)
     }
   }

@@ -10,6 +10,7 @@ import type { AgentBrowserBridge } from '../agent-browser/agent-browser-bridge'
 import { browserSessionRegistry } from '../sessions/profiles/browser-session-registry'
 import { installBrowserJavaScriptDialogs } from '../guest-lifecycle/prompts/browser-javascript-dialogs'
 import type { ServeBrowserPageState } from '../../runtime/browser/headless/serve-browser-tab-layout'
+import { OffscreenPageIdleClock, resolveServeBrowserTabIdleMs } from './offscreen-page-idle-clock'
 
 // orca serve has no renderer for webviews; hidden BrowserWindows host its pages.
 // Headless Linux requires Xvfb; Electron --headless segfaults.
@@ -23,19 +24,34 @@ const OWNER_RETIREMENT_CONCURRENCY = 4
 // paintWhenInitiallyHidden:false would also drop the macOS headless compositor captures need.
 const PAGE_STARTS_HIDDEN = { show: false }
 
+type FreedPage = { worktreeId: string; entries: Electron.NavigationEntry[]; index: number }
+
 export class OffscreenBrowserBackend implements BrowserBackend {
   private readonly windowsByPageId = new Map<string, BrowserWindow>()
   // Reject creates once shutdown starts so pages cannot escape destroyAll's ownership snapshot.
   private shutdownStarted = false
   private readonly pendingOwnerRetirements = new Set<Promise<void>>()
+  // A freed page's back/forward list, so waking it under the same id feels like it never left.
+  private readonly freedPages = new Map<string, FreedPage>()
+  private readonly idleClock: OffscreenPageIdleClock
 
   constructor(
     private readonly browserManager: BrowserManager,
     private readonly options: {
-      getAgentBrowserBridge?: () => Pick<AgentBrowserBridge, 'onPageClosed'> | null
+      getAgentBrowserBridge?: () => Pick<
+        AgentBrowserBridge,
+        'onPageClosed' | 'getActivePageId'
+      > | null
       onPageNavigated?: (page: ServeBrowserPageState) => void
+      /** Pages whose tab is saved are freed after ORCA_SERVE_BROWSER_TAB_IDLE_MINUTES unused;
+       * their next use restores them from that saved tab. */
+      isPageSaved?: (page: { browserPageId: string; worktreeId: string }) => boolean
     } = {}
-  ) {}
+  ) {
+    this.idleClock = new OffscreenPageIdleClock(
+      options.isPageSaved ? resolveServeBrowserTabIdleMs() : 0
+    )
+  }
 
   async createTab(params: BrowserBackendCreateTab): Promise<{ browserPageId: string }> {
     if (this.shutdownStarted) {
@@ -106,6 +122,7 @@ export class OffscreenBrowserBackend implements BrowserBackend {
       }
       void this.retirePageOwner(browserPageId)
       this.windowsByPageId.delete(browserPageId)
+      this.idleClock.untrack(browserPageId)
       this.browserManager.unregisterGuest(browserPageId)
     })
 
@@ -124,8 +141,20 @@ export class OffscreenBrowserBackend implements BrowserBackend {
       win.webContents.on('did-stop-loading', report)
     }
 
+    if (worktreeId) {
+      const onIdle = (): void => this.freeIdlePage(browserPageId, worktreeId, win, onIdle)
+      this.idleClock.track(browserPageId, win.webContents, onIdle)
+    }
+
+    const freed = this.freedPages.get(browserPageId)
+    this.freedPages.delete(browserPageId)
     const url = params.url || 'about:blank'
-    void this.loadUrl(win, url).catch((error) => {
+    const load = freed
+      ? win.webContents.navigationHistory
+          .restore({ entries: freed.entries, index: freed.index })
+          .catch(() => this.loadUrl(win, url))
+      : this.loadUrl(win, url)
+    void load.catch((error) => {
       console.warn(
         '[offscreen-browser] page load failed:',
         error instanceof Error ? error.message : String(error)
@@ -136,9 +165,54 @@ export class OffscreenBrowserBackend implements BrowserBackend {
   }
 
   async closeTab(browserPageId: string): Promise<void> {
+    this.freedPages.delete(browserPageId)
+    await this.releasePage(browserPageId, 'page-closed')
+  }
+
+  /** Frees an unused page's renderer; its saved tab stays listed and the next use restores it. */
+  private freeIdlePage(
+    browserPageId: string,
+    worktreeId: string,
+    win: BrowserWindow,
+    onIdle: () => void
+  ): void {
+    if (this.windowsByPageId.get(browserPageId) !== win || win.isDestroyed()) {
+      return
+    }
+    const isSaved = this.options.isPageSaved
+    // Page-less commands target the active page; freeing it would silently retarget them.
+    if (
+      !isSaved?.({ browserPageId, worktreeId }) ||
+      this.browserManager.isAgentUsingPage(browserPageId) ||
+      this.options.getAgentBrowserBridge?.()?.getActivePageId(worktreeId) === browserPageId
+    ) {
+      this.idleClock.restart(browserPageId, win.webContents, onIdle)
+      return
+    }
+    // Tabs closed while freed never come back through this backend; drop their history here.
+    for (const [pageId, page] of this.freedPages) {
+      if (!isSaved({ browserPageId: pageId, worktreeId: page.worktreeId })) {
+        this.freedPages.delete(pageId)
+      }
+    }
+    const history = win.webContents.navigationHistory
+    this.freedPages.set(browserPageId, {
+      worktreeId,
+      entries: history.getAllEntries(),
+      index: history.getActiveIndex()
+    })
+    // Downloads outlive the page, as they do when its renderer dies.
+    void this.releasePage(browserPageId, 'guest-destroyed')
+  }
+
+  private async releasePage(
+    browserPageId: string,
+    reason: 'page-closed' | 'guest-destroyed'
+  ): Promise<void> {
     const win = this.windowsByPageId.get(browserPageId)
     this.windowsByPageId.delete(browserPageId)
-    this.browserManager.unregisterGuest(browserPageId)
+    this.idleClock.untrack(browserPageId)
+    this.browserManager.unregisterGuest(browserPageId, reason)
     try {
       if (win) {
         await this.retirePageOwner(browserPageId)
