@@ -38,10 +38,7 @@ export class OffscreenBrowserBackend implements BrowserBackend {
   constructor(
     private readonly browserManager: BrowserManager,
     private readonly options: {
-      getAgentBrowserBridge?: () => Pick<
-        AgentBrowserBridge,
-        'onPageClosed' | 'getActivePageId'
-      > | null
+      getAgentBrowserBridge?: () => Pick<AgentBrowserBridge, 'onPageClosed' | 'isRoutedPage'> | null
       onPageNavigated?: (page: ServeBrowserPageState) => void
       /** Pages whose tab is saved are freed after ORCA_SERVE_BROWSER_TAB_IDLE_MINUTES unused;
        * their next use restores them from that saved tab. */
@@ -152,7 +149,10 @@ export class OffscreenBrowserBackend implements BrowserBackend {
     const load = freed
       ? win.webContents.navigationHistory
           .restore({ entries: freed.entries, index: freed.index })
-          .catch(() => this.loadUrl(win, url))
+          // A failed or superseded restore still left its history; only an empty page needs the URL.
+          .catch(() =>
+            win.webContents.navigationHistory.length() > 0 ? undefined : this.loadUrl(win, url)
+          )
       : this.loadUrl(win, url)
     void load.catch((error) => {
       console.warn(
@@ -180,11 +180,14 @@ export class OffscreenBrowserBackend implements BrowserBackend {
       return
     }
     const isSaved = this.options.isPageSaved
-    // Page-less commands target the active page; freeing it would silently retarget them.
+    // Freeing a routed page would retarget page-less commands; freeing an opener closes its popups.
     if (
       !isSaved?.({ browserPageId, worktreeId }) ||
       this.browserManager.isAgentUsingPage(browserPageId) ||
-      this.options.getAgentBrowserBridge?.()?.getActivePageId(worktreeId) === browserPageId
+      this.options.getAgentBrowserBridge?.()?.isRoutedPage(win.webContents.id) === true ||
+      this.browserManager
+        .getPopupPages()
+        .some((popup) => popup.openerBrowserPageId === browserPageId)
     ) {
       this.idleClock.restart(browserPageId, win.webContents, onIdle)
       return

@@ -32,6 +32,17 @@ export abstract class AgentBrowserBridgeTabs extends AgentBrowserBridgeState {
 
   protected abstract watchPopupClose(webContentsId: number): void
 
+  /** Page-less commands route to this page now, or will once a person's held pick applies; never picks a fallback. */
+  isRoutedPage(webContentsId: number): boolean {
+    return (
+      this.activeWebContentsId === webContentsId ||
+      [
+        ...this.activeWebContentsPerWorktree.values(),
+        ...this.heldPersonSelections.values()
+      ].includes(webContentsId)
+    )
+  }
+
   // A person's pick never pulls an agent off the tab it is driving; it applies once that tab goes idle.
   private selectForPerson(webContentsId: number, worktreeId?: string): void {
     for (const key of routingKeys(worktreeId)) {

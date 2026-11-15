@@ -29,7 +29,8 @@ async function run(): Promise<void> {
   const browserManager = {
     registerOffscreenGuest: () => true,
     unregisterGuest: () => {},
-    isAgentUsingPage: () => false
+    isAgentUsingPage: () => false,
+    getPopupPages: () => []
   }
   const backend = new OffscreenBrowserBackend(
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: page lifetime only calls these members.
