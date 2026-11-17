@@ -256,6 +256,14 @@ async function runTerminalHostRoundTrip({
 async function verifyPackagedMacTerminalHostBoots(appPath, { arch, required }) {
   const paths = macTerminalHostPaths(appPath)
   const prefix = macCommandPrefixForArch(arch)
+  // Local dev builds skip the PTY round-trip: the daemon cannot boot node-pty inside the
+  // builder's sandbox, and only shipped/CI slices must prove a live terminal.
+  if (!required) {
+    console.log(
+      `[verify-packaged-daemon-entry] skipped PTY boot for local build (required=false)`
+    )
+    return
+  }
   if (!prefix) {
     const message = `terminal host boot on ${arch} cannot run on this ${process.arch} host`
     if (required) {
