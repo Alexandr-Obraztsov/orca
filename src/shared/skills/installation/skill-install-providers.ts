@@ -94,6 +94,13 @@ export const SKILL_INSTALL_PROVIDERS = Object.freeze([
     homeEnv: 'KIRO_HOME'
   },
   {
+    id: 'nessy',
+    displayName: 'Nessy',
+    globalSegments: ['.nessy', 'skills'],
+    workspaceSegments: ['.nessy', 'skills'],
+    homeEnv: 'NESSY_HOME'
+  },
+  {
     id: 'antigravity',
     displayName: 'Antigravity',
     globalSegments: ['.gemini', 'config', 'skills'],

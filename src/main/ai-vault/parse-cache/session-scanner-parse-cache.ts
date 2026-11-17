@@ -11,6 +11,7 @@ import { createDroidSessionResumeState } from '../scanners/droid/session-scanner
 import { createMessageGraphSessionResumeState } from '../scanners/session-scanner-graph-parsers'
 import { createClaudeSessionResumeState } from '../scanners/claude/session-scanner-primary-parsers'
 import { createCodebuddySessionResumeState } from '../scanners/codebuddy/session-scanner-codebuddy-parser'
+import { createNessySessionResumeState } from '../scanners/nessy/session-scanner-nessy-parser'
 import { createGeminiJsonlSessionResumeState } from '../scanners/gemini/session-scanner-gemini-parsers'
 import { createCopilotSessionResumeState } from '../scanners/copilot/session-scanner-copilot-parser'
 import { createCursorSessionResumeState } from '../scanners/cursor/session-scanner-cursor-parser'
@@ -55,6 +56,8 @@ function resumableStateFactoryFor(
       return (messages) => createQoderSessionResumeState(candidate.file, messages)
     case 'codebuddy':
       return (messages) => createCodebuddySessionResumeState(candidate.file, messages)
+    case 'nessy':
+      return (messages) => createNessySessionResumeState(candidate.file, messages)
     case 'codex':
       return (messages) =>
         createCodexSessionResumeState(candidate.file, candidate.codexHome, messages)

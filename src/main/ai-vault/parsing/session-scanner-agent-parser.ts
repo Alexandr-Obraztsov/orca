@@ -4,6 +4,7 @@ import {
 } from '../scan-lifecycle/ai-vault-scan-cancellation'
 import { parseQoderSessionFile } from '../scanners/qoder/session-scanner-qoder-parser'
 import { parseCodebuddySessionFile } from '../scanners/codebuddy/session-scanner-codebuddy-parser'
+import { parseNessySessionFile } from '../scanners/nessy/session-scanner-nessy-parser'
 import type { AiVaultSession } from '../../../shared/ai-vault/contracts/ai-vault-types'
 import { parseDevinSessionFile } from '../scanners/devin/session-scanner-devin-parser'
 import { parseAntigravitySessionFile } from '../scanners/antigravity/session-scanner-antigravity-parser'
@@ -87,6 +88,8 @@ export async function parseAgentSessionFile(
       return parseQoderSessionFile(candidate.file, platform, messages)
     case 'codebuddy':
       return parseCodebuddySessionFile(candidate.file, platform, messages)
+    case 'nessy':
+      return parseNessySessionFile(candidate.file, platform, messages)
     case 'claude':
       return parseClaudeSessionFile(candidate.file, platform, messages)
     case 'codex':

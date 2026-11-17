@@ -15,7 +15,9 @@ function resolveTuiAgentConfig(source: TuiAgentConfigSource): TuiAgentConfig {
 
 const TUI_AGENT_CONFIG_SOURCE: Record<TuiAgent, TuiAgentConfigSource> = {
   claude: {
-    detectCmd: 'claude',
+    // claude launches through the tclaude wrapper; keep `claude` as a recognized alias.
+    detectCmd: 'tclaude',
+    detectCmdAliases: ['claude'],
     promptInjectionMode: 'argv',
     pasteNeedsTypedRequest: true,
     // Native --prefill avoids paste-after-ready races (https://github.com/stablyai/orca/pull/926).

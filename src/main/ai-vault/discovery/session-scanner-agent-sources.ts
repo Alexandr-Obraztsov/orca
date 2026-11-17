@@ -70,6 +70,10 @@ const DROID_SESSIONS_DIR = join(homedir(), '.factory', 'sessions')
 const DROID_PROJECTS_DIR = join(homedir(), '.factory', 'projects')
 const CLINE_SESSIONS_DIR =
   process.env.CLINE_SESSION_DATA_DIR?.trim() || join(homedir(), '.cline', 'data', 'sessions')
+const NESSY_PROJECTS_DIR = join(
+  resolveAbsoluteDirOverride(process.env.NESSY_HOME, join(homedir(), '.nessy')),
+  'projects'
+)
 
 /** Shared discovery rules constrain which paths the delete validator accepts. */
 export type AiVaultAgentSource = {
@@ -306,6 +310,18 @@ export const AI_VAULT_AGENT_SOURCES: AiVaultAgentSourceTable = {
     extensions: ['.jsonl'],
     // Exclude log, SQLite and materialized-projection sidecars.
     filePredicate: (filePath) => basename(filePath) === 'session.jsonl'
+  },
+  nessy: {
+    // Nessy files sessions under ~/.nessy/projects/<encoded-path>/chats/<uuid>.jsonl.
+    rootDirs: (options, wslHomeDirs) =>
+      sessionRootDirs(
+        options.nessyProjectsDir ?? NESSY_PROJECTS_DIR,
+        wslHomeDirs,
+        ['.nessy', 'projects']
+      ),
+    extensions: ['.jsonl'],
+    // Project buckets sit directly under the root; transcript files live in their `chats` subdir.
+    directoryPredicate: (name, depth) => (depth === 0 ? true : depth === 1 && name === 'chats')
   }
 }
 
