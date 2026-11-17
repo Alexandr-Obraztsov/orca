@@ -19,7 +19,9 @@ function isClaudeResumeSelector(token: string): boolean {
 
 function isClaudeExecutableToken(token: string): boolean {
   const base = token.split(/[\\/]/).pop() ?? ''
-  return /^claude(\.(exe|cmd|bat|ps1))?$/i.test(base)
+  // claude launches through the tclaude wrapper, so treat tclaude as the claude executable for
+  // resume-selector dedup (base command is `tclaude ...`); keep `claude` for direct launches.
+  return /^(?:t)?claude(\.(exe|cmd|bat|ps1))?$/i.test(base)
 }
 
 /** Accept claude only in command position (start, wrapper --, PowerShell &, or POSIX assignments); path-shaped arguments cannot claim execution. */
