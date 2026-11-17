@@ -29,10 +29,6 @@ export const NESSY_LAUNCH_SPEC: AcpLaunchSpec = {
   loginCommand: agentSessionSetupFor('nessy')?.loginCommand ?? [],
   account: directoryAccountBinding('NESSY_HOME', (homePath) => join(homePath, '.nessy')),
   installDirectories: ({ homePath }) => [join(homePath, '.nessy', 'bin')],
-  // Nessy's ACP approval mode caps at `--approval-mode auto`; full access is the same auto mode.
-  permissionModeConfig: {
-    values: { ask: 'default', 'accept-edits': 'auto-edit', auto: 'auto', 'full-access': 'auto' }
-  },
   modelDiscovery: {
     kind: 'session',
     // Nessy lists models inside a disposable ACP session; it advertises model-specific reasoning efforts.
