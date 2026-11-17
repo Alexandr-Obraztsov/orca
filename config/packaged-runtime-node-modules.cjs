@@ -87,7 +87,11 @@ const JS_SOURCE_MAP_ARTIFACT_RE = /\.(?:c|m)?js\.map$/
 
 const NODE_BUILTINS = new Set([
   ...builtinModules,
-  ...builtinModules.map((moduleName) => `node:${moduleName}`)
+  ...builtinModules.map((moduleName) => `node:${moduleName}`),
+  // node:sqlite is experimental and absent from builtinModules on Node 22.x,
+  // but the packaged Electron runtime resolves it as a builtin.
+  'sqlite',
+  'node:sqlite'
 ])
 
 function packageNameFromSpecifier(specifier) {

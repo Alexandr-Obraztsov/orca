@@ -1,4 +1,5 @@
 import type { SpeechModelDownloadFile, SpeechModelManifest } from '../../shared/speech/speech-types'
+import { modelDownloadUrl } from './speech-model-download-url'
 
 type DownloadFileSpec = readonly [name: string, sizeBytes: number, sha256: string]
 
@@ -9,7 +10,7 @@ function huggingFaceFiles(
 ): SpeechModelDownloadFile[] {
   return specs.map(([name, sizeBytes, sha256]) => ({
     name,
-    url: `https://huggingface.co/${repository}/resolve/${revision}/${encodeURIComponent(name)}?download=true`,
+    url: modelDownloadUrl(repository, revision, name),
     sizeBytes,
     sha256
   }))

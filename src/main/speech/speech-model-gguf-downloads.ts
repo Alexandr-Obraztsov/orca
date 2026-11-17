@@ -1,4 +1,5 @@
 import type { SpeechModelDownloadFile } from '../../shared/speech/speech-types'
+import { modelDownloadUrl } from './speech-model-download-url'
 
 type GgufDownload = readonly [
   repository: string,
@@ -69,6 +70,6 @@ export function getGgufSpeechModelDownload(modelId: GgufSpeechModelId): {
   sizeBytes: number
 } {
   const [repository, revision, name, sizeBytes, sha256] = GGUF_DOWNLOADS[modelId]
-  const url = `https://huggingface.co/${repository}/resolve/${revision}/${encodeURIComponent(name)}?download=true`
+  const url = modelDownloadUrl(repository, revision, name)
   return { downloadFiles: [{ name, url, sizeBytes, sha256 }], files: [name], sizeBytes }
 }
