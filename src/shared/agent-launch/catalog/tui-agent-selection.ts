@@ -53,9 +53,9 @@ export const TUI_AGENT_AUTO_PICK_ORDER = [
   'tclaude'
 ] as const satisfies readonly TuiAgent[]
 
-// Fresh installs show only the five supported harnesses; the rest remain in code and can be
-// re-enabled per-project via settings. This hides them from the UI by default without deleting them.
+// Only claude, codex and nessy are active by default; every other harness is hidden from the UI.
 export const DEFAULT_DISABLED_TUI_AGENTS = [
+  'claude-agent-teams',
   'openclaude',
   'codebuddy',
   'autohand',
@@ -96,6 +96,7 @@ export const DEFAULT_DISABLED_TUI_AGENTS = [
   'zcode',
   'prime-agent',
   'dsh',
+  'qwen-code',
   'jcode',
   'tclaude'
 ] as const satisfies readonly TuiAgent[]

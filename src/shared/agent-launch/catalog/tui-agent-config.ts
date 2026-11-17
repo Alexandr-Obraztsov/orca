@@ -51,11 +51,8 @@ const TUI_AGENT_CONFIG_SOURCE: Record<TuiAgent, TuiAgentConfigSource> = {
     // Why: runs the same Claude binary, so Ctrl+Enter must match `claude`.
     ctrlEnterEncoding: 'csi-u'
   },
-  codebuddy: {
-    detectCmd: 'codebuddy',
-    detectCmdAliases: ['cbc'],
-    promptInjectionMode: 'argv'
-  },
+  // prettier-ignore
+  codebuddy: { detectCmd: 'codebuddy', detectCmdAliases: ['cbc'], promptInjectionMode: 'argv' },
   openclaude: {
     detectCmd: 'openclaude',
     promptInjectionMode: 'argv',
@@ -333,7 +330,7 @@ const TUI_AGENT_CONFIG_SOURCE: Record<TuiAgent, TuiAgentConfigSource> = {
   // prettier-ignore
   jcode: { detectCmd: 'jcode', launchCmd: 'jcode', expectedProcess: 'jcode', promptInjectionMode: 'stdin-after-start' },
   // prettier-ignore
-  nessy: { detectCmd: 'nessy', promptInjectionMode: 'flag-prompt-interactive' },
+  nessy: { detectCmd: 'nessy', promptInjectionMode: 'flag-prompt-interactive', pasteNeedsTypedRequest: true, ctrlEnterEncoding: 'csi-u' },
   tclaude: { detectCmd: 'tclaude', promptInjectionMode: 'argv' }
 }
 

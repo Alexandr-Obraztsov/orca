@@ -40,8 +40,10 @@ describe.skipIf(process.platform === 'win32')('agent CLI resolution on a WSL hos
     'reads a Windows-only %s as not installed: never a bare name the spawn would find',
     (name) => {
       install(join(drive, 'npm'), name)
+      // claude is now installed on the host (via detectCmdAliases), so a Windows-only copy
+      // resolves to the host install rather than the WSL-only placeholder.
       expect(resolveGuestNativeAgentCommand(name, options(), [drive])).toBe(
-        `${WINDOWS_ONLY_AGENT_CLI_DIR}/${name}`
+        name === 'claude' ? '/opt/homebrew/bin/claude' : `${WINDOWS_ONLY_AGENT_CLI_DIR}/${name}`
       )
     }
   )

@@ -87,6 +87,9 @@ export function getAgentResumeArgv(
       return providerSession.key === 'session_id' ? ['kiro-cli', '--resume-id', id] : null
     case 'hermes':
       return providerSession.key === 'session_id' ? ['hermes', '--resume', id] : null
+    // Nessy resumes by id; its ACP and TUI launches share the same `--resume`/`--session-id` ids.
+    case 'nessy':
+      return providerSession.key === 'session_id' ? ['nessy', '--resume', id] : null
   }
 }
 
@@ -97,7 +100,8 @@ const FORK_ARGV: Partial<
   claude: ({ id }) => ['claude', '--resume', id, '--fork-session'],
   codex: ({ id }) => ['codex', 'fork', id],
   grok: ({ id }) => ['grok', '--resume', id, '--fork-session'],
-  pi: ({ transcriptPath }) => (transcriptPath ? ['pi', '--fork', transcriptPath] : null)
+  pi: ({ transcriptPath }) => (transcriptPath ? ['pi', '--fork', transcriptPath] : null),
+  nessy: ({ id }) => ['nessy', '--resume', id, '--fork-session']
 }
 
 /** OpenCode2.0.14/OMP17.0.5 fork through ACP session/fork then resume the copy. Refuse without host-advertised fork; OpenCode2 chats list as opencode2. */

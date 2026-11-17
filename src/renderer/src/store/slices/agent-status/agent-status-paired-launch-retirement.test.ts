@@ -81,5 +81,5 @@ it('a paired host retiring a launch ends its note for OSC updates and cold resto
     ),
     platform: 'linux'
   })
-  expect(coldRestore?.launchCommand).toBe("claude '--resume' 'conversation-1'")
+  expect(coldRestore?.launchCommand).toBe("tclaude '--resume' 'conversation-1'")
 })
