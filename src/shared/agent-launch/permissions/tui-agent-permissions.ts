@@ -50,12 +50,18 @@ export const YOLO_TUI_AGENT_ENV: Partial<Record<TuiAgent, Record<string, string>
   goose: { GOOSE_MODE: 'auto' }
 }
 
+// Configurable agents are those with any preset permission args/env. Most are yolo-capable
+// (YOLO_TUI_AGENT_ARGS/ENV); auto-only agents (e.g. nessy, whose CLI caps out at --approval-mode
+// auto) are configurable for manual/auto but have no yolo mode.
 const PERMISSION_AGENT_IDS = Object.keys(TUI_AGENT_CONFIG).filter(
-  (agent): agent is TuiAgent => agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV
+  (agent): agent is TuiAgent =>
+    agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV || agent in AUTO_TUI_AGENT_ARGS
 )
 
 export function hasConfigurableTuiAgentPermissions(agent: TuiAgent): boolean {
-  return agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV
+  return (
+    agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV || agent in AUTO_TUI_AGENT_ARGS
+  )
 }
 
 function normalizeArgs(value: string | null | undefined): string {
@@ -117,6 +123,12 @@ export function resolveTuiAgentPermissionMode(args: {
   }
   if (args.agent in YOLO_TUI_AGENT_ENV) {
     modes.push(resolveAgentEnvPermissionMode(args.agentEnv, YOLO_TUI_AGENT_ENV[args.agent]))
+  }
+  // Auto-only agents (no yolo mode) resolve manual/auto/mixed against their auto preset.
+  if (args.agent in AUTO_TUI_AGENT_ARGS && !(args.agent in YOLO_TUI_AGENT_ARGS)) {
+    const autoArgs = AUTO_TUI_AGENT_ARGS[args.agent] ?? ''
+    const current = normalizeArgs(args.agentArgs)
+    modes.push(!current ? 'manual' : current === autoArgs ? 'auto' : 'mixed')
   }
 
   return combinePermissionModes(modes)
@@ -207,6 +219,14 @@ export function applyAgentPermissionMode(args: {
       const currentEnv = nextEnv[agent]
       if (sameEnv(currentEnv, {}) || sameEnv(currentEnv, yoloEnv)) {
         nextEnv[agent] = args.mode === 'yolo' ? { ...yoloEnv } : {}
+      }
+    }
+
+    // Auto-only agents (no yolo preset): apply the auto preset or clear to manual.
+    if (!(agent in YOLO_TUI_AGENT_ARGS) && !(agent in YOLO_TUI_AGENT_ENV) && autoArgs) {
+      const currentArgs = normalizeArgs(nextArgs[agent])
+      if (!currentArgs || currentArgs === autoArgs) {
+        nextArgs[agent] = args.mode === 'auto' ? autoArgs : ''
       }
     }
   }

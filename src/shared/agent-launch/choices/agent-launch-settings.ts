@@ -32,8 +32,7 @@ import {
 import {
   applyAgentPermissionMode,
   AUTO_TUI_AGENT_ARGS,
-  YOLO_TUI_AGENT_ARGS,
-  YOLO_TUI_AGENT_ENV,
+  hasConfigurableTuiAgentPermissions,
   resolveTuiAgentPermissionMode,
   resolveAgentPermissionModeSummary,
   resolveNonAutoAgentPermissionMode,
@@ -204,7 +203,7 @@ export function agentLaunchSettingsMutationUpdates(
         typed ? legacyPermissionsUpdates(settings, mutation) : applyAgentPermissionMode(args)
       if (mutation.agent) {
         const agent = mutation.agent
-        if (!(agent in YOLO_TUI_AGENT_ARGS) && !(agent in YOLO_TUI_AGENT_ENV)) {
+        if (!hasConfigurableTuiAgentPermissions(agent)) {
           throw new Error('This agent has no configurable terminal permission mode')
         }
         if (mutation.mode === 'auto' && !AUTO_TUI_AGENT_ARGS[agent]) {
