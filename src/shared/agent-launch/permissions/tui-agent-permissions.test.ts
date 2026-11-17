@@ -4,8 +4,10 @@ import {
   resolveAgentPermissionModeSummary,
   resolveNonAutoAgentPermissionMode,
   AUTO_TUI_AGENT_ARGS,
-  YOLO_TUI_AGENT_ENV
+  YOLO_TUI_AGENT_ENV,
+  YOLO_TUI_AGENT_ARGS
 } from './tui-agent-permissions'
+import { agentPermissionArgs, agentPermissionChoices } from './tui-agent-permission-choice'
 
 describe('tui agent permissions', () => {
   it.each(['yolo', 'manual'] as const)(
@@ -52,5 +54,22 @@ describe('tui agent permissions', () => {
     expect(result.agentDefaultArgs.claude).toBe('')
     expect(result.agentDefaultArgs.codex).toBe('--model gpt-5')
     expect(result.agentDefaultEnv.goose).toEqual({})
+  })
+
+  it('maps nessy full access to auto-edit while keeping all five choices', () => {
+    // Full access runs nessy's never-ask-for-edits mode, distinct from its auto mode.
+    expect(YOLO_TUI_AGENT_ARGS.nessy).toBe('--approval-mode auto-edit')
+    expect(AUTO_TUI_AGENT_ARGS.nessy).toBe('--approval-mode auto')
+    expect(agentPermissionArgs('nessy', 'full-access')).toBe('--approval-mode auto-edit')
+    expect(agentPermissionArgs('nessy', 'auto')).toBe('--approval-mode auto')
+    expect(agentPermissionArgs('nessy', 'accept-edits')).toBe('--approval-mode auto-edit')
+    expect(agentPermissionArgs('nessy', 'ask')).toBe('--approval-mode default')
+    expect(agentPermissionChoices('nessy')).toEqual([
+      'own',
+      'ask',
+      'accept-edits',
+      'auto',
+      'full-access'
+    ])
   })
 })

@@ -44,8 +44,8 @@ export const YOLO_TUI_AGENT_ARGS: Partial<Record<TuiAgent, string>> = {
   ante: '--yolo',
   trae: '--yolo',
   droid: '--auto high',
-  // Nessy's CLI caps out at `--approval-mode auto`; full access is the same auto mode.
-  nessy: '--approval-mode auto'
+  // Nessy's full access runs its never-ask-for-edits mode, the same flag its accept-edits preset uses.
+  nessy: '--approval-mode auto-edit'
 }
 
 export const YOLO_TUI_AGENT_ENV: Partial<Record<TuiAgent, Record<string, string>>> = {
@@ -53,8 +53,8 @@ export const YOLO_TUI_AGENT_ENV: Partial<Record<TuiAgent, Record<string, string>
 }
 
 // Configurable agents are those with any preset permission args/env. Most are yolo-capable
-// (YOLO_TUI_AGENT_ARGS/ENV). Nessy's CLI caps out at --approval-mode auto, so its yolo and auto
-// presets are identical; resolveAgentPermissionMode treats that as auto.
+// (YOLO_TUI_AGENT_ARGS/ENV). Nessy's full access runs --approval-mode auto-edit, matching its
+// accept-edits preset, so presets resolve that flag as full access.
 const PERMISSION_AGENT_IDS = Object.keys(TUI_AGENT_CONFIG).filter(
   (agent): agent is TuiAgent =>
     agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV || agent in AUTO_TUI_AGENT_ARGS
@@ -88,8 +88,8 @@ function resolveAgentPermissionMode(
   if (!args) {
     return 'manual'
   }
-  // Check auto first: for agents whose yolo and auto presets are identical (e.g. nessy,
-  // whose CLI caps at `--approval-mode auto`), full access is the same as auto.
+  // Auto first keeps nessy's `--approval-mode auto` reading as auto even though its full-access
+  // preset (--approval-mode auto-edit) shares a flag with its accept-edits preset.
   return args === autoArgs ? 'auto' : args === yoloArgs ? 'yolo' : 'mixed'
 }
 
