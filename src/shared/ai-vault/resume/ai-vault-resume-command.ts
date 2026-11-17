@@ -224,6 +224,7 @@ function buildAgentResumeInvocation(
     // falls through
     case 'omp':
     case 'prime-agent':
+    case 'nessy':
       return `${baseCommand} --resume ${sessionArg}`
     case 'antigravity':
       return `${baseCommand} --conversation ${sessionArg}`
