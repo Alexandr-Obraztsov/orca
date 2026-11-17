@@ -30,7 +30,6 @@ const EDIT_ACCEPTING_CHAT_PERMISSION_MODES: AgentChatPermissionModeSupport = {
   modes: ['ask', 'accept-edits', 'full-access']
 }
 
-<<<<<<< HEAD
 /** Every agent that has a native chat. */
 export const NATIVE_CHAT_AGENTS = [
   'claude',
@@ -105,19 +104,6 @@ export function isNativeChatAgent(agent: string): agent is NativeChatAgent {
 export function chatAsksNoApprovals(agent: string): boolean {
   return isNativeChatAgent(agent) && AGENT_CHAT_PERMISSION_MODES_BY_AGENT[agent] === null
 }
-=======
-const AGENT_CHAT_PERMISSION_MODES_BY_AGENT = new Map<string, AgentChatPermissionModeSupport>([
-  ['claude', CLAUDE_CHAT_PERMISSION_MODES],
-  ['codex', CODEX_CHAT_PERMISSION_MODES],
-  ['grok', ACP_CHAT_PERMISSION_MODES],
-  ['opencode', ACP_CHAT_PERMISSION_MODES],
-  ['opencode2', ACP_CHAT_PERMISSION_MODES],
-  ['omp', ACP_CHAT_PERMISSION_MODES],
-  ['copilot', ACP_CHAT_PERMISSION_MODES],
-  ['kimi', KIMI_CHAT_PERMISSION_MODES],
-  ['antigravity', ANTIGRAVITY_CHAT_PERMISSION_MODES]
-])
->>>>>>> 1cf83ecde5d (fix(nessy): full-access now auto-approves ACP permission requests)
 
 /** The one table of which agents' chats offer which modes; null keeps following Agent Permissions. */
 export function agentChatPermissionModes(agent: string): AgentChatPermissionModeSupport | null {
