@@ -2,6 +2,7 @@ import {
   textGenerationFailure,
   type TextGenerationFailureFields
 } from '../../../text-generation-failure-copy'
+import { findOptionOccurrence } from '../../../command-option-occurrence'
 import { planAgentBinary } from '../../../agent-launch/startup/agent-command-plan'
 
 import type { CommandTemplateBackslash } from './commit-message-prompt'
@@ -11,13 +12,24 @@ import {
   isCustomAgentId
 } from './commit-message-agent-spec'
 import { planCustomCommand } from './commit-message-prompt'
-import { planAdditionalAgentArgs, compactRecipeOptions } from './commit-message-generation-options'
+import {
+  KIMI_VALUE_OPTIONS,
+  findRecipeOption,
+  planAdditionalAgentArgs,
+  compactRecipeOptions
+} from './commit-message-generation-options'
 import {
   taskPolicyRecipeArgs,
   codexRecipeConfigArgs,
   applySingletonOptionOverrides
 } from './commit-message-recipe-options'
 import type { TuiAgent } from '../../../agent-launch/catalog/tui-agent'
+import {
+  isDirectOpenCodeGenerationCommand,
+  openCodeGenerationLauncherBoundary,
+  mergeOpenCodeGenerationArgs
+} from '../../../text-generation/launch/opencode-generation-command'
+import { buildAntigravityGenerationInput } from '../../../text-generation/output/antigravity-generation-stream'
 
 // Share pure request/prompt-to-spawn validation and argv planning between local main and SSH JSON-RPC generators.
 
@@ -58,6 +70,12 @@ export type CommitMessagePlanResult =
   | ({ ok: false } & TextGenerationFailureFields)
 
 const DEFAULT_SINGLETON_OPTIONS: readonly (readonly string[])[] = [['--model']]
+const ANTIGRAVITY_FORMAT_OPTIONS = [
+  '--input-format',
+  '-input-format',
+  '--output-format',
+  '-output-format'
+]
 
 function insertAdditionalAgentArgs(args: {
   baseArgs: string[]
@@ -159,8 +177,14 @@ export function planCommitMessageGeneration(
   if (!command.ok) {
     return { ok: false, error: command.error }
   }
-  const prefixArgs = taskPolicyRecipeArgs(input.agentId, command.prefixArgs)
-  const recipeArgs = taskPolicyRecipeArgs(input.agentId, agentArgs.args)
+  const prefixArgs =
+    input.agentId === 'antigravity'
+      ? compactRecipeOptions(command.prefixArgs, ANTIGRAVITY_FORMAT_OPTIONS)
+      : taskPolicyRecipeArgs(input.agentId, command.prefixArgs)
+  const recipeArgs =
+    input.agentId === 'antigravity'
+      ? compactRecipeOptions(agentArgs.args, ANTIGRAVITY_FORMAT_OPTIONS)
+      : taskPolicyRecipeArgs(input.agentId, agentArgs.args)
   const baseArgs = spec.buildArgs({
     prompt: argvPrompt,
     model: input.model,
@@ -170,26 +194,61 @@ export function planCommitMessageGeneration(
     toolFree: input.toolFree,
     userArgs: [...prefixArgs, ...recipeArgs]
   })
-  // Replace singleton values rather than stack them: yargs arrays crash CLIs.
+  // Replace singleton values rather than stack them: yargs arrays crash CLIs such as OpenCode model.split.
   const merged = applySingletonOptionOverrides({
     generatedArgs: baseArgs,
     prefixArgs,
     recipeArgs,
     singletonOptions: spec.singletonOptions ?? DEFAULT_SINGLETON_OPTIONS,
-    valueOptions: []
+    valueOptions: input.agentId === 'kimi' ? KIMI_VALUE_OPTIONS : []
   })
-  const args = insertAdditionalAgentArgs({
-    baseArgs: merged.generatedArgs,
-    agentArgs: merged.recipeArgs,
-    promptDelivery: spec.promptDelivery,
-    prompt: argvPrompt
-  })
+  const args =
+    input.agentId === 'kimi'
+      ? [...merged.generatedArgs, ...merged.recipeArgs]
+      : insertAdditionalAgentArgs({
+          baseArgs: merged.generatedArgs,
+          agentArgs: merged.recipeArgs,
+          promptDelivery: spec.promptDelivery,
+          prompt: argvPrompt
+        })
+  const generationArgs = mergeOpenCodeGenerationArgs(
+    input.agentId,
+    command.binary,
+    merged.prefixArgs,
+    args
+  )
+  const formatOption =
+    input.agentId === 'opencode' || input.agentId === 'opencode2'
+      ? findOptionOccurrence(generationArgs, ['--format'], true)
+      : null
+  const kimiFormatOption =
+    input.agentId === 'kimi'
+      ? findRecipeOption(generationArgs, ['--output-format'], KIMI_VALUE_OPTIONS)
+      : null
+  const directOpenCode = isDirectOpenCodeGenerationCommand(command.binary, merged.prefixArgs)
+  const launcherBoundary = openCodeGenerationLauncherBoundary(
+    command.binary,
+    merged.nativePrefixArgs
+  )
+  const nativePrefixArgs =
+    launcherBoundary === null
+      ? merged.nativePrefixArgs
+      : merged.nativePrefixArgs.slice(0, launcherBoundary)
+  const nativeRunOptions =
+    launcherBoundary === null
+      ? merged.nativePrefixOptions
+      : [...merged.nativePrefixOptions, ...merged.nativePrefixArgs.slice(launcherBoundary)]
   return {
     ok: true,
     plan: {
       binary: command.binary,
-      args,
-      stdinPayload: spec.promptDelivery === 'stdin' ? prompt : null,
+      args: generationArgs,
+      stdinPayload:
+        input.agentId === 'antigravity'
+          ? buildAntigravityGenerationInput(prompt)
+          : spec.promptDelivery === 'stdin'
+            ? prompt
+            : null,
       ...(spec.promptDelivery === 'file'
         ? {
             promptFile: {
@@ -206,6 +265,24 @@ export function planCommitMessageGeneration(
               ...codexRecipeConfigArgs(merged.recipeArgs)
             ]
           }
+        : {}),
+      ...(input.agentId === 'antigravity' ? { policyProbeArgs: merged.prefixArgs } : {}),
+      ...(input.agentId === 'opencode' || input.agentId === 'opencode2'
+        ? {
+            openCodeTask: {
+              prefixArgs: directOpenCode ? [] : nativePrefixArgs,
+              runArgs: directOpenCode
+                ? generationArgs.slice(1)
+                : [...nativeRunOptions, ...args.slice(1)]
+            }
+          }
+        : {}),
+      ...(formatOption?.value === 'json' ? { outputFormat: 'opencode-json' as const } : {}),
+      ...(kimiFormatOption?.value === 'stream-json'
+        ? { outputFormat: 'kimi-stream-json' as const }
+        : {}),
+      ...(input.agentId === 'antigravity'
+        ? { outputFormat: 'antigravity-stream-json' as const }
         : {}),
       ...(command.env ? { env: command.env } : {})
     }

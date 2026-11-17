@@ -114,7 +114,7 @@ beforeEach(() => {
 it('loads complete Settings inventory even when the automatic inventory is already cached', async () => {
   useAppStore.getState().clearLocalDetectedAgents()
   detectLocalAgents.mockImplementation((args) =>
-    Promise.resolve(args?.enabledOnly ? ['claude'] : ['claude', 'codex'])
+    Promise.resolve(args?.enabledOnly ? ['claude'] : ['claude', 'kiro'])
   )
   await useAppStore.getState().ensureDetectedAgents()
   const container = document.createElement('div')
@@ -125,19 +125,19 @@ it('loads complete Settings inventory even when the automatic inventory is alrea
     root.render(createElement(HookProbe, { target: { kind: 'local' }, inventory: 'all' }))
   })
   await flushEffects()
-  expect(latestHookResult?.detectedIds).toEqual(['claude', 'codex'])
+  expect(latestHookResult?.detectedIds).toEqual(['claude', 'kiro'])
   expect(useAppStore.getState().detectedAgentIds).toEqual(['claude'])
   expect(detectLocalAgents.mock.calls.map(([args]) => args?.enabledOnly === true)).toEqual([
     true,
     false
   ])
-  refreshLocalAgents.mockResolvedValueOnce({ agents: ['claude', 'codex'] })
+  refreshLocalAgents.mockResolvedValueOnce({ agents: ['claude', 'codex', 'kiro'] })
   await act(async () => {
     await latestHookResult?.refresh()
   })
-  expect(latestHookResult?.detectedIds).toEqual(['claude', 'codex'])
+  expect(latestHookResult?.detectedIds).toEqual(['claude', 'codex', 'kiro'])
   expect(refreshLocalAgents.mock.lastCall?.[0]?.enabledOnly).not.toBe(true)
-  expect(useAppStore.getState().detectedAgentIds).toEqual(['claude', 'codex'])
+  expect(useAppStore.getState().detectedAgentIds).toEqual(['claude', 'codex', 'kiro'])
 })
 
 describe('Floating Workspace authority', () => {

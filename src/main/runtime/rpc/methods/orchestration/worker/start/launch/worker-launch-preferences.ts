@@ -67,6 +67,7 @@ export function createPendingWorkerLaunchReceipt(args: {
 
 export function resolveWorkerLaunchPreferences(args: {
   agent: TuiAgent
+  openCodeModelLaunchSupported?: boolean
   createsWorktree?: boolean
   model?: string
   effort?: string

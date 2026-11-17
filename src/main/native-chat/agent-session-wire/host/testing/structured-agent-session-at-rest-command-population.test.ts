@@ -5,12 +5,12 @@ import { expect, it, vi } from 'vitest'
 import type { AgentSessionSubscribeEvent } from '../../../../../shared/agent-session/agent-session-wire'
 
 it.each([
-  ['claude', false, true, 1, 2],
-  ['nessy', false, false, 0, 0],
-  ['claude', true, true, 0, 1]
+  ['claude', false],
+  ['omp', false],
+  ['claude', true]
 ] as const)(
   'uses the phone CI host fixture with actual %s dispatch, pending preparation=%s and retirement',
-  async (provider, pending, expectFast, startsAfterRetire, startsAfterRead) => {
+  async (provider, pending) => {
     vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
     const fixture = await createMobileCommandMenuHostFixture(provider, pending)
     const frames: AgentSessionSubscribeEvent[] = []
@@ -24,19 +24,15 @@ it.each([
         await vi.advanceTimersByTimeAsync(330_000)
         expect(fixture.starts()).toBe(0)
       } else {
-        expect(
-          ((await fixture.read()).commands?.some((row) => row.name === 'fast') ?? false)
-        ).toBe(expectFast)
+        expect((await fixture.read()).commands?.some((row) => row.name === 'fast')).toBe(true)
       }
       await fixture.retire(true)
       await vi.waitFor(() =>
         expect(frames.some((event) => event.type !== 'end' && event.commandsChanged)).toBe(true)
       )
-      expect(fixture.starts()).toBe(startsAfterRetire)
-      expect(
-        ((await fixture.read()).commands?.some((row) => row.name === 'fast') ?? false)
-      ).toBe(expectFast)
-      expect(fixture.starts()).toBe(startsAfterRead)
+      expect(fixture.starts()).toBe(pending ? 0 : 1)
+      expect((await fixture.read()).commands?.some((row) => row.name === 'fast')).toBe(true)
+      expect(fixture.starts()).toBe(pending ? 1 : 2)
     } finally {
       stop()
       await fixture.dispose()

@@ -14,6 +14,7 @@ import {
 import { sessionCandidatesFromDiscoveries } from './discovery/session-scanner-candidates'
 import { parseSessionCandidates } from './parsing/session-scanner-candidate-parse'
 import { createSessionParseStats } from './parse-cache/session-scanner-parse-cache'
+import { recordSessionScanIssue } from './parsing/session-scan-issues'
 import {
   aiVaultScanWorkload,
   noteAiVaultScanReading
@@ -22,6 +23,10 @@ import { yieldScanInventory } from './scope/session-scanner-scope-inventory'
 import { prepareScopeScan, scanInScopeSessions } from './scope/session-scanner-scope-walk'
 import { discoverAiVaultSessionSources } from './discovery/session-scanner-source-discovery'
 import { withAntigravityArtifactPaths } from './scanners/antigravity/antigravity-session-artifacts'
+import {
+  cursorChatMetaRefusals,
+  withCursorChatMetaScan
+} from './scanners/cursor/session-scanner-cursor-chat-meta'
 import type { AiVaultScanOptions } from './session-scanner-types'
 
 import { scopeOnlyScan } from './scope/session-scope-cwd'
@@ -44,8 +49,10 @@ export async function scanAiVaultSessions(
 }
 
 async function scanAiVaultSessionStores(options: AiVaultScanOptions): Promise<AiVaultListResult> {
+  // Keep Cursor metadata scoped across discovery and parsing to read the chats tree only once.
   return withSpan('aiVault.scan', (span) =>
-    withDevinSessionsDbScan(async () => {
+    withDevinSessionsDbScan(() =>
+      withCursorChatMetaScan(async () => {
         const limit = options.unlimited
           ? Number.POSITIVE_INFINITY
           : clampPositiveInteger(options.limit, DEFAULT_AI_VAULT_SCAN_LIMIT)
@@ -120,6 +127,14 @@ async function scanAiVaultSessionStores(options: AiVaultScanOptions): Promise<Ai
         })
         // Scope discovery may parse nothing; check cancellation before returning a completed scan.
         throwIfAiVaultScanCancelled(options.signal)
+        for (const refusal of cursorChatMetaRefusals()) {
+          // Report each refused chats root once across its Cursor transcripts.
+          recordSessionScanIssue(issues, {
+            agent: 'cursor',
+            path: refusal.chatsRoot,
+            ...refusal.text
+          })
+        }
 
         span.setAttribute('candidates', candidates.length)
         span.setAttribute('reused', parseStats.reused)
@@ -138,6 +153,7 @@ async function scanAiVaultSessionStores(options: AiVaultScanOptions): Promise<Ai
           scannedAt: new Date().toISOString()
         }
       })
+    )
   )
 }
 

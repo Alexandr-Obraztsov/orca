@@ -16,8 +16,9 @@ import { acpStructuredAgentDefinition } from '../session/acp-structured-agent-de
 import { GrokFixtureReplay } from '../session/testing/acp-structured-fixture-replay.test-support'
 import type { AcpFixtureFrame } from '../timeline/testing/acp-timeline-fixture.test-support'
 import {
-  NESSY,
+  GROK,
   openAcpAdapterRig,
+  PROVIDER_SESSION,
   waitFor,
   type AcpAdapterRig
 } from '../session/testing/acp-structured-adapter.test-support'
@@ -71,8 +72,45 @@ async function ended(rig: AcpAdapterRig, command: StructuredAgentSessionCommandR
 }
 
 describe('ACP compaction settlement', () => {
+  it("reads Grok's rate-limit RPC code as one usage failure, ignoring its late notification", async () => {
+    const { rig, command, prompt } = await compact(GROK)
+    const { agent } = rig.child()
+    // Grok keeps its 429 code inside the compact error wrapper; a producer shape, not a live capture.
+    agent.fail(prompt, -32003, 'Internal error', {
+      kind: 'compact_failed',
+      message: 'Rate limited'
+    })
+    const { turn, inside } = await ended(rig, command)
+    expect(turn).toMatchObject({ state: 'completed', outcome: 'failure' })
+    agent.notify('_x.ai/session/prompt_complete', {
+      sessionId: PROVIDER_SESSION,
+      promptId: command.turnId,
+      stopReason: 'rate_limit',
+      agentResult: 'Late cause'
+    })
+    await rig.adapter.dispatch({
+      sessionId: SESSION,
+      clientMessageId: 'next',
+      body: { kind: 'message', role: 'user', blocks: [{ type: 'text', text: 'next' }] },
+      fence: 1
+    })
+    agent.reply(await rig.frame('session/prompt', 1), { stopReason: 'end_turn' })
+    await waitFor(async () => expect(await rig.rig.turns()).toHaveLength(2))
+    const usage = expect.objectContaining({
+      tone: 'warning',
+      failure: {
+        kind: 'usageLimitReached',
+        detail: { text: 'Rate limited', audience: 'person' }
+      }
+    })
+    expect(inside).toEqual([usage])
+    expect((await rig.rig.rows()).filter((row) => row.body.kind === 'status')).toEqual([
+      expect.objectContaining({ body: usage })
+    ])
+  })
+
   it('ends a stopped compaction as cancelled, with no result row', async () => {
-    const { rig, command, prompt } = await compact(NESSY)
+    const { rig, command, prompt } = await compact(GROK)
     const { agent } = rig.child()
     agent.on('session/cancel', () => agent.reply(prompt, { stopReason: 'cancelled' }))
     await expect(

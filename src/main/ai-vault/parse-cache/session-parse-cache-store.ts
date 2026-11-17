@@ -101,8 +101,8 @@ export function resetSessionParseCacheForTests(): void {
   coldTier = null
 }
 
-// No live AiVault agent shares transcript roots anymore.
-const SHARED_TRANSCRIPT_AGENTS: ReadonlySet<string> = new Set<AiVaultAgent>()
+// Pi and OMP can share roots; retain separate parser-specific rows for the same transcript.
+const SHARED_TRANSCRIPT_AGENTS: ReadonlySet<string> = new Set<AiVaultAgent>(['pi', 'omp'])
 
 export function sessionParseCacheKey(agent: AiVaultAgent, path: string): string {
   if (!SHARED_TRANSCRIPT_AGENTS.has(agent)) {

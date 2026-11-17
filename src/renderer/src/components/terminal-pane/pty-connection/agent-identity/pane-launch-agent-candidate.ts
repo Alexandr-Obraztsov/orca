@@ -43,10 +43,10 @@ export function resolvePaneLaunchTuiAgent(
   return isTuiAgent(candidate) ? candidate : null
 }
 
-// All surviving TUI agents answer OSC color queries before their input loop is ready.
+// jcode queries colors before its input loop is ready; skip renderer replies like main ingress to avoid pre-typed composer text (#12112).
 export function paneShouldAnswerOscColorQueries(
-  _state: PaneLaunchAgentStoreSlice,
-  _pane: PaneLaunchAgentPaneSlice
+  state: PaneLaunchAgentStoreSlice,
+  pane: PaneLaunchAgentPaneSlice
 ): boolean {
-  return true
+  return resolvePaneLaunchTuiAgent(state, pane) !== 'jcode'
 }

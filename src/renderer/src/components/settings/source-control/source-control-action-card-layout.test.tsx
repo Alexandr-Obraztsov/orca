@@ -76,7 +76,7 @@ function Row({
 }
 beforeEach(() => {
   resetHostStructuredAgentsForTests()
-  useAppStore.setState({ localDetectedAgentIdsByContext: { host: ['claude', 'codex', 'qwen-code'] } })
+  useAppStore.setState({ localDetectedAgentIdsByContext: { host: ['claude', 'goose', 'grok'] } })
 })
 afterEach(resetHostStructuredAgentsForTests)
 

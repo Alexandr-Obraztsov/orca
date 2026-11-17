@@ -1,3 +1,4 @@
+import type { AgentSessionModelCatalogResult } from '../../../../shared/agent-session/agent-session-wire'
 import type { RuntimeGitContext } from '@/runtime/source-control/git/runtime-git-client-context'
 import {
   agentPickerListsCliModels,
@@ -27,13 +28,25 @@ export function agentPickerModelCatalogReads(
         ? readAgentPickerCliModelCatalog(entry.agent, cliDiscoveryRuntime)
         : !target
           ? undefined
-          : readModelMenuCatalog(
-              { ...input, target, agent: entry.agent },
-              waitForListing,
-              signal
-            ),
+          : entry.agent === 'antigravity'
+            ? callStructuredAgentSession<AgentSessionModelCatalogResult>(
+                target,
+                'agentSession.modelCatalog',
+                {
+                  ...(input.worktree ? { worktree: input.worktree } : {}),
+                  agent: entry.agent,
+                  ...(waitForListing ? { waitForListing } : {})
+                }
+              )
+            : readModelMenuCatalog(
+                { ...input, target, agent: entry.agent },
+                waitForListing,
+                signal
+              ),
     refreshOnInvalidation: (entry: Pick<AgentPickerEntry, 'agent'>) =>
-      !!target && !(cliDiscoveryRuntime && agentPickerListsCliModels(entry)),
+      !!target &&
+      !(cliDiscoveryRuntime && agentPickerListsCliModels(entry)) &&
+      entry.agent !== 'antigravity',
     subscribeInvalidation: target
       ? (listener: () => void) => subscribeModelMenuInvalidation(target, listener)
       : undefined

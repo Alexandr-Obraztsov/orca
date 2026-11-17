@@ -11,7 +11,9 @@ import { scanAiVaultSessions } from '../session-scanner'
 import { resetSessionParseCachePersistenceForTests } from '../parse-cache/session-parse-cache-persistence'
 import {
   isolatedScanRoots,
-  jsonLines
+  jsonLines,
+  writeAntigravityTranscript,
+  writeAntigravityHistory
 } from '../scanner-fixtures/session-scanner-test-fixtures'
 
 let tempRoots: string[] = []
@@ -81,4 +83,29 @@ describe('scanAiVaultSessions — scope before the recency cap', () => {
       truncateAiVaultListResult(scoped, 2, [workspace]).sessions.map((s) => s.sessionId)
     ).toContain('01a14083-old')
   })
+})
+
+it('keeps an older Antigravity session in scope across warm scans and changed history', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'orca-scope-history-'))
+  tempRoots.push(root)
+  const roots = isolatedScanRoots(root)
+  await writeRollout(roots.codexSessionsDir, 'newer', '/other', '15')
+  const timestamp = '2026-10-11T10:00:00.000Z'
+  const path = await writeAntigravityTranscript(roots.antigravityBrainDir, 'older', [
+    { source: 'USER_EXPLICIT', type: 'USER_INPUT', created_at: timestamp, content: 'Find me' }
+  ])
+  await utimes(path, new Date(timestamp), new Date(timestamp))
+  const history = (workspace: string) =>
+    writeAntigravityHistory(roots.antigravityBrainDir, [
+      { conversationId: 'older', display: 'Find me', timestamp, workspace }
+    ])
+  const scan = () =>
+    scanAiVaultSessions({ ...roots, platform: 'linux', limit: 1, scopePaths: ['/repo'] })
+  await history('/repo')
+  expect((await scan()).sessions.map((row) => row.sessionId)).toContain('older')
+  expect((await scan()).sessions.map((row) => row.sessionId)).toContain('older')
+  await history('/elsewhere')
+  expect((await scan()).sessions.map((row) => row.sessionId)).not.toContain('older')
+  await history('/repo')
+  expect((await scan()).sessions.map((row) => row.sessionId)).toContain('older')
 })

@@ -48,6 +48,7 @@ export function resolveAiVaultSessionResumeInChatForWorkspace(args: {
     ? resolveStructuredAgentSessionOwner(state, targetWorkspaceId)
     : null
   const aliasDependent =
+    args.session.agent !== 'pi' &&
     aiVaultSessionResumeInChatWorkspaceMatters(args.session.agent) &&
     !aiVaultSessionCwdMatchesWorkspace(args.session.cwd, targetWorkspacePath)
   const capabilities = targetOwner ? resolveHostCapabilities(state, targetOwner) : null

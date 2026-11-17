@@ -15,7 +15,8 @@ import {
   AGENT_LAUNCH_PROMPT_CARRY_RUNTIME_CAPABILITY,
   AGENT_LAUNCH_LOCAL_PRESENTATION_RUNTIME_CAPABILITY,
   AGENT_LAUNCH_REPLAY_REQUIRED_RUNTIME_CAPABILITY,
-  AGENT_LAUNCH_SURFACE_RUNTIME_CAPABILITY
+  AGENT_LAUNCH_SURFACE_RUNTIME_CAPABILITY,
+  AGENT_LAUNCH_PI_MODEL_RUNTIME_CAPABILITY
 } from '../../shared/agent-launch/contracts/agent-launch-runtime-capability'
 import { createStructuredAgentSessionOperationId } from '../../shared/agent-session/lifecycle/operations/structured-agent-session-mutation'
 import { parseAgentSessionOperationTimestamp } from '../../shared/agent-session/agent-session-host-authority'
@@ -76,7 +77,9 @@ export function readCliAgentLaunch(
     agent,
     model: getOptionalStringFlag(flags, 'model'),
     effort: getOptionalStringFlag(flags, 'effort'),
-    createsWorktree: target.createsWorktree
+    createsWorktree: target.createsWorktree,
+    // The execution host verifies an OpenCode model itself before it starts one.
+    openCodeModelLaunchSupported: true
   })
   if ('refusal' in checked) {
     throw new RuntimeClientError(checked.refusal.code, checked.refusal.message)
@@ -139,6 +142,16 @@ export async function callAgentLaunch(
   }
   if (launch.surface && !capabilities.includes(AGENT_LAUNCH_SURFACE_RUNTIME_CAPABILITY)) {
     throw new RuntimeClientError('incompatible_runtime', SURFACE_UNSUPPORTED_MESSAGE)
+  }
+  if (
+    launch.agent === 'pi' &&
+    launch.sessionOptions &&
+    !capabilities.includes(AGENT_LAUNCH_PI_MODEL_RUNTIME_CAPABILITY)
+  ) {
+    throw new RuntimeClientError(
+      'incompatible_runtime',
+      'This Orca host cannot start Pi on a chosen model. Update Orca on the execution host, or omit --model.'
+    )
   }
   if (!capabilities.includes(AGENT_LAUNCH_LOCAL_PRESENTATION_RUNTIME_CAPABILITY)) {
     throw new RuntimeClientError(

@@ -22,6 +22,13 @@ import { isDiscoverableSessionFile } from '../discovery/session-file-discovery'
 import { subagentTranscriptsDirFor } from '../scanners/claude/session-scanner-subagent-transcripts'
 import type { AiVaultScanOptions } from '../session-scanner-types'
 
+// These sessions own their containing directory, including companion files.
+const AI_VAULT_WHOLE_DIRECTORY_DELETE_AGENTS = new Set<AiVaultDeletableAgent>([
+  'rovo',
+  'grok',
+  'cline'
+])
+
 export type ValidateAiVaultSessionDeleteTargetArgs = {
   agent: AiVaultAgent
   filePath: string
@@ -84,6 +91,14 @@ function sessionDeleteRemovals(args: {
   roots: readonly string[]
 }): readonly AiVaultSessionDeleteRemoval[] | null {
   const { agent, resolvedPath, matchedRoot, roots } = args
+
+  if (AI_VAULT_WHOLE_DIRECTORY_DELETE_AGENTS.has(agent)) {
+    const sessionDir = dirname(resolvedPath)
+    if (sessionDir === matchedRoot || !isPathInsideOrEqual(matchedRoot, sessionDir)) {
+      return null
+    }
+    return [{ path: sessionDir, kind: 'directory', roots }]
+  }
 
   if (agent === 'claude') {
     const sessionId = basename(resolvedPath, extname(resolvedPath))

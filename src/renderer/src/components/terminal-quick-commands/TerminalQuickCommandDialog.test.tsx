@@ -206,7 +206,7 @@ describe('TerminalQuickCommandDialog animation structure', () => {
     )
     const trigger = getByRole(document.body, 'button', { name: 'Select agent' })
     await act(async () => fireEvent.keyDown(trigger, { key: 'Enter' }))
-    const unsupported = getByRole(document.body, 'menuitem', { name: /^Qwen Code/ })
+    const unsupported = getByRole(document.body, 'menuitem', { name: /^Aider/ })
     expect(unsupported.getAttribute('aria-disabled')).toBe('true')
     await act(async () => fireEvent.click(unsupported))
     expect(onSave).not.toHaveBeenCalled()

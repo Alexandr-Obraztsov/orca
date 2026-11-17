@@ -7,7 +7,7 @@ export function canCommandCodeOutputOwnPane(args: {
   paneOwnerAgent?: AgentType | null
 }): boolean {
   if (args.foregroundAgent) {
-    return false
+    return args.foregroundAgent === 'command-code'
   }
   if (args.shellForeground) {
     return false

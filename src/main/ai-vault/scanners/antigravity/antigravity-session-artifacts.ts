@@ -1,9 +1,6 @@
 import type { Dirent } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import type {
-  AiVaultAgent,
-  AiVaultSession
-} from '../../../../shared/ai-vault/contracts/ai-vault-types'
+import type { AiVaultSession } from '../../../../shared/ai-vault/contracts/ai-vault-types'
 import type { SessionFileDiscovery } from '../../session-scanner-types'
 import { antigravityConversationIdFromTranscriptPath } from './session-scanner-antigravity-paths'
 
@@ -41,7 +38,7 @@ export function withAntigravityArtifactPaths(
   }
   return sessions.map((session) => {
     if (
-      session.agent !== ('antigravity' as AiVaultAgent) ||
+      session.agent !== 'antigravity' ||
       !antigravityConversationIdFromTranscriptPath(session.filePath)
     ) {
       return session

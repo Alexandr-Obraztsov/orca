@@ -31,7 +31,7 @@ function makeRecord(
     paneKey,
     tabId: 'tab-1',
     worktreeId: 'wt-1',
-    agent: 'qwen-code',
+    agent: 'omp',
     providerSession: { key: 'session_id', id: 'sess-1' },
     prompt: 'finish the task',
     state: 'working',
@@ -39,9 +39,9 @@ function makeRecord(
     updatedAt: 1,
     origin,
     launchConfig: {
-      agentCommand: 'qwen-code',
+      agentCommand: 'omp',
       agentArgs: '',
-      agentEnv: { QWEN_CODE_AGENT_DIR: '/tmp/qwen-code-agent' }
+      agentEnv: { PI_CODING_AGENT_DIR: '/tmp/omp-agent' }
     }
   }
 }

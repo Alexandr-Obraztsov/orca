@@ -11,7 +11,7 @@ import { waitForWorkerAgentReady } from '../wait/launched-agent-composer-readine
 export function registerTerminalPtyExitWaiterTests(): void {
   describe('idle and fresh readiness waits on an exited terminal', () => {
     it.each(
-      (['codex', 'claude', 'qwen-code'] as const).flatMap((agent) =>
+      (['pi', 'claude', 'opencode'] as const).flatMap((agent) =>
         [true, false].map((exitBeforeWait) => ({ agent, exitBeforeWait }))
       )
     )(
@@ -123,7 +123,7 @@ export function registerTerminalPtyExitWaiterTests(): void {
       }
     )
 
-    it.each(['claude', 'codex'] as const)(
+    it.each(['claude', 'opencode'] as const)(
       'does not deliver a %s launch prompt after end',
       async (agent) => {
         const { runtime, handle } = await createTranscriptPane({

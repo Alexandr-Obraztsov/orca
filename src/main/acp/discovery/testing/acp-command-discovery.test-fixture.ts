@@ -2,20 +2,20 @@ import { mkdirSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import capture from '../../../../shared/__fixtures__/nessy-native-commands.json'
+import capture from '../../../../shared/__fixtures__/omp-native-commands.json'
 import { agentSessionRecordFixture } from '../../../native-chat/testing/agent-session-record-test-fixture'
 import type { ProviderProcessCloseResult } from '../../../provider-process/provider-process-close'
 import { AcpAtRestCommandCatalog, type AcpAtRestCommandDeps } from '../acp-at-rest-commands'
 import { acpLaunchSpecFor } from '../../launch/acp-launch-registry'
 import { FakeAcpChild } from '../../process/testing/acp-scripted-connection.test-fixture'
 
-export const SPEC = acpLaunchSpecFor('nessy')!
+export const OMP = acpLaunchSpecFor('omp')!
 export const DISCOVERY_SESSION = 'command-discovery'
-export const record = (workspaceId = 'workspace-1') =>
+export const ompRecord = (workspaceId = 'workspace-1') =>
   agentSessionRecordFixture({
     sessionId: `chat-${workspaceId}`,
-    provider: 'nessy',
-    accountHome: { variable: 'NESSY_HOME', path: '/accounts/nessy' },
+    provider: 'omp',
+    accountHome: { variable: 'PI_CODING_AGENT_DIR', path: '/accounts/omp' },
     location: { workspaceId, workspaceKind: 'folder' }
   })
 
@@ -37,7 +37,7 @@ export class CommandDiscoveryChild extends FakeAcpChild {
 export async function commandDiscoveryRig(
   script?: (child: CommandDiscoveryChild) => void,
   overrides: Partial<AcpAtRestCommandDeps> = {},
-  spec = SPEC
+  spec = OMP
 ) {
   const root = await mkdtemp(join(tmpdir(), 'orca-31999-commands-'))
   const workspacePath = (id: string) => join(root, 'work', id)
@@ -49,8 +49,8 @@ export async function commandDiscoveryRig(
       mkdirSync(path, { recursive: true })
       return path
     },
-    resolveEnvironment: async () => ({ PATH: '/bin', NESSY_HOME: '/accounts/nessy' }),
-    resolveCommand: () => '/configured/nessy',
+    resolveEnvironment: async () => ({ PATH: '/bin', OMP_PROFILE: 'configured' }),
+    resolveCommand: () => '/configured/omp',
     probeVersion: async () => ({ version: '18.12.6' }),
     resolveVisualsSkill: async () => ({
       pluginDir: '/installed/plugin',

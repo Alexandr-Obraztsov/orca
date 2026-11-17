@@ -1,5 +1,11 @@
 // Build history resume lines for the execution platform and actual shell.
 import { quoteCmdDoubleQuoted } from '../../shell/launch/shell-argument-quoting'
+import {
+  isAntigravityReferenceSession,
+  antigravityTranscriptReferencePrompt
+} from '../../agent-session/lifecycle/provider-handles/antigravity-session-origin'
+import { normalizeAiVaultResumeFilePath } from './ai-vault-resume-path'
+import { ompTranscriptProfileArgs } from '../../agent-launch/startup/omp-profile'
 import { TUI_AGENT_CONFIG } from '../../agent-launch/catalog/tui-agent-config'
 import {
   clearEnvCommand,
@@ -22,15 +28,27 @@ export function buildAiVaultResumeCommand(args: {
   shell?: AgentStartupShell
   clearEnvNames?: readonly string[]
 }): string {
-  const { agent, sessionId, cwd, platform, commandOverride, codexHome, shell } = args
+  const { agent, sessionId, cwd, platform, commandOverride, codexHome, resumeFilePath, shell } =
+    args
   const baseCommand = commandOverride?.trim() || defaultAiVaultResumeCommandBase(agent)
+  // OMP/Prime --resume accepts absolute transcript paths across custom roots/WSL; default-store ID lookup would miss them. Fall back to ID without a path.
+  const resumeTarget =
+    (agent === 'omp' || agent === 'prime-agent') && resumeFilePath?.trim()
+      ? resumeFilePath.trim()
+      : sessionId
   const sessionArg =
     shell === 'cmd'
-      ? quoteCmdDoubleQuoted(sessionId)
+      ? quoteCmdDoubleQuoted(resumeTarget)
       : shell
-        ? quoteStartupArg(sessionId, shell)
-        : quoteShellArg(sessionId, platform)
-  const resumeCommand = buildAgentResumeInvocation(agent, baseCommand, sessionArg)
+        ? quoteStartupArg(resumeTarget, shell)
+        : quoteShellArg(resumeTarget, platform)
+  // Profile names are [a-z0-9._-] only, literal in every shell like `--resume`.
+  const ompProfileArgs = agent === 'omp' ? ompTranscriptProfileArgs(resumeTarget) : []
+  const referencePath = normalizeAiVaultResumeFilePath(resumeFilePath ?? undefined, platform)
+  const resumeCommand =
+    isAntigravityReferenceSession({ agent, filePath: referencePath }) && referencePath
+      ? `${baseCommand} --prompt-interactive ${quoteResumeArg(antigravityTranscriptReferencePrompt(referencePath), platform, shell)}`
+      : buildAgentResumeInvocation(agent, [baseCommand, ...ompProfileArgs].join(' '), sessionArg)
 
   return buildAiVaultResumeShellCommand({
     resumeCommand,
@@ -146,6 +164,16 @@ export function realHomeCodexResumeEnvDeletion(
 }
 
 function defaultAiVaultResumeCommandBase(agent: AiVaultAgent): string {
+  if (agent === 'cursor') {
+    return 'cursor-agent'
+  }
+  if (agent === 'hermes') {
+    return 'hermes'
+  }
+  // Preserve launch subcommands and mode flags when resuming.
+  if (agent === 'rovo' || agent === 'opencode2' || agent === 'kiro') {
+    return TUI_AGENT_CONFIG[agent].launchCmd
+  }
   return TUI_AGENT_CONFIG[agent].detectCmd
 }
 
@@ -157,9 +185,44 @@ function buildAgentResumeInvocation(
   switch (agent) {
     case 'codex':
       return `${baseCommand} resume ${sessionArg}`
+    case 'rovo':
+      // Why: the base is the full launch command, as a settings override is.
+      return `${baseCommand} --restore ${sessionArg}`
+    case 'opencode2':
+    case 'opencode':
+    case 'pi':
+    // Kimi --session/-S is workspace-scoped; retain the cwd prefix or resume fails.
+    // falls through
+    case 'kimi':
+      return `${baseCommand} --session ${sessionArg}`
+    case 'copilot':
+      return `${baseCommand} --resume=${sessionArg}`
+    // Muse resume is workspace-scoped; retain the cwd prefix.
+    case 'muse':
+      return `${baseCommand} resume ${sessionArg}`
+    case 'cline':
+      return `${baseCommand} --id ${sessionArg}`
+    case 'qoder':
+    case 'codebuddy':
     case 'claude':
-    case 'nessy':
+    case 'zcode':
+    case 'cursor':
+    case 'gemini':
+    case 'grok':
+    case 'hermes':
+    case 'devin':
+    case 'openclaw':
+    case 'droid':
+    case 'jcode':
+    // OMP/Prime use the same --resume form with absolute transcript paths.
+    // falls through
+    case 'omp':
+    case 'prime-agent':
       return `${baseCommand} --resume ${sessionArg}`
+    case 'antigravity':
+      return `${baseCommand} --conversation ${sessionArg}`
+    case 'kiro':
+      return `${baseCommand} --resume-id ${sessionArg}`
   }
 }
 

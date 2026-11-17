@@ -91,7 +91,7 @@ export function AgentChoiceFields({
       ? { agent, catalog: liveCatalog, terminal: {} }
       : null
   const menu =
-    live && catalog
+    live && catalog && agent !== 'antigravity'
       ? modelMenuOptions(live.catalog, {
           agent,
           surface: 'terminal',

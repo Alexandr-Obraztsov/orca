@@ -4,6 +4,9 @@ import { useAppStore } from '../../store'
 import { StatCard } from './StatCard'
 import { ClaudeUsagePane } from './ClaudeUsagePane'
 import { CodexUsagePane } from './CodexUsagePane'
+import { GrokUsagePane } from './GrokUsagePane'
+import { OpenCodeUsagePane } from './OpenCodeUsagePane'
+import { MuseUsagePane } from './MuseUsagePane'
 import { UsageOverviewPane } from './UsageOverviewPane'
 import { Button } from '../ui/button'
 import {
@@ -55,7 +58,7 @@ function formatTrackingSince(
   })
 }
 
-type UsageTab = 'overview' | 'claude' | 'codex'
+type UsageTab = 'overview' | 'claude' | 'codex' | 'opencode' | 'muse' | 'grok'
 
 const USAGE_ANALYTICS_OPTIONS = [
   {
@@ -74,6 +77,24 @@ const USAGE_ANALYTICS_OPTIONS = [
     id: 'codex',
     get label() {
       return translate('auto.components.stats.StatsPane.7d26110cea', 'Codex')
+    }
+  },
+  {
+    id: 'opencode',
+    get label() {
+      return translate('auto.components.stats.StatsPane.1e696db2f6', 'OpenCode')
+    }
+  },
+  {
+    id: 'muse',
+    get label() {
+      return translate('auto.lib.agent.catalog.muse_label', 'Muse')
+    }
+  },
+  {
+    id: 'grok',
+    get label() {
+      return translate('auto.components.stats.StatsPane.grokUsageTab', 'Grok')
     }
   }
 ] as const satisfies readonly { id: UsageTab; label: string }[]
@@ -192,8 +213,14 @@ export function StatsPane(): React.JSX.Element {
             <UsageOverviewPane />
           ) : activeUsageTab === 'claude' ? (
             <ClaudeUsagePane />
-          ) : (
+          ) : activeUsageTab === 'codex' ? (
             <CodexUsagePane />
+          ) : activeUsageTab === 'opencode' ? (
+            <OpenCodeUsagePane />
+          ) : activeUsageTab === 'muse' ? (
+            <MuseUsagePane />
+          ) : (
+            <GrokUsagePane />
           )}
         </div>
       </div>

@@ -1,13 +1,18 @@
+import { agentConversationCopyRefusal } from '../../native-chat/conversation-adoption/agent-conversation-copy-error'
 import type { StructuredAgentSessionConversationCopyInput } from '../../native-chat/agent-session-wire/providers/structured-agent-session-conversation-copy-input'
+import { readOpenCodeForkCoverageViaWorker } from '../../ai-vault/scanners/opencode/reader-transport/session-scanner-opencode-sqlite-worker-spawn'
 import type { NativeCopyCoverage } from '../../native-chat/agent-session-journal/context-epochs/journal-history-origin'
 import { observeAcpForkSupport } from '../capabilities/acp-fork-support'
 import { normalizeAgentProviderSession } from '../../../shared/agent-session/lifecycle/agent-session-resume'
+import { OpenCodeCopyServerRouteError } from '../../../shared/agent-launch/startup/opencode-launch-command'
 import {
   agentSessionAccountHomesEqual,
   type AgentSessionAccountHome
 } from '../../../shared/agent-session/lifecycle/accounts/agent-session-account-home'
 import { waitForPromiseWithSignal } from '../../../shared/abort-signal-reason'
 import type { AiVaultConversationCopy } from '../../../shared/ai-vault/resume/ai-vault-resume-preparation'
+import { resolveSessionFilePath } from '../../native-chat/session-file-resolver'
+import { resolveOmpSessionsDir } from '../../ai-vault/scanners/omp/omp-session-root'
 import { AcpRpcError } from '../transport/acp-errors'
 import { acpAgentName } from '../session/acp-structured-agent-definitions'
 import type { AcpStructuredConnection } from '../process/acp-structured-connection'
@@ -41,6 +46,7 @@ export async function copyAcpConversation(
   const signal = options.signal ? AbortSignal.any([timeout, options.signal]) : timeout
   let connection: AcpStructuredConnection | null = null
   let result: AiVaultConversationCopy
+  let launchEnv: Record<string, string>
   try {
     try {
       signal.throwIfAborted()
@@ -49,6 +55,7 @@ export async function copyAcpConversation(
       )
       signal.throwIfAborted()
       const launch = await waitForPromiseWithSignal(deps.readLaunch(input.identity), signal)
+      launchEnv = launch.env
       signal.throwIfAborted()
       deps.spec.assertCopyLaunchArgs?.([], launch.prefixArgs)
       await assertCopyAccountSelected(deps, input.accountHome, launch.env, signal)
@@ -76,9 +83,29 @@ export async function copyAcpConversation(
       if (sessionId === input.providerSessionId) {
         throw new Error('The agent returned the original conversation instead of a copy.')
       }
-      result = { sessionId }
+      const filePath =
+        deps.spec.agent === 'omp'
+          ? await resolveSessionFilePath(
+              'omp',
+              sessionId,
+              {
+                ompSessionsDir: resolveOmpSessionsDir({ env: launch.env })
+              },
+              signal
+            )
+          : undefined
+      if (deps.spec.agent === 'omp' && !filePath) {
+        throw new Error('OMP did not save the copied conversation in its pinned session directory.')
+      }
+      result = {
+        sessionId,
+        ...(filePath ? { filePath } : {})
+      }
     } catch (error) {
-      if (error instanceof AcpCopyAccountMismatchError) {
+      if (
+        error instanceof AcpCopyAccountMismatchError ||
+        error instanceof OpenCodeCopyServerRouteError
+      ) {
         throw error
       }
       throw new Error(
@@ -87,6 +114,38 @@ export async function copyAcpConversation(
           : `${name} could not copy this chat.`,
         { cause: error }
       )
+    }
+    if (input.checkpoint && (deps.spec.agent === 'opencode' || deps.spec.agent === 'opencode2')) {
+      try {
+        const dbPath = deps.spec.transcriptImport?.conversationStore({
+          accountHome: input.accountHome,
+          launchEnv
+        })
+        if (!dbPath) {
+          throw new Error('OpenCode conversation store is unavailable')
+        }
+        const ids = await readOpenCodeForkCoverageViaWorker(
+          {
+            dbPath,
+            sessionId: result.sessionId,
+            sourceSessionId: input.providerSessionId
+          },
+          signal
+        )
+        return { ...result, coverage: { unit: 'acp-user-message', ids } }
+      } catch (error) {
+        options.signal?.throwIfAborted()
+        deps.logger?.warn('OpenCode fork coverage read failed', {
+          scope: 'acp-conversation-copy',
+          sessionId: result.sessionId,
+          error
+        })
+        throw agentConversationCopyRefusal(
+          'agent_session_identity_required',
+          { reason: 'transcriptUnreadable' },
+          `${name} could not read the copied chat. Check that its conversation store is available, then try again.`
+        )
+      }
     }
     return result
   } finally {

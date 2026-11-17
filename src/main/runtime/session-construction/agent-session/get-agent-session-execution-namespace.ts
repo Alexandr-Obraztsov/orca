@@ -15,6 +15,7 @@ import {
 import { isTuiAgentEnabled } from '../../../../shared/agent-launch/catalog/tui-agent-selection'
 import { buildAgentResumeStartupPlan } from '../../../../shared/agent-launch/startup/tui-agent-resume-startup'
 import { agentLaunchQuotingShell } from '../../../../shared/agent-launch/startup/agent-launch-runtime'
+import { OrchestrationError } from '../../orchestration/orchestration-error'
 import { withAgentSessionAccountEnv } from '../../agent-session/agent-session-account-env'
 import { resolveWslHostAgentResumeInputs } from '../../terminal/launch/wsl-host-agent-terminal-launch'
 import type { SleepingAgentLaunchConfig } from '../../../../shared/agent-session/lifecycle/agent-session-resume'
@@ -124,6 +125,15 @@ export abstract class OrcaRuntimeWithGetAgentSessionExecutionNamespace extends O
     if (request.kind === 'automatic') {
       // Legacy renderer sleep records are migration evidence, not host authority.
       throw new Error('agent_session_resume_not_authorized')
+    }
+    if (
+      request.agent === 'opencode' &&
+      Object.values(request.launchPreferences ?? {}).some((value) => value !== undefined)
+    ) {
+      throw new OrchestrationError(
+        'capability_unsupported',
+        'OpenCode resume preferences are not verified by this execution host.'
+      )
     }
     if (!this.store) {
       throw new Error('runtime_unavailable')

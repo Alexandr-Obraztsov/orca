@@ -36,5 +36,5 @@ export const ANTIGRAVITY_USAGE_MAX_OUTPUT_BYTES = 512 * 1024
 
 // Use same Antigravity binary name as command detection.
 export function antigravityCommandName(): string {
-  return (TUI_AGENT_CONFIG as Record<string, { detectCmd: string }>).antigravity.detectCmd
+  return TUI_AGENT_CONFIG.antigravity.detectCmd
 }

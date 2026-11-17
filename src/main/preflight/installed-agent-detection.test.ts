@@ -19,21 +19,17 @@ describe('detectInstalledAgents command overrides', () => {
   })
 
   it('lists an agent outside PATH only when its override executable exists', async () => {
-    const executable = path.join(dir, process.platform === 'win32' ? 'codex.exe' : 'codex')
+    const executable = path.join(dir, process.platform === 'win32' ? 'ante.exe' : 'ante')
     await writeFile(executable, '#!/bin/sh\n')
     await chmod(executable, 0o755)
 
-    // A resolvable override executable counts as installed even when the agent is otherwise absent.
     await expect(
-      detectInstalledAgents(undefined, { agentCmdOverrides: { codex: `"${executable}"` } })
-    ).resolves.toContain('codex')
-    // A missing override adds nothing beyond the plain environment detection: codex/claude/qwen-code/nessy
-    // may be genuinely installed, so only the override-driven delta is asserted.
-    const baseline = await detectInstalledAgents(undefined, {})
+      detectInstalledAgents(undefined, { agentCmdOverrides: { ante: `"${executable}"` } })
+    ).resolves.toContain('ante')
     await expect(
       detectInstalledAgents(undefined, {
-        agentCmdOverrides: { codex: `"${path.join(dir, 'missing', 'codex')}"` }
+        agentCmdOverrides: { ante: `"${path.join(dir, 'missing', 'ante')}"` }
       })
-    ).resolves.toEqual(baseline)
+    ).resolves.not.toContain('ante')
   })
 })

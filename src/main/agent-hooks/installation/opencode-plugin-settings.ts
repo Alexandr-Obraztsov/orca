@@ -1,10 +1,9 @@
 import type { PluginSources } from '../../../wsl-guest/plugins/installation/plugin-sources'
 import { isAgentStatusHooksEnabledForAgent } from '../../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
-import type { TuiAgent } from '../../../shared/agent-launch/catalog/tui-agent'
 import type { ManagedHookDetectionSettings } from './managed-hook-detection-commands'
 
 function enabled(settings: ManagedHookDetectionSettings, agent: 'opencode' | 'opencode2'): boolean {
-  return isAgentStatusHooksEnabledForAgent(settings, agent as TuiAgent)
+  return isAgentStatusHooksEnabledForAgent(settings, agent)
 }
 
 export function openCodePluginSettingsKey(settings: ManagedHookDetectionSettings): string {

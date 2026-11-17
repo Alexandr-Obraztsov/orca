@@ -157,7 +157,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
             tabId
           })
           mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-            agent: 'qwen-code',
+            agent: 'droid',
             routingTrusted: true,
             shellForeground: false
           }
@@ -168,7 +168,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
           // Scope to this pane's pty id: a delayed confirm for another test's pane can fire during this advance.
           expect(window.api.pty.confirmForegroundProcess).not.toHaveBeenCalledWith(ptyId)
           expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-            agent: 'qwen-code',
+            agent: 'droid',
             routingRevoked: true,
             shellForeground: false
           })
@@ -202,7 +202,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
             tabId
           })
           mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-            agent: 'qwen-code',
+            agent: 'droid',
             routingTrusted: true,
             shellForeground: false
           }
@@ -212,7 +212,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
 
           expect(window.api.pty.confirmForegroundProcess).not.toHaveBeenCalledWith(ptyId)
           expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-            agent: 'qwen-code',
+            agent: 'droid',
             routingRevoked: true,
             shellForeground: false
           })
@@ -224,7 +224,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         }
       })
 
-      it('keeps trusted Qwen Code routing through a rapid Shift+Enter burst', async () => {
+      it('keeps trusted Droid routing through a rapid Shift+Enter burst', async () => {
         vi.useFakeTimers()
         const ptyId = 'pty-droid-shift-enter-burst'
         const tabId = `tab-${ptyId}`
@@ -233,15 +233,15 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
           tabId
         })
         mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-          agent: 'qwen-code',
+          agent: 'droid',
           routingTrusted: true,
           shellForeground: false
         }
         mockStoreState.agentStatusByPaneKey[cacheKey] = {
           state: 'working',
-          agentType: 'qwen-code'
+          agentType: 'droid'
         }
-        vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('qwen-code')
+        vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('droid')
 
         binding.requestWindowsShiftEnterReconfirmation()
         await vi.advanceTimersByTimeAsync(200)
@@ -249,14 +249,14 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         await vi.advanceTimersByTimeAsync(349)
 
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'droid',
           routingTrusted: true,
           shellForeground: false
         })
 
         await vi.advanceTimersByTimeAsync(1)
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'droid',
           routingRevoked: true,
           routingConfirmationPending: true,
           shellForeground: false
@@ -267,7 +267,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         await flushAsyncTicks()
         expect(window.api.pty.confirmForegroundProcess).toHaveBeenCalledWith(ptyId)
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'droid',
           agentEvidence: 'process-read',
           routingTrusted: true,
           shellForeground: false
@@ -277,14 +277,14 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         await vi.advanceTimersByTimeAsync(700)
         await flushAsyncTicks()
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'droid',
           agentEvidence: 'process-read',
           routingTrusted: true,
           shellForeground: false
         })
       })
 
-      it('revokes stale trusted Qwen Code routing on focus before confirming the shell', async () => {
+      it('revokes stale trusted Pi routing on focus before confirming the shell', async () => {
         vi.useFakeTimers()
         const ptyId = 'pty-pi-focus-after-exit'
         const tabId = `tab-${ptyId}`
@@ -293,20 +293,20 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
           tabId
         })
         mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-          agent: 'qwen-code',
+          agent: 'pi',
           routingTrusted: true,
           shellForeground: false
         }
         mockStoreState.agentStatusByPaneKey[cacheKey] = {
           state: 'working',
-          agentType: 'qwen-code'
+          agentType: 'pi'
         }
         vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('cmd.exe')
 
         binding.sampleForegroundAgentOnFocus()
 
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'pi',
           routingRevoked: true,
           routingConfirmationPending: true,
           shellForeground: false
@@ -325,7 +325,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
 
       it('confirms daemon launch identity before restoring warm-reattach routing', async () => {
         vi.useFakeTimers()
-        vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('qwen-code')
+        vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('droid')
         const ptyId = 'pty-launch-identity-no-sample'
         const tabId = `tab-${ptyId}`
         mockStoreState.tabsByWorktree = { 'wt-1': [{ id: tabId, ptyId }] }
@@ -333,11 +333,11 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         const { binding, cacheKey } = await connectRestoredPaneForForegroundSampling({
           ptyId,
           tabId,
-          launchAgent: 'qwen-code'
+          launchAgent: 'droid'
         })
         expect(mockStoreState.registerAgentLaunchConfig).not.toHaveBeenCalled()
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'droid',
           agentEvidence: 'launch-record',
           shellForeground: false
         })
@@ -345,7 +345,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
 
         binding.sampleForegroundAgentOnFocus()
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'droid',
           agentEvidence: 'launch-record',
           shellForeground: false
         })
@@ -354,7 +354,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         await advanceVisibleForegroundRead()
 
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'qwen-code',
+          agent: 'droid',
           agentEvidence: 'process-read',
           routingTrusted: true,
           shellForeground: false
@@ -372,7 +372,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         const { cacheKey } = await connectRestoredPaneForForegroundSampling({
           ptyId,
           tabId,
-          launchAgent: 'qwen-code'
+          launchAgent: 'droid'
         })
         expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, cacheKey)).toBe('alt-enter')
 
@@ -381,7 +381,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         )
         await flushAsyncTicks()
 
-        // Assert the floor (initial read + two retries), not an exact count: an incidental qwen-code reconfirm can add one more.
+        // Assert the floor (initial read + two retries), not an exact count: an incidental droid reconfirm can add one more.
         expect(
           vi.mocked(window.api.pty.confirmForegroundProcess).mock.calls.length
         ).toBeGreaterThanOrEqual(3)
@@ -408,8 +408,8 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
           tabId,
           isVisibleRef: { current: false },
           launchConfig: {
-            agentCommand: 'custom-wrapper --agent qwen-code',
-            agentArgs: 'qwen-code',
+            agentCommand: 'custom-wrapper --agent droid',
+            agentArgs: 'droid',
             agentEnv: {}
           }
         })
@@ -430,7 +430,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         const ptyId = 'pty-stale-launch-shell-settled'
         const tabId = `tab-${ptyId}`
         mockStoreState.tabsByWorktree = {
-          'wt-1': [{ id: tabId, ptyId, launchAgent: 'qwen-code' }]
+          'wt-1': [{ id: tabId, ptyId, launchAgent: 'droid' }]
         }
         mockStoreState.registerAgentLaunchConfig.mockImplementation(
           (key: string, launchConfig: unknown, identity: { agentType?: string }): void => {
@@ -445,7 +445,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
           ptyId,
           tabId,
           isVisibleRef,
-          launchConfig: { agentCommand: 'qwen-code', agentArgs: '', agentEnv: {} }
+          launchConfig: { agentCommand: 'droid', agentArgs: '', agentEnv: {} }
         })
         await vi.advanceTimersByTimeAsync(300)
         await flushAsyncTicks(20)
@@ -554,14 +554,14 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         expect(foregroundReadCallsFor(ptyId)).toHaveLength(0)
       })
 
-      it('re-confirms leaked 133;D after detach moved pane-scoped Qwen Code identity', async () => {
+      it('re-confirms leaked 133;D after detach moved pane-scoped Droid identity', async () => {
         vi.useFakeTimers()
         const { connectPanePty } = await import('../connect-pane-pty')
         const agentTitleMocks4 = await vi.importMock<PtyConnectionAgentTitleMocks>(
           '@/lib/agent-status/aggregation/worktree-agent-status'
         )
         const getForegroundProcess = vi.mocked(window.api.pty.getForegroundProcess)
-        getForegroundProcess.mockResolvedValue('qwen-code')
+        getForegroundProcess.mockResolvedValue('droid')
         const ptyId = 'pty-detached-droid-leaked-d'
         const tabId = 'tab-detached-droid'
         const cacheKey = makePaneKey(tabId, LEAF_1)
@@ -581,12 +581,12 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
         )
         transportFactoryQueue.push(transport)
         mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-          agent: 'qwen-code',
+          agent: 'droid',
           shellForeground: false
         }
         mockStoreState.agentLaunchConfigByPaneKey[cacheKey] = {
           launchConfig: { agentArgs: '', agentEnv: {} },
-          identity: { agentType: 'qwen-code' }
+          identity: { agentType: 'droid' }
         }
         const deps = createDeps({
           tabId,
@@ -610,7 +610,7 @@ export function registerPtyConnectionForegroundAgentSamplingTests(): void {
           shellForeground: true
         })
         expect(mockStoreState.setPaneForegroundAgent).toHaveBeenCalledWith(cacheKey, {
-          agent: 'qwen-code',
+          agent: 'droid',
           agentEvidence: 'process-read',
           routingTrusted: true,
           shellForeground: false

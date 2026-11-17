@@ -137,6 +137,7 @@ export const ExplicitEnsure = z
     worktree: WorktreeSelector,
     agent: z.enum(RESUMABLE_TUI_AGENTS),
     providerSession: ProviderSession,
+    ompResumeFilePath: OmpResumeFilePath.optional(),
     terminalKittyKeyboardProtocol: z.boolean().optional(),
     agentArgs: AgentArgs.optional(),
     launchPreferences: LaunchPreferences.optional(),
@@ -148,7 +149,14 @@ export const ExplicitEnsure = z
   })
   .strict()
   .superRefine((value, context) => {
-    if (getAgentResumeArgv(value.agent, value.providerSession) === null) {
+    if (value.ompResumeFilePath !== undefined && value.agent !== 'omp') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ompResumeFilePath'],
+        message: 'OMP resume path requires the OMP agent'
+      })
+    }
+    if (getAgentResumeArgv(value.agent, value.providerSession, value.ompResumeFilePath) === null) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['providerSession'],

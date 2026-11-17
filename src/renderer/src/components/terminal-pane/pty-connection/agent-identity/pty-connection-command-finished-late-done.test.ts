@@ -212,7 +212,7 @@ describe('command-finished drop and a Done that lands after it', () => {
         }
       },
       setStatus: (state) => {
-        realStore.getState().setAgentStatus(paneKey, { state, prompt: '', agentType: 'nessy' })
+        realStore.getState().setAgentStatus(paneKey, { state, prompt: '', agentType: 'opencode' })
         mockStoreState.agentStatusByPaneKey[paneKey] =
           realStore.getState().agentStatusByPaneKey[paneKey]
       }

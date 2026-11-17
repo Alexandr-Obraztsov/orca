@@ -378,16 +378,16 @@ describe('agent sleep planner', () => {
 
   it.each([
     {
-      agent: 'qwen-code' as const,
+      agent: 'pi' as const,
       providerSession: {
         key: 'session_id' as const,
-        id: 'qwen-code-session-1',
-        transcriptPath: '/tmp/qwen-code-session-1.jsonl'
+        id: 'pi-session-1',
+        transcriptPath: '/tmp/pi-session-1.jsonl'
       }
     },
     {
-      agent: 'codex' as const,
-      providerSession: { key: 'session_id' as const, id: 'codex-session-1' }
+      agent: 'omp' as const,
+      providerSession: { key: 'session_id' as const, id: 'omp-session-1' }
     }
   ])(
     'still hibernates completed $agent panes that only retain live resume identity',

@@ -9,7 +9,10 @@ import {
   type CommitMessagePlan
 } from '../../shared/source-control/ai/generation/commit-message-plan'
 import type { ResolvedSourceControlAiGenerationParams } from '../../shared/source-control/ai/source-control-ai-operation-resolution'
+import { openCodeVariantRetryPlan } from '../../shared/text-generation/launch/opencode-generation-command'
+import { copilotUnavailableModelRetryPlan } from './failures/copilot-unavailable-model-retry'
 import { runLocalPlanForAgent } from './execution/source-control-local-generation'
+import { runOpenCodeTextTask } from '../opencode/text-tasks/opencode-text-task'
 import { cleanAgentAnswer, emptyResultFailure } from './failures/source-control-agent-failure'
 import { runRemoteSourceControlPlan } from './execution/source-control-remote-generation'
 import type {
@@ -57,14 +60,24 @@ export async function runGenerationRequest(input: {
           target: input.target,
           operation: input.operation
         })
-      : runLocalPlanForAgent({
-          agentId: input.params.agentId,
-          plan,
-          target: input.target,
-          operation: input.operation,
-          spawnAgent: input.spawnAgent,
-          shouldExecute: input.shouldExecute
-        })
+      : plan.openCodeTask
+        ? runOpenCodeTextTask({
+            plan,
+            target: input.target,
+            operation: input.operation,
+            spawnAgent: input.spawnAgent,
+            shouldExecute: input.shouldExecute,
+            legacyVariantFlag:
+              input.params.agentId === 'opencode' && input.operation !== 'jira-issue-summary'
+          })
+        : runLocalPlanForAgent({
+            agentId: input.params.agentId,
+            plan,
+            target: input.target,
+            operation: input.operation,
+            spawnAgent: input.spawnAgent,
+            shouldExecute: input.shouldExecute
+          })
   let result = await runClaudeGenerationAttempts({
     agentId: input.params.agentId,
     run: (attempt): Promise<InternalTextGenerationResult> => {
@@ -89,6 +102,22 @@ export async function runGenerationRequest(input: {
     },
     failedExit: (outcome) => (outcome.success ? undefined : outcome.failureOutput)
   })
+  if (
+    input.operation !== 'jira-issue-summary' &&
+    !result.success &&
+    input.params.agentId === 'opencode'
+  ) {
+    const retry = openCodeVariantRetryPlan(plan, result.failureOutput?.stderr ?? '')
+    if (retry) {
+      result = await execute(retry)
+    }
+  }
+  if (!result.success && input.params.agentId === 'copilot') {
+    const retry = copilotUnavailableModelRetryPlan(plan, result.failureOutput)
+    if (retry) {
+      result = await execute(retry)
+    }
+  }
   // Custom raw models can omit the opening think tag; built-in replies may mention it literally. PR JSON strips only after parsing fails.
   if (
     !result.success ||

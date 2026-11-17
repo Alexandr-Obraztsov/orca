@@ -1,5 +1,4 @@
 import type {
-  AiVaultAgent,
   AiVaultSession,
   AiVaultSessionPreviewMessage
 } from '../../../../../shared/ai-vault/contracts/ai-vault-types'
@@ -241,7 +240,7 @@ export function readOpenCodeSqliteSession(args: {
       : row.time_created
   // Keep a real database path for UI open/reveal actions; synthetic db#session paths only route parsing.
   const accumulator = createAccumulator({
-    agent: (args.agent ?? 'opencode') as AiVaultAgent,
+    agent: args.agent ?? 'opencode',
     file: {
       path: dbPath,
       mtimeMs,

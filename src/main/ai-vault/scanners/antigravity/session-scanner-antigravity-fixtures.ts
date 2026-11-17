@@ -1,11 +1,10 @@
 import type { IncrementalAgentFixture } from '../../scanner-fixtures/session-scanner-incremental-fixtures'
-import type { AiVaultAgent } from '../../../../shared/ai-vault/contracts/ai-vault-types'
 
 export function antigravityFixture(): IncrementalAgentFixture {
   const record = (source: string, type: string, content: string, createdAt: string) =>
     JSON.stringify({ source, type, content, created_at: createdAt })
   return {
-    agent: 'antigravity' as AiVaultAgent,
+    agent: 'antigravity',
     fileName: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/.system_generated/logs/transcript.jsonl',
     seedLines: [
       record(

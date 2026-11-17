@@ -102,7 +102,7 @@ export async function acquireAcpStructuredSession(input: {
     {
       clientInfo: { name: 'orca', version: '1' },
       clientCapabilities: spec.dialect.clientCapabilities,
-      retryBusyPrompts: false,
+      retryBusyPrompts: spec.agent === 'omp',
       ...(spec.signIn ? { signIn: spec.signIn } : {}),
       onPermission: (request, context) => {
         if (!childState.isAcpReadySession(session) || !session.turns?.acceptsRequests) {

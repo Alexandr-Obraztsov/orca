@@ -11,7 +11,7 @@ export type LegacyIdentityTracker = {
 }
 
 export function createLegacyIdentityTracker(input: {
-  transcriptAgent: NativeChatTranscriptAgent | 'grok' | 'omp'
+  transcriptAgent: NativeChatTranscriptAgent
   agent: AgentType
   sessionId: string
 }): LegacyIdentityTracker {

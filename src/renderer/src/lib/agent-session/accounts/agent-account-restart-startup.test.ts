@@ -171,7 +171,7 @@ describe('buildPaneAccountRestartStartup for Claude', () => {
       })
 
       expect(buildPaneAccountRestartStartup('claude', pane)?.command).toBe(
-        `${prefix}tclaude '--resume' '${SESSION_ID}'`
+        `${prefix}claude '--resume' '${SESSION_ID}'`
       )
     } finally {
       useAppStore.setState(original)

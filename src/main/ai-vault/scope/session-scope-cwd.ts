@@ -1,14 +1,20 @@
 import type { AiVaultAgent } from '../../../shared/ai-vault/contracts/ai-vault-types'
 import {
   openTranscriptReadStream,
-  readTranscriptSlice
+  readTranscriptSlice,
+  wslGatedReadFile
 } from '../../native-chat/transcript-filesystem/wsl-transcript-fs-access'
 import {
   isZstdTranscriptPath,
   readZstdTranscriptSlice,
   zstdTranscriptStream
 } from '../../native-chat/transcript-streaming/transcript-zstd-decompression'
-import { CLAUDE_CWD_BUCKET_LAYOUT, type CwdBucketLayout } from './session-cwd-bucket-layouts'
+import {
+  CLAUDE_CWD_BUCKET_LAYOUT,
+  CODEBUDDY_CWD_BUCKET_LAYOUT,
+  PI_CWD_BUCKET_LAYOUT,
+  type CwdBucketLayout
+} from './session-cwd-bucket-layouts'
 import type {
   AiVaultScanOptions,
   FileWithMtime,
@@ -17,6 +23,15 @@ import type {
 import { asRecord } from '../parsing/session-record-fields'
 import { extractString } from '../../../shared/trimmed-string'
 import { parseJsonObject } from '../parsing/session-json-object'
+import { clineManifestCwd } from '../scanners/cline/session-scanner-cline-parser'
+import {
+  cursorChatMetaUnavailable,
+  readCursorChatMeta
+} from '../scanners/cursor/session-scanner-cursor-chat-meta'
+import { rovoSessionCwd } from '../scanners/session-scanner-rovo-metadata'
+import { grokSessionCwd } from '../scanners/grok/session-scanner-grok-parser'
+import { listedKiroMetadata } from '../scanners/kiro/session-scanner-kiro-parser'
+import { openCodeSessionCwd } from '../scanners/opencode/session-scanner-opencode-parser'
 
 type HeadRecord = Record<string, unknown>
 
@@ -49,14 +64,100 @@ function head(
   }
 }
 
+function document(cwdOf: (content: string) => string | null): SessionScopeCwdSource {
+  return { kind: 'read', readCwd: ({ file }, signal) => readDocumentCwd(file, cwdOf, signal) }
+}
+
+async function readDocumentCwd(
+  file: FileWithMtime,
+  cwdOf: (content: string) => string | null,
+  signal?: AbortSignal
+): Promise<ScopeCwdRead> {
+  const content = await settledRead(
+    () => wslGatedReadFile(file.path, 'utf-8', 'scan', signal),
+    signal
+  )
+  if (content === null) {
+    return null
+  }
+  try {
+    return { cwd: cwdOf(content) }
+  } catch {
+    return null
+  }
+}
+
+function jsonRecord(content: string): Record<string, unknown> | null {
+  return asRecord(JSON.parse(content) as unknown)
+}
+
+const SESSION_HEADER = head((record) => (record.type === 'session' ? record.cwd : undefined))
+
+const CURSOR: SessionScopeCwdSource = {
+  kind: 'read',
+  readCwd: async ({ file }, signal) => {
+    const meta = await settledRead(() => readCursorChatMeta(file.path, signal), signal)
+    if (meta) {
+      return { cwd: meta.cwd }
+    }
+    return file.sidecar === 'none' && !cursorChatMetaUnavailable(file.path) ? { cwd: null } : null
+  }
+}
+
 export const AI_VAULT_SCOPE_CWD_SOURCES: Record<AiVaultAgent, SessionScopeCwdSource> = {
   claude: { kind: 'bucket', layout: CLAUDE_CWD_BUCKET_LAYOUT },
+  pi: { kind: 'bucket', layout: PI_CWD_BUCKET_LAYOUT },
+  codebuddy: { kind: 'bucket', layout: CODEBUDDY_CWD_BUCKET_LAYOUT },
   // Codex base instructions can enlarge the first record beyond the default read chunk.
   codex: head(
     (record) => (record.type === 'session_meta' ? asRecord(record.payload)?.cwd : undefined),
     64 * 1024
   ),
-  nessy: PARSE
+  qoder: head((record) => record.cwd),
+  omp: SESSION_HEADER,
+  'prime-agent': SESSION_HEADER,
+  openclaw: SESSION_HEADER,
+  droid: head((record) => (record.type === 'session_start' ? record.cwd : undefined)),
+  gemini: { kind: 'none' },
+  grok: document((content) => {
+    const summary = jsonRecord(content)
+    return summary ? grokSessionCwd(summary) : null
+  }),
+  rovo: document((content) => {
+    const metadata = jsonRecord(content)
+    return metadata ? rovoSessionCwd(metadata) : null
+  }),
+  cline: document(clineManifestCwd),
+  kiro: document((content) => {
+    const metadata = listedKiroMetadata(content)
+    return metadata ? extractString(metadata.cwd) : null
+  }),
+  cursor: CURSOR,
+  // Legacy session files; database rows (`<db>#<id>`) are already filtered by directory in SQL.
+  opencode: {
+    kind: 'read',
+    readCwd: async ({ file }, signal) =>
+      file.path.includes('#')
+        ? null
+        : readDocumentCwd(
+            file,
+            (content) => {
+              const record = jsonRecord(content)
+              return record ? openCodeSessionCwd(record) : null
+            },
+            signal
+          )
+  },
+  // A cwd recorded mid-file, a sidecar join, a shared index, or a database row.
+  hermes: PARSE,
+  antigravity: PARSE,
+  copilot: PARSE,
+  opencode2: PARSE,
+  zcode: PARSE,
+  devin: PARSE,
+  kimi: PARSE,
+  muse: PARSE,
+  jcode: PARSE
 }
 
 /** Answer from scope sources alone, without the global recency pass (Workspace and Project). */
@@ -126,4 +227,15 @@ function firstHeadCwd(
     }
   }
   return null
+}
+
+async function settledRead<T>(read: () => Promise<T>, signal?: AbortSignal): Promise<T | null> {
+  try {
+    return await read()
+  } catch (error) {
+    if (signal?.aborted) {
+      throw error
+    }
+    return null
+  }
 }

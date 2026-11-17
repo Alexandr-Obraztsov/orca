@@ -26,6 +26,14 @@ function send(rig: AcpAdapterRig, clientMessageId: string) {
   return rig.adapter.dispatch({ sessionId: SESSION, clientMessageId, body: hello, fence: 1 })
 }
 
+function chunk(promptId: string, text: string) {
+  return {
+    sessionId: PROVIDER_SESSION,
+    update: { sessionUpdate: 'agent_message_chunk', content: { type: 'text', text } },
+    _meta: { promptId }
+  }
+}
+
 it('reads those last words when the agent ends its stdout before its exit is seen', async () => {
   const rig = await openAcpAdapterRig({
     script: (agent) =>
@@ -49,6 +57,32 @@ it('reads those last words when the agent ends its stdout before its exit is see
 })
 
 describe('ACP structured session adapter: turns', () => {
+  it('sends a prompt under an injected id and settles it on the agent first event', async () => {
+    const rig = await openAcpAdapterRig()
+    await rig.acquire()
+    expect(await send(rig, 'send-1')).toEqual({ state: 'admitted' })
+    const prompt = await rig.frame('session/prompt')
+    expect(prompt.params).toMatchObject({
+      prompt: [{ type: 'text', text: 'hello' }],
+      _meta: { promptId: 'prompt:send-1', requestId: 'prompt:send-1' }
+    })
+    rig.child().agent.notify('session/update', chunk('prompt:send-1', 'Hi there'))
+    await waitFor(() =>
+      expect(rig.settled).toEqual([
+        {
+          sessionId: SESSION,
+          clientMessageId: 'send-1',
+          providerIdentity: { provider: 'orca', clientMessageId: 'send-1' }
+        }
+      ])
+    )
+    rig.child().agent.reply(prompt, { stopReason: 'end_turn' })
+    await waitFor(async () => {
+      const turns = (await rig.rig.rows()).flatMap((row) => readAgentJournalTurn(row.body) ?? [])
+      expect(turns.at(-1)).toMatchObject({ state: 'completed', outcome: 'success' })
+    })
+  })
+
   it('stops a running turn: open permissions answer cancelled, session/cancel goes out', async () => {
     const rig = await openAcpAdapterRig()
     await rig.acquire()
@@ -160,5 +194,34 @@ describe('ACP structured session adapter: requests a Stop cancels', () => {
       result: { outcome: { outcome: 'selected', optionId: 'allow-once' } }
     })
     expect(rig.sent('session/cancel')).toHaveLength(1)
+  })
+})
+
+describe('ACP structured session adapter: close and exit', () => {
+  it('ends the session on an unexpected exit: held sends rejected, the running one unknown', async () => {
+    const rig = await openAcpAdapterRig()
+    await rig.acquire()
+    await send(rig, 'send-1')
+    await rig.frame('session/prompt')
+    await send(rig, 'send-2')
+    rig.child().stderr = 'grok: crashed'
+    rig.child().exit()
+    await waitFor(() =>
+      expect(rig.ended).toMatchObject([
+        {
+          type: 'ended',
+          cause: 'unexpected-exit',
+          acquisitionGeneration: 'gen-acp',
+          failure: { kind: 'providerExited' }
+        }
+      ])
+    )
+    expect(rig.settled).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ clientMessageId: 'send-2', state: 'rejected' }),
+        expect.objectContaining({ clientMessageId: 'send-1', state: 'unknown' })
+      ])
+    )
+    await expect(send(rig, 'send-3')).rejects.toThrow(/no live grok child/)
   })
 })

@@ -95,7 +95,7 @@ describe('manual sleep agent session capture', () => {
   })
 
   // Why: an unresumable `live` checkpoint is provisional, so the wipe must still clear it.
-  it('does not promote Nessy identity without an authoritative transcript', () => {
+  it('does not promote Pi identity without an authoritative transcript', () => {
     vi.useFakeTimers()
     vi.setSystemTime(NOW)
     const store = createTestStore()
@@ -103,9 +103,8 @@ describe('manual sleep agent session capture', () => {
     store.setState({
       sleepingAgentSessionsByPaneKey: {
         'tab-1:leaf-1': makeSleepingRecord({
-          agent: 'qwen-code',
-          // A conversation_id handle is unresumable: the provisional live checkpoint must be wiped.
-          providerSession: { key: 'conversation_id', id: 'qwen-session-1' }
+          agent: 'pi',
+          providerSession: { key: 'session_id', id: 'pi-session-1' }
         })
       }
     } as Partial<AppState>)

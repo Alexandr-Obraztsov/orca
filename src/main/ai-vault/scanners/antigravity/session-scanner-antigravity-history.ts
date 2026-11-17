@@ -4,10 +4,7 @@ import {
   antigravityMetadataWorkspaces,
   readBoundedAntigravityIndex
 } from './session-scanner-antigravity-metadata'
-import type {
-  AiVaultAgent,
-  AiVaultSession
-} from '../../../../shared/ai-vault/contracts/ai-vault-types'
+import type { AiVaultSession } from '../../../../shared/ai-vault/contracts/ai-vault-types'
 import {
   openTranscriptReadStream,
   wslGatedStat
@@ -86,7 +83,7 @@ export function createAntigravityWorkspaceResolver(
 
   return {
     async enrich(session, historyPath) {
-      if (session.agent !== ('antigravity' as AiVaultAgent) || session.cwd) {
+      if (session.agent !== 'antigravity' || session.cwd) {
         return session
       }
       if (antigravitySessionOrigin(session.filePath) === 'antigravity-acp') {

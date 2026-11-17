@@ -25,7 +25,14 @@ export type AiVaultResumeInChatEligibility =
 export function aiVaultSessionResumeInChatWorkspaceMatters(
   agent: AiVaultSession['agent']
 ): boolean {
-  return agent === 'claude'
+  return (
+    agent === 'claude' ||
+    agent === 'grok' ||
+    agent === 'omp' ||
+    agent === 'opencode' ||
+    agent === 'opencode2' ||
+    agent === 'pi'
+  )
 }
 
 /** Compare with shared runtime rules; POSIX case folding would conflate distinct directories. */

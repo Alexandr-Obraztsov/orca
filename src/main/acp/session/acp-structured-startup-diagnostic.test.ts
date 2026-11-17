@@ -8,7 +8,7 @@ import { collectBundle } from '../../observability/bundle'
 import { createLocalFileSink } from '../../observability/local-file-sink'
 import { setActiveSink } from '../../observability/tracer'
 import { acpLaunchSpecFor } from '../launch/acp-launch-registry'
-import { NESSY, openAcpAdapterRig } from './testing/acp-structured-adapter.test-support'
+import { GROK, openAcpAdapterRig } from './testing/acp-structured-adapter.test-support'
 
 afterEach(async () => {
   setActiveSink(null)
@@ -16,13 +16,16 @@ afterEach(async () => {
   await closeProviderTimelineRigs()
 })
 
-it.each(['initialize', 'session/new'])(
+it.each(['initialize', 'session/new', 'authenticate'])(
   'keeps a live %s rejection and stderr in the startup failure',
   async (method) => {
     const rig = await openAcpAdapterRig({
-      spec: acpLaunchSpecFor('nessy')!,
+      spec: acpLaunchSpecFor('antigravity')!,
       initialize: { authMethods: [{ id: 'oauth-personal', name: 'Google' }] },
       script: (agent) => {
+        if (method === 'authenticate') {
+          agent.on('session/new', (frame) => agent.fail(frame, -32000, 'Sign in'))
+        }
         agent.on(method, (frame) => {
           rig.child().stderr = 'harness: Permission denied {"token":"stderr-private"}'
           agent.fail(frame, -32603, 'Internal error', {
@@ -95,14 +98,14 @@ it.each(['load', 'resume'] as const)(
     setActiveSink(sink)
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     const rig = await openAcpAdapterRig({
-      spec: { ...NESSY, resumePreference: method === 'resume' ? 'resume' : undefined },
+      spec: { ...GROK, resumePreference: method === 'resume' ? 'resume' : undefined },
       initialize: {
         agentCapabilities: { loadSession: true, sessionCapabilities: { resume: {} } }
       },
       launch: {
         resume: {
           sessionId: 'saved-session',
-          key: 'acp:nessy:saved',
+          key: 'acp:grok:saved',
           mayBeUnsaved: async () => false,
           lossKeys: []
         }

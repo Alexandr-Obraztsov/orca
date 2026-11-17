@@ -1,8 +1,5 @@
 import { basename } from 'node:path'
-import type {
-  AiVaultAgent,
-  AiVaultScanIssue
-} from '../../../../../shared/ai-vault/contracts/ai-vault-types'
+import type { AiVaultScanIssue } from '../../../../../shared/ai-vault/contracts/ai-vault-types'
 import { isWslUncPath } from '../../../../../shared/file-access/wsl-paths'
 import {
   aiVaultScanIssueText,
@@ -75,7 +72,7 @@ export function openCodeDatabaseScanIssue(
             detail: errorMessage(error)
           })
         : unreadableShareText(dbPath, name, label)
-  return { agent: agent as AiVaultAgent, kind: 'scope', path: dbPath, ...text }
+  return { agent, kind: 'scope', path: dbPath, ...text }
 }
 
 function unreadableShareText(dbPath: string, name: string, label: string): AiVaultScanIssueText {

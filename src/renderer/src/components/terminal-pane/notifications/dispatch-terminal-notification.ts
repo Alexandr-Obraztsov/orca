@@ -23,6 +23,7 @@ import {
 } from '../../../../../shared/orchestration/workers/dispatched-worker-attention'
 import { canonicalOrchestrationForRow } from '../../../runtime/agent-orchestration/visible-agent-orchestration'
 import { isSupersededAgentCompletionSnapshot } from '../agent-completion/agent-completion-snapshot-staleness'
+import { isAutoApprovedAntigravityPermission } from './antigravity-auto-approved-permission'
 import type {
   AgentCompletionDispatchMeta,
   AgentCompletionStatusSnapshot
@@ -130,7 +131,11 @@ export function dispatchTerminalNotification(
       : undefined
   if (
     event.source === 'agent-task-complete' &&
-    isSupersededAgentCompletionSnapshot(storedAgentStatus, eventAgentStatusSnapshot)
+    (isSupersededAgentCompletionSnapshot(storedAgentStatus, eventAgentStatusSnapshot) ||
+      isAutoApprovedAntigravityPermission(
+        agentStatus,
+        event.paneKey ? state.agentLaunchConfigByPaneKey[event.paneKey] : undefined
+      ))
   ) {
     recordAgentFinishDropped('superseded-snapshot', {
       workspaceId: worktreeId,

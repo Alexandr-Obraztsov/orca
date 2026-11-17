@@ -60,6 +60,9 @@ export function runQuickCommandInNewTab({
       prompt: command.prompt,
       worktreeId,
       groupId: targetGroupId,
+      ...(command.agent === 'opencode' || command.agent === 'opencode2'
+        ? { promptDelivery: 'submit-after-ready' as const }
+        : {}),
       launchSource: 'quick_command',
       quickCommandLabel: command.label
     })

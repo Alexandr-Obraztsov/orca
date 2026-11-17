@@ -8,6 +8,12 @@ import {
 } from '@/runtime/hosts/installation/use-managed-runtime-install'
 import { ManagedRuntimeInstallRow } from '../../managed-runtime/ManagedRuntimeInstallRow'
 import { useAntigravityChatSignIn } from '../../provider-accounts/use-antigravity-chat-sign-in'
+import { AntigravityProviderSignInArea } from '../../provider-accounts/AntigravityProviderSignInArea'
+import { antigravityProviderSignInShown } from '../../provider-accounts/antigravity-chat-runtime-sign-in-policy'
+import {
+  getHostRuntimeLabel,
+  getRuntimeSentenceLabel
+} from '../../../lib/provider-accounts/account-runtime-label'
 import type { AgentOpensAs } from '../../../lib/agent-session/launch/native-chat-provider-choice'
 import { SettingsSegmentedControl } from '../../settings/form-controls/SettingsFormControls'
 import { structuredChatUnavailableOnPlatform } from '../../../../../shared/agent-session/structured-chat-platform-support'
@@ -79,7 +85,9 @@ export function useAgentChatRuntimeInstall(agent: TuiAgent): {
 } {
   const runtime = useManagedRuntimeInstall(CHAT_HOST, agent, true)
   // Install and Remove wait for a running sign-in, which runs the installed server.
-  const signIn = useAntigravityChatSignIn(runtime.kind === 'active' ? CHAT_HOST : null)
+  const signIn = useAntigravityChatSignIn(
+    agent === 'antigravity' && runtime.kind === 'active' ? CHAT_HOST : null
+  )
   return { runtime, signInRunning: antigravityChatSignInRunning(signIn.flow) }
 }
 
@@ -118,6 +126,13 @@ export function AgentChatRuntimeArea({
           </div>
         )}
       </ManagedRuntimeInstallRow>
+      {agent === 'antigravity' && antigravityProviderSignInShown(runtime) ? (
+        <AntigravityProviderSignInArea
+          owner={CHAT_HOST}
+          label={getRuntimeSentenceLabel({ runtime: 'host', label: getHostRuntimeLabel(t) })}
+          install={runtime}
+        />
+      ) : null}
     </div>
   )
 }

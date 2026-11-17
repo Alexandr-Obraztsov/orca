@@ -2,10 +2,7 @@ import {
   physicalSessionCandidates,
   type SessionFileChoice
 } from '../../ai-vault/session-scanner-types'
-import type {
-  AiVaultAgent,
-  AiVaultScanIssue
-} from '../../../shared/ai-vault/contracts/ai-vault-types'
+import type { AiVaultScanIssue } from '../../../shared/ai-vault/contracts/ai-vault-types'
 import {
   cursorChatMetaRefusals,
   withCursorChatMetaScan
@@ -131,7 +128,7 @@ export async function runSessionSearchPass(
 
     for (const refusal of cursorChatMetaRefusals()) {
       recordSessionScanIssue(issues, {
-        agent: 'cursor' as AiVaultAgent,
+        agent: 'cursor',
         path: refusal.chatsRoot,
         ...refusal.text
       })

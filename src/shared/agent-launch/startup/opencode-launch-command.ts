@@ -38,8 +38,12 @@ export function selectOpenCodeHookAgent(
   launchCommand: string | undefined,
   isEnabled: (agent: 'opencode' | 'opencode2') => boolean
 ): 'opencode' | 'opencode2' | null {
-  // OpenCode is no longer a TuiAgent; only a detected launch binary can select it.
-  const explicit = launchAgent === undefined ? openCodeCommandAgent(launchCommand) : null
+  const explicit =
+    launchAgent === 'opencode' || launchAgent === 'opencode2'
+      ? launchAgent
+      : launchAgent === undefined
+        ? openCodeCommandAgent(launchCommand)
+        : null
   // An explicit version selects its own integration; disabling it never substitutes the other.
   if (explicit) {
     return isEnabled(explicit) ? explicit : null

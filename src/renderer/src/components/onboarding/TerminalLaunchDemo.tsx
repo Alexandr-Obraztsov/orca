@@ -5,7 +5,7 @@ import { useTranslate } from '@/i18n/use-translate'
 
 // Shell text, not prose: what a terminal shows when the agent's CLI starts.
 const DEMO_PROMPT = '~/uploader ❯'
-const DEMO_COMMAND = 'codex'
+const DEMO_COMMAND = 'gemini'
 
 // Pixel positions here are the keyframe targets in main.css (.onboarding-launch-demo).
 export function TerminalLaunchDemo(): React.JSX.Element {
@@ -26,7 +26,7 @@ export function TerminalLaunchDemo(): React.JSX.Element {
           className="inline-flex h-5 items-center gap-1 overflow-hidden whitespace-nowrap rounded border border-border bg-background font-medium"
         >
           <SquareTerminal className="size-3 shrink-0" />
-          {getAgentLabel('codex')}
+          {getAgentLabel('gemini')}
         </span>
         <span
           data-demo="plus"
@@ -55,7 +55,7 @@ export function TerminalLaunchDemo(): React.JSX.Element {
         </div>
         <div className="text-muted-foreground">
           {t('components.onboarding.launchDemo.cliReady', '{{agent}} CLI ready.', {
-            agent: getAgentLabel('codex')
+            agent: getAgentLabel('gemini')
           })}
         </div>
         <div>
@@ -70,8 +70,8 @@ export function TerminalLaunchDemo(): React.JSX.Element {
         <DemoRow agent="claude" label={getAgentLabel('claude')} alt />
         <DemoRow agent="codex" label={getAgentLabel('codex')} />
         <div className="my-[3px] h-px bg-border" />
-        <DemoRow agent="qwen-code" label={`${getAgentLabel('qwen-code')} ${cli}`} />
-        <DemoRow agent="nessy" label={`${getAgentLabel('nessy')} ${cli}`} picked />
+        <DemoRow agent="copilot" label={`${getAgentLabel('copilot')} ${cli}`} />
+        <DemoRow agent="gemini" label={`${getAgentLabel('gemini')} ${cli}`} picked />
       </div>
       <svg
         data-demo="cursor"
@@ -90,7 +90,7 @@ function DemoRow({
   alt,
   picked
 }: {
-  agent: 'claude' | 'codex' | 'qwen-code' | 'nessy'
+  agent: 'claude' | 'codex' | 'copilot' | 'gemini'
   label: string
   alt?: boolean
   picked?: boolean

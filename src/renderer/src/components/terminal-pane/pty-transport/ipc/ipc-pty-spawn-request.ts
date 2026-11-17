@@ -1,6 +1,14 @@
 import type { IpcPtyTransportOptions, PtyConnectResult, PtyTransport } from '../pty-transport-types'
+import type { RuntimeCreateAgentSessionResult } from '../../../../../../shared/agent-session/agent-session-host-authority'
+import {
+  createAgentSessionCreateOperation,
+  type AgentSessionCreateOperation
+} from '../../../../runtime/hosted-terminals/creation/agent-launch/agent-session-create-operation'
+import { callRuntimeRpc } from '../../../../runtime/rpc/calls/runtime-rpc-call'
+import { toRuntimeTerminalWorktreeSelector } from '../../../../runtime/rpc/targets/runtime-worktree-selector'
 
 type PtyConnectOptions = Parameters<PtyTransport['connect']>[0]
+const modelLaunchOperations = new WeakMap<IpcPtyTransportOptions, AgentSessionCreateOperation>()
 
 /** Fence buffered state by PTY lifetime during connect; older hosts omit incarnationId, and later PtyConnectResult consumers do not need it. */
 export type IpcPtySpawnResponse = PtyConnectResult & {
@@ -13,6 +21,55 @@ export async function spawnIpcPty(
   connectOptions: PtyConnectOptions,
   admittedSessionId?: string
 ): Promise<IpcPtySpawnResponse> {
+  if (
+    !admittedSessionId &&
+    transportOptions.launchAgent === 'opencode' &&
+    Object.values(transportOptions.agentLaunchPreferences ?? {}).some(
+      (value) => value !== undefined
+    )
+  ) {
+    const { worktreeId, tabId, leafId, connectionId, resumeProviderSession } = transportOptions
+    if (!worktreeId || !tabId || !leafId || connectionId || resumeProviderSession) {
+      throw new Error('capability_unsupported')
+    }
+    let operation = modelLaunchOperations.get(transportOptions)
+    if (!operation) {
+      operation = createAgentSessionCreateOperation()
+      modelLaunchOperations.set(transportOptions, operation)
+    }
+    const created = await operation.run((clientOperationId) =>
+      callRuntimeRpc<RuntimeCreateAgentSessionResult>(
+        { kind: 'local' },
+        'terminal.createAgentSession',
+        {
+          clientOperationId,
+          worktree: toRuntimeTerminalWorktreeSelector(worktreeId),
+          agent: 'opencode',
+          prompt: transportOptions.agentPrompt,
+          promptDelivery: transportOptions.agentPromptDelivery,
+          agentArgs: transportOptions.agentArgsOverride,
+          launchPreferences: transportOptions.agentLaunchPreferences,
+          startupCwd: transportOptions.cwd,
+          ...(transportOptions.trustWorktreeId
+            ? { trustWorktreeId: transportOptions.trustWorktreeId }
+            : {}),
+          placement: { tabId, leafId },
+          presentation: 'background',
+          ...(transportOptions.terminalKittyKeyboardProtocol === true
+            ? { terminalKittyKeyboardProtocol: true }
+            : {})
+        }
+      )
+    )
+    if (!created.terminal.ptyId) {
+      throw new Error('agent_session_operation_unknown')
+    }
+    return spawnIpcPty(
+      { ...transportOptions, command: undefined, launchConfig: undefined },
+      { ...connectOptions, command: undefined, launchConfig: undefined },
+      created.terminal.ptyId
+    )
+  }
   const {
     cwd,
     env,

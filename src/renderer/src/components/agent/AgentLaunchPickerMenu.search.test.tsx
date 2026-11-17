@@ -47,11 +47,11 @@ it('includes blank terminal in keyboard results and filters it for agent and mod
       models: [{ id: 'astra', label: 'Astra', isDefault: true, efforts: [] }]
     }
   }
-  const qwenCode: AgentPickerEntry = {
+  const antigravity: AgentPickerEntry = {
     ...entry,
-    agent: 'qwen-code',
-    label: 'Qwen Code',
-    rows: [{ agent: 'qwen-code', kind: 'cli' }],
+    agent: 'antigravity',
+    label: 'Antigravity',
+    rows: [{ agent: 'antigravity', kind: 'cli' }],
     catalog: { origin: 'probe', fetchedAt: 1, models: [] }
   }
   function Picker({ showLeadingItem = false }: { showLeadingItem?: boolean }) {
@@ -63,7 +63,7 @@ it('includes blank terminal in keyboard results and filters it for agent and mod
           <DropdownMenuTrigger>Open</DropdownMenuTrigger>
           <DropdownMenuContent>
             <AgentLaunchPickerMenu
-              entries={[entry, qwenCode]}
+              entries={[entry, antigravity]}
               leadingItems={
                 showLeadingItem ? <DropdownMenuItem>Custom command</DropdownMenuItem> : undefined
               }
@@ -97,10 +97,10 @@ it('includes blank terminal in keyboard results and filters it for agent and mod
   expect(screen.getByLabelText('Selection').textContent).toBe('codex:')
 
   await user.click(screen.getByRole('button', { name: 'Open' }))
-  await user.type(screen.getByRole('textbox'), 'qwen')
+  await user.type(screen.getByRole('textbox'), 'anti')
   expect(screen.queryByRole('menuitem', { name: 'Blank Terminal' })).toBeNull()
   await user.keyboard('{Enter}')
-  expect(screen.getByLabelText('Selection').textContent).toBe('qwen-code:')
+  expect(screen.getByLabelText('Selection').textContent).toBe('antigravity:')
 
   await user.click(screen.getByRole('button', { name: 'Open' }))
   await user.type(screen.getByRole('textbox'), 'astra{Enter}')
@@ -118,11 +118,11 @@ it('lists an agent named by the query before other agents’ model setups', () =
     structured: {},
     catalog: { origin: 'probe', fetchedAt: 1, models: [] }
   }
-  const nessy: AgentPickerEntry = {
+  const opencode: AgentPickerEntry = {
     ...codex,
-    agent: 'nessy',
-    label: 'Nessy',
-    rows: [{ agent: 'nessy', kind: 'cli' }],
+    agent: 'opencode',
+    label: 'OpenCode',
+    rows: [{ agent: 'opencode', kind: 'cli' }],
     catalog: {
       origin: 'probe',
       fetchedAt: 1,
@@ -134,7 +134,7 @@ it('lists an agent named by the query before other agents’ model setups', () =
     <DropdownMenu defaultOpen modal={false}>
       <DropdownMenuTrigger>Open</DropdownMenuTrigger>
       <DropdownMenuContent>
-        <AgentLaunchPickerMenu entries={[nessy, codex]} runLaunch={launch} />
+        <AgentLaunchPickerMenu entries={[opencode, codex]} runLaunch={launch} />
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -142,17 +142,17 @@ it('lists an agent named by the query before other agents’ model setups', () =
   fireEvent.change(screen.getByRole('textbox'), { target: { value: 'codex' } })
   const items = screen.getAllByRole('menuitem').map((item) => item.textContent)
   expect(items[0]).toContain('Codex')
-  expect(items[0]).not.toContain('Nessy')
-  expect(items.some((text) => text?.includes('Nessy · GPT-5 Codex'))).toBe(true)
+  expect(items[0]).not.toContain('OpenCode')
+  expect(items.some((text) => text?.includes('OpenCode · GPT-5 Codex'))).toBe(true)
   const highlighted = document.querySelectorAll('[data-search-default]')
   expect(highlighted).toHaveLength(1)
   expect(highlighted[0].textContent).toContain('Codex')
-  expect(highlighted[0].textContent).not.toContain('Nessy')
+  expect(highlighted[0].textContent).not.toContain('OpenCode')
   fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })
   expect(launch).toHaveBeenCalledWith({ agent: 'codex', kind: 'cli' }, undefined)
 })
 
-it('matches Qwen Code and its model setups via the qwen query', async () => {
+it('matches Antigravity and its model setups via the AGY acronym', async () => {
   const codex: AgentPickerEntry = {
     agent: 'codex',
     label: 'Codex',
@@ -163,11 +163,11 @@ it('matches Qwen Code and its model setups via the qwen query', async () => {
     structured: {},
     catalog: { origin: 'probe', fetchedAt: 1, models: [] }
   }
-  const qwenCode: AgentPickerEntry = {
+  const antigravity: AgentPickerEntry = {
     ...codex,
-    agent: 'qwen-code',
-    label: 'Qwen Code',
-    rows: [{ agent: 'qwen-code', kind: 'cli' }],
+    agent: 'antigravity',
+    label: 'Antigravity',
+    rows: [{ agent: 'antigravity', kind: 'cli' }],
     catalog: {
       origin: 'probe',
       fetchedAt: 1,
@@ -180,26 +180,26 @@ it('matches Qwen Code and its model setups via the qwen query', async () => {
     <DropdownMenu defaultOpen modal={false}>
       <DropdownMenuTrigger>Open</DropdownMenuTrigger>
       <DropdownMenuContent>
-        <AgentLaunchPickerMenu entries={[codex, qwenCode]} runLaunch={launch} />
+        <AgentLaunchPickerMenu entries={[codex, antigravity]} runLaunch={launch} />
       </DropdownMenuContent>
     </DropdownMenu>
   )
-  await user.type(screen.getByRole('textbox'), 'qwen')
+  await user.type(screen.getByRole('textbox'), 'AGY')
   expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
-    expect.stringContaining('Qwen Code')
+    expect.stringContaining('Antigravity')
   ])
   await user.keyboard('{Enter}')
-  expect(launch).toHaveBeenCalledWith({ agent: 'qwen-code', kind: 'cli' }, undefined)
+  expect(launch).toHaveBeenCalledWith({ agent: 'antigravity', kind: 'cli' }, undefined)
 
   launch.mockClear()
   await user.click(screen.getByRole('button', { name: 'Open' }))
-  await user.type(screen.getByRole('textbox'), 'qwen Gemini{Enter}')
+  await user.type(screen.getByRole('textbox'), 'AGY Gemini{Enter}')
   expect(launch).toHaveBeenCalledWith(
-    { agent: 'qwen-code', kind: 'cli', executionHostId: undefined },
+    { agent: 'antigravity', kind: 'cli', executionHostId: undefined },
     expect.objectContaining({
-      agent: 'qwen-code',
+      agent: 'antigravity',
       choices: { model: 'gemini-2.5-pro' }
     }),
-    qwenCode
+    antigravity
   )
 })

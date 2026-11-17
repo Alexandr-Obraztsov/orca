@@ -1,3 +1,4 @@
+import { prioritizeAntigravityTranscriptCandidates } from '../scanners/antigravity/antigravity-transcript-candidates'
 import { readCodexRolloutSessionMetaId } from '../../codex/history/rollouts/codex-rollout-session-meta'
 import {
   codexRolloutHardlinkIdentity,
@@ -6,6 +7,7 @@ import {
   dedupeCodexRolloutCopyAliases,
   dedupeCodexRolloutFileAliases
 } from '../scanners/codex/codex-session-root-dedup'
+import { antigravityHistoryPathForBrainDir } from '../scanners/antigravity/session-scanner-antigravity-paths'
 import { codexHomeForSessionsDir } from '../scanners/codex/session-scanner-codex-paths'
 import { DEFAULT_CODEX_HOME_DIR } from './session-scanner-agent-sources'
 import type {
@@ -28,10 +30,15 @@ export function discoveryFileCandidates(
           options.defaultCodexHomeDir ?? DEFAULT_CODEX_HOME_DIR
         )
       : null
+  const antigravityHistoryPath =
+    discovery.agent === 'antigravity'
+      ? antigravityHistoryPathForBrainDir(discovery.rootDir)
+      : undefined
   return files.map((file) => ({
     agent: discovery.agent,
     file,
-    codexHome
+    codexHome,
+    antigravityHistoryPath
   }))
 }
 
@@ -50,14 +57,28 @@ export function dropCodexHardlinkAliases(
   return dedupeCodexRolloutFileAliases(candidates, CODEX_ALIAS_ACCESSORS)
 }
 
+// OMP inherits PI_CODING_AGENT_DIR; the Pi parse labels the OMP transcripts it reads, so read each once.
+function dropOmpCandidatesListedByPi(
+  candidates: readonly SessionFileCandidate[]
+): SessionFileCandidate[] {
+  const piPaths = new Set(
+    candidates.flatMap((candidate) => (candidate.agent === 'pi' ? [candidate.file.path] : []))
+  )
+  return candidates.filter(
+    (candidate) => candidate.agent !== 'omp' || !piPaths.has(candidate.file.path)
+  )
+}
+
 export async function sessionCandidatesFromDiscoveries(
   discoveries: SessionFileDiscovery[],
   options: AiVaultScanOptions
 ): Promise<SessionFileChoice[]> {
   const physical = dropCodexHardlinkAliases(
-    discoveries
-      .flatMap((discovery) => discoveryFileCandidates(discovery, discovery.files, options))
-      .sort((left, right) => right.file.mtimeMs - left.file.mtimeMs)
+    dropOmpCandidatesListedByPi(
+      discoveries.flatMap((discovery) =>
+        discoveryFileCandidates(discovery, discovery.files, options)
+      )
+    ).sort((left, right) => right.file.mtimeMs - left.file.mtimeMs)
   )
   const canonical = new Map<string, SessionFileCandidate[]>()
   const legacy: SessionFileCandidate[] = []
@@ -91,5 +112,8 @@ export async function sessionCandidatesFromDiscoveries(
     candidates.push(group.length === 1 ? group[0] : { ...group[0], alternatives: group })
   }
   candidates.sort((a, b) => b.file.mtimeMs - a.file.mtimeMs)
-  return candidates
+  return prioritizeAntigravityTranscriptCandidates(
+    candidates,
+    (candidate) => candidate.agent === 'antigravity'
+  )
 }

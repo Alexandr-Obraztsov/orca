@@ -42,7 +42,7 @@ export type AcpCommandOptionsFixtureModule = {
 
 export type MobileCommandMenuHostFixtureModule = {
   createMobileCommandMenuHostFixture: (
-    provider: 'claude' | 'nessy',
+    provider: 'claude' | 'omp',
     holdPreparation?: boolean,
     population?: number
   ) => Promise<{

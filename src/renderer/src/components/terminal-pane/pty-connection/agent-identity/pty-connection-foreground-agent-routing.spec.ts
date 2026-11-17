@@ -65,7 +65,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       await restoreTerminalTestGlobals()
     })
 
-    it('routes a manually typed Qwen Code only after foreground enrichment confirms it', async () => {
+    it('routes a manually typed Droid only after foreground enrichment confirms it', async () => {
       vi.useFakeTimers()
       const { connectPanePty } = await import('../connect-pane-pty')
       const agentTitleMocks3 = await vi.importMock<PtyConnectionAgentTitleMocks>(
@@ -75,9 +75,9 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       const pane = createPane(1)
       const ptyId = 'pty-manually-typed-droid'
       const tabId = 'tab-manually-typed-droid'
-      const foregroundResults = ['powershell.exe', 'qwen-code']
+      const foregroundResults = ['powershell.exe', 'droid']
       vi.mocked(window.api.pty.confirmForegroundProcess).mockImplementation(async (id: string) =>
-        id === ptyId ? (foregroundResults.shift() ?? 'qwen-code') : null
+        id === ptyId ? (foregroundResults.shift() ?? 'droid') : null
       )
       const transport = createMockTransport(ptyId)
       transport.connect.mockImplementation(
@@ -102,7 +102,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       await vi.advanceTimersByTimeAsync(20)
       await flushAsyncTicks()
 
-      sendTerminalInputThroughPane(pane, 'qwen-code\r')
+      sendTerminalInputThroughPane(pane, 'droid\r')
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('alt-enter')
 
       dataCallbackRef.current?.('\x1b]133;C\x07')
@@ -111,20 +111,20 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('alt-enter')
       await vi.advanceTimersByTimeAsync(1200)
       expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]).toEqual({
-        agent: 'qwen-code',
+        agent: 'droid',
         agentEvidence: 'process-read',
         routingTrusted: true,
         shellForeground: false
       })
     })
 
-    it('confirms a manually typed Qwen Code without OSC command boundaries', async () => {
+    it('confirms a manually typed Droid without OSC command boundaries', async () => {
       vi.useFakeTimers()
       const { connectPanePty } = await import('../connect-pane-pty')
       const agentTitleMocks4 = await vi.importMock<PtyConnectionAgentTitleMocks>(
         '@/lib/agent-status/aggregation/worktree-agent-status'
       )
-      vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('qwen-code')
+      vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('droid')
       const pane = createPane(1)
       const ptyId = 'pty-manual-droid-no-osc'
       const tabId = 'tab-manual-droid-no-osc'
@@ -144,14 +144,14 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       await vi.advanceTimersByTimeAsync(20)
       await flushAsyncTicks()
 
-      sendTerminalInputThroughPane(pane, 'qwen-code\r')
+      sendTerminalInputThroughPane(pane, 'droid\r')
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('alt-enter')
 
       await vi.advanceTimersByTimeAsync(350)
 
       expect(window.api.pty.confirmForegroundProcess).toHaveBeenCalledWith(ptyId)
       expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]).toEqual({
-        agent: 'qwen-code',
+        agent: 'droid',
         agentEvidence: 'process-read',
         routingTrusted: true,
         shellForeground: false
@@ -159,16 +159,16 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('csi-u')
     })
 
-    it('trusts a launched Qwen Code whose no-OSC boot only becomes foreground after retries', async () => {
-      // Retry across Qwen Code boot while early foreground reads still see its shell.
+    it('trusts a launched Droid whose no-OSC boot only becomes foreground after retries', async () => {
+      // Retry across Droid boot while early foreground reads still see its shell.
       vi.useFakeTimers()
       const { connectPanePty } = await import('../connect-pane-pty')
       const agentTitleMocks6 = await vi.importMock<PtyConnectionAgentTitleMocks>(
         '@/lib/agent-status/aggregation/worktree-agent-status'
       )
-      const foregroundResults = ['bash.exe', 'bash.exe', 'qwen-code']
+      const foregroundResults = ['bash.exe', 'bash.exe', 'droid']
       vi.mocked(window.api.pty.confirmForegroundProcess).mockImplementation(
-        async () => foregroundResults.shift() ?? 'qwen-code'
+        async () => foregroundResults.shift() ?? 'droid'
       )
       const pane = createPane(1)
       const ptyId = 'pty-launched-droid-slow-boot'
@@ -181,7 +181,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
           pane,
           createManager(1),
           bindPaneAgentTitleMocks(
-            createDeps({ tabId, startup: { command: 'qwen-code', launchAgent: 'qwen-code' } }),
+            createDeps({ tabId, startup: { command: 'droid', launchAgent: 'droid' } }),
             agentTitleMocks6
           )
         )
@@ -199,7 +199,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       await flushAsyncTicks()
 
       expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]).toEqual({
-        agent: 'qwen-code',
+        agent: 'droid',
         agentEvidence: 'process-read',
         routingTrusted: true,
         shellForeground: false
@@ -207,7 +207,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('csi-u')
     })
 
-    it('stays recoverable when a launched Qwen Code outlasts the fresh-spawn confirmation window', async () => {
+    it('stays recoverable when a launched Droid outlasts the fresh-spawn confirmation window', async () => {
       // A slow-boot miss must remain recoverable; latching shell would erase launch identity and poison later routing.
       vi.useFakeTimers()
       const { connectPanePty } = await import('../connect-pane-pty')
@@ -229,7 +229,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
           pane,
           createManager(1),
           bindPaneAgentTitleMocks(
-            createDeps({ tabId, startup: { command: 'qwen-code', launchAgent: 'qwen-code' } }),
+            createDeps({ tabId, startup: { command: 'droid', launchAgent: 'droid' } }),
             agentTitleMocks7
           )
         )
@@ -241,7 +241,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
         | ((id: string) => void)
         | undefined
       onPtySpawn?.(ptyId)
-      // Whole ladder elapses while the shell is still foreground (Qwen Code not up yet).
+      // Whole ladder elapses while the shell is still foreground (Droid not up yet).
       await vi.advanceTimersByTimeAsync(350 + 1200 + 6000)
       await flushAsyncTicks()
 
@@ -252,14 +252,14 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       })
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('alt-enter')
 
-      // Qwen Code finally boots and a focus event re-samples: trust is recoverable.
-      foreground = 'qwen-code'
+      // Droid finally boots and a focus event re-samples: trust is recoverable.
+      foreground = 'droid'
       binding.sampleForegroundAgentOnFocus()
       await vi.advanceTimersByTimeAsync(350 + 1200 + 6000)
       await flushAsyncTicks()
 
       expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]).toEqual({
-        agent: 'qwen-code',
+        agent: 'droid',
         agentEvidence: 'process-read',
         routingTrusted: true,
         shellForeground: false
@@ -309,7 +309,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       binding.dispose()
     })
 
-    it('revokes trusted Qwen Code after accepted no-OSC exit input until shell confirmation', async () => {
+    it('revokes trusted Droid after accepted no-OSC exit input until shell confirmation', async () => {
       vi.useFakeTimers()
       const { connectPanePty } = await import('../connect-pane-pty')
       const agentTitleMocks9 = await vi.importMock<PtyConnectionAgentTitleMocks>(
@@ -332,7 +332,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       await vi.advanceTimersByTimeAsync(20)
       await flushAsyncTicks()
       mockStoreState.paneForegroundAgentByPaneKey[paneKey] = {
-        agent: 'qwen-code',
+        agent: 'droid',
         routingTrusted: true,
         shellForeground: false
       }
@@ -341,12 +341,12 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       await flushAsyncTicks()
 
       expect(mockStoreState.paneForegroundAgentByPaneKey[paneKey]).toEqual({
-        agent: 'qwen-code',
+        agent: 'droid',
         routingRevoked: true,
         routingConfirmationPending: true,
         shellForeground: false
       })
-      // Retain safe capability during provider reads so a second Qwen Code Shift+Enter cannot become submit.
+      // Retain safe capability during provider reads so a second Pi Shift+Enter cannot become submit.
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('csi-u')
 
       await vi.advanceTimersByTimeAsync(350 + 1200 + 6000)
@@ -358,14 +358,14 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('alt-enter')
     })
 
-    it('trusts Qwen Code in a no-OSC shell and retires routing after accepted exit input', async () => {
+    it('trusts Pi in a no-OSC shell and retires routing after accepted exit input', async () => {
       vi.useFakeTimers()
       const { connectPanePty } = await import('../connect-pane-pty')
       const agentTitleMocks10 = await vi.importMock<PtyConnectionAgentTitleMocks>(
         '@/lib/agent-status/aggregation/worktree-agent-status'
       )
-      let foreground = 'qwen-code'
-      vi.mocked(window.api.pty.getForegroundProcess).mockResolvedValue('qwen-code')
+      let foreground = 'pi'
+      vi.mocked(window.api.pty.getForegroundProcess).mockResolvedValue('pi')
       vi.mocked(window.api.pty.confirmForegroundProcess).mockImplementation(async () => foreground)
       const pane = createPane(1)
       const ptyId = 'pty-pi-no-osc-lifecycle'
@@ -378,7 +378,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
           pane,
           createManager(1),
           bindPaneAgentTitleMocks(
-            createDeps({ tabId, startup: { command: 'qwen-code', launchAgent: 'qwen-code' } }),
+            createDeps({ tabId, startup: { command: 'pi', launchAgent: 'pi' } }),
             agentTitleMocks10
           )
         )
@@ -407,7 +407,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       foreground = 'cmd.exe'
       sendTerminalInputThroughPane(pane, '\x03')
       await flushAsyncTicks()
-      // A provider read is pending; do not turn the next Qwen Code Shift+Enter into submit.
+      // A provider read is pending; do not turn the next Pi Shift+Enter into submit.
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('csi-u')
       await vi.advanceTimersByTimeAsync(
         VISIBLE_PTY_SETTLE_MS + WRAPPER_RESOLVE_RETRY_MS + SECOND_WRAPPER_RETRY_MS
@@ -420,7 +420,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       })
     })
 
-    it('never promotes typed Qwen Code text when foreground enrichment is unavailable', async () => {
+    it('never promotes typed Droid text when foreground enrichment is unavailable', async () => {
       vi.useFakeTimers()
       const { connectPanePty } = await import('../connect-pane-pty')
       const agentTitleMocks11 = await vi.importMock<PtyConnectionAgentTitleMocks>(
@@ -457,7 +457,7 @@ export function registerPtyConnectionForegroundAgentRoutingTests(): void {
       await vi.advanceTimersByTimeAsync(20)
       await flushAsyncTicks()
 
-      sendTerminalInputThroughPane(pane, 'qwen-code\r')
+      sendTerminalInputThroughPane(pane, 'droid\r')
       dataCallbackRef.current?.('\x1b]133;C\x07')
       await vi.advanceTimersByTimeAsync(350)
       expect(resolveMockPaneWindowsShiftEnterEncoding(mockStoreState, paneKey)).toBe('alt-enter')

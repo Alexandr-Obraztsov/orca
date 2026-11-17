@@ -14,6 +14,7 @@ import {
 import { normalizeSourceControlGroupOrder } from '../../../../shared/source-control/listing/source-control-group-order'
 import { normalizeProjectGroups } from '../../../../shared/project-groups'
 import { normalizeDisabledTuiAgents } from '../../../../shared/agent-launch/catalog/tui-agent-selection'
+import { hasUnsupportedTuiAgentArgs } from '../../../../shared/agent-launch/choices/tui-agent-launch-defaults'
 import { normalizeTerminalCursorStyleDefault } from '../../../../shared/terminal/appearance/terminal-cursor-style-settings'
 import { normalizeTerminalLineHeight } from '../../../../shared/terminal/appearance/terminal-line-height-settings'
 import { migratePortugueseUiLanguageOnLoad } from '../../../../shared/portuguese-ui-language-migration'
@@ -174,7 +175,11 @@ export function prepareLoadedProfileSettings(
     !hasTypedAgentPermission(parsed.settings) ||
     parsed.settings?.agentLaunchChoices === undefined ||
     JSON.stringify(parsed.settings.agentLaunchChoices) !==
-      JSON.stringify(migratedAgentPermission.agentLaunchChoices)
+      JSON.stringify(migratedAgentPermission.agentLaunchChoices) ||
+    parsed.settings?.agentDefaultArgs?.devin !==
+      migratedAgentYoloDefaults.agentDefaultArgs?.devin ||
+    hasUnsupportedTuiAgentArgs('opencode', parsed.settings?.agentDefaultArgs?.opencode) ||
+    hasUnsupportedTuiAgentArgs('kilo', parsed.settings?.agentDefaultArgs?.kilo)
   ) {
     markNeedsSave()
   }

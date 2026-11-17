@@ -26,7 +26,7 @@ import { AcpStructuredSessionAdapter } from '../acp-structured-session-adapter'
 import type { AcpStructuredSessionAdapterDeps } from '../acp-structured-session-adapter-deps'
 import { AgentSessionStartFailure } from '../../../native-chat/agent-session-wire/startup/structured-agent-session-start-failure'
 
-export const NESSY = acpLaunchSpecFor('nessy')!
+export const GROK = acpLaunchSpecFor('grok')!
 const RIG_ENV = { PATH: '/usr/bin', ORCA_PANE_KEY: 'tab-1:pane-1', ORCA_AGENT_HOOK_PORT: '1234' }
 export const PROVIDER_SESSION = 'acp-session-1'
 
@@ -98,7 +98,7 @@ export async function openAcpAdapterRig(
   let openVerdict: AgentSessionStartFailure | undefined
   let opened: StructuredAgentSessionProviderOpenResult | null = null
   const startListeners = new Set<() => void>()
-  const spec = options.spec ?? NESSY
+  const spec = options.spec ?? GROK
   const dataDirectory =
     options.deps?.dataDirectory ??
     (spec.privateTempDirectory

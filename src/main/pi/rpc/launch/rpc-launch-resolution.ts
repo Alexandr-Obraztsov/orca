@@ -1,7 +1,6 @@
 import { open, realpath } from 'node:fs/promises'
 import { isAbsolute, normalize } from 'node:path'
 import { z } from 'zod'
-import type { TuiAgent } from '../../../../shared/agent-launch/catalog/tui-agent'
 import { agentSessionRefusalError } from '../../../../shared/agent-session/failures/agent-session-wire-refusals'
 import {
   agentSessionProviderHandleChainHead,
@@ -68,8 +67,7 @@ export function resolvePiRpcCommand(
 ): StructuredAgentCommand {
   const homePath = env.HOME ?? env.USERPROFILE
   return resolveStructuredAgentCommand(
-    // pi is retained as a runtime but is no longer a TuiAgent.
-    'pi' as TuiAgent,
+    'pi',
     commandSettings,
     { pathEnv: env.PATH ?? env.Path ?? null, ...(homePath ? { homePath } : {}) },
     resolve ? { resolve } : {}
@@ -223,7 +221,7 @@ export function piRpcLaunchPart(
       deps.probeVersion
     )
     if (launchVersion.status === 'tooOld') {
-      throw AgentCliInstallationError.tooOld('pi' as TuiAgent, launchVersion)
+      throw AgentCliInstallationError.tooOld('pi', launchVersion)
     }
     const backgroundWork = await (
       deps.ensureBackgroundWorkBridge ??

@@ -34,7 +34,7 @@ vi.mock(
     ...(await actual<object>()),
     getStructuredAgentSessionHost: () => ({
       loadedSessionIds: () => [...chats.loaded],
-      sessionAgent: () => 'codex',
+      sessionAgent: () => 'opencode',
       close: async (id: string) => {
         chats.closed.push(id)
         chats.loaded = chats.loaded.filter((loaded) => loaded !== id)
@@ -48,7 +48,7 @@ vi.mock('../../../../acp/launch/acp-launch-registry', async (importOriginal) => 
   const launchGate = new AcpLaunchGate('Grok')
   const pin = {
     version: '1.0',
-    url: 'https://example.test/nessy-1.0.tar.gz',
+    url: 'https://example.test/grok-1.0.tar.gz',
     archiveSha256: 'a'.repeat(64),
     archiveBytes: 10,
     members: [{ path: 'server', sha256: 'b'.repeat(64), bytes: 6 }]
@@ -56,10 +56,8 @@ vi.mock('../../../../acp/launch/acp-launch-registry', async (importOriginal) => 
   const managedRuntime = { label: 'Grok', root: (data: string) => `${data}/rt`, pin: () => pin }
   return {
     ...actual,
-    // Only nessy ships a launch spec now; fall back to it so the remove case can
-    // run under its own agent key (the module-level installation map is per-agent).
     acpLaunchSpecFor: (agent: string) => {
-      const spec = actual.acpLaunchSpecFor(agent) ?? actual.acpLaunchSpecFor('nessy')
+      const spec = actual.acpLaunchSpecFor(agent)
       return spec && { ...spec, command: 'orca-rpc-managed-test', managedRuntime, launchGate }
     }
   }
@@ -81,31 +79,31 @@ it('pushes a snapshot, then the install another client starts, until the transpo
   const transport = new AbortController()
   const frames: unknown[] = []
   const watcher = { ...ctx, signal: transport.signal }
-  await subscribeMethod.handler({ agent: 'nessy' }, watcher, (frame) => frames.push(frame))
+  await subscribeMethod.handler({ agent: 'grok' }, watcher, (frame) => frames.push(frame))
   expect(frames).toEqual([
     expect.objectContaining({ available: true, installedVersion: null, operation: null })
   ])
-  const started = await installMethod.handler({ agent: 'nessy' }, ctx)
+  const started = await installMethod.handler({ agent: 'grok' }, ctx)
   const id = String(started.operation?.id)
   await vi.waitFor(() =>
     expect(frames.at(-1)).toMatchObject({ operation: { id, phase: 'downloading' } })
   )
   // Cancel answers with the outcome once the run has unwound.
-  const outcome = await cancelMethod.handler({ agent: 'nessy', operationId: id }, ctx)
+  const outcome = await cancelMethod.handler({ agent: 'grok', operationId: id }, ctx)
   expect(outcome).toMatchObject({ id, phase: 'cancelled' })
   await vi.waitFor(() => expect(frames.at(-1)).toMatchObject({ operation: { phase: 'cancelled' } }))
 
   transport.abort()
   const seen = frames.length
-  const again = await installMethod.handler({ agent: 'nessy' }, ctx)
-  await cancelMethod.handler({ agent: 'nessy', operationId: String(again.operation?.id) }, ctx)
+  const again = await installMethod.handler({ agent: 'grok' }, ctx)
+  await cancelMethod.handler({ agent: 'grok', operationId: String(again.operation?.id) }, ctx)
   expect(frames).toHaveLength(seen)
   await rm(host.dataDirectory, { recursive: true, force: true })
 })
 
 it('removes the files only once every chat and unclosed child that may run them is stopped', async () => {
   host.dataDirectory = await mkdtemp(join(tmpdir(), 'orca-runtime-remove-rpc-'))
-  const agent = 'codex'
+  const agent = 'opencode'
   const spec = acpLaunchSpecFor(agent)
   const pin = spec?.managedRuntime?.pin()
   if (!spec?.launchGate || !pin) {

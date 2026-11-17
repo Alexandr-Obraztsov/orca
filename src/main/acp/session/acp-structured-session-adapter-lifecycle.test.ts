@@ -19,6 +19,31 @@ async function journalTurns(rig: AcpAdapterRig) {
 }
 
 describe('ACP connection loss', () => {
+  it('settles a send the agent never took as unknown when its stdin breaks, stops the child and tells the host', async () => {
+    const rig = await openAcpAdapterRig()
+    await rig.acquire()
+    await sendHello(rig, 'lost')
+    await rig.frame('session/prompt')
+    await sendHello(rig, 'held')
+    rig.child().agent.stdin.destroy()
+    await rig.settle()
+    await waitFor(() =>
+      expect(rig.ended).toMatchObject([
+        { type: 'ended', cause: 'unexpected-exit', acquisitionGeneration: 'gen-acp' }
+      ])
+    )
+    expect(rig.settled).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ clientMessageId: 'lost', state: 'unknown' }),
+        expect.objectContaining({ clientMessageId: 'held', state: 'rejected' })
+      ])
+    )
+    expect(rig.child().closes).toBe(1)
+    // An unacknowledged prompt never opened a turn to mark complete.
+    expect(await journalTurns(rig)).toEqual([])
+    await expect(sendHello(rig, 'after')).rejects.toThrow(/no live grok child/)
+  })
+
   it('leaves a running turn unverifiable, never completed, when its stdin breaks mid-turn', async () => {
     const rig = await openAcpAdapterRig()
     await rig.acquire()

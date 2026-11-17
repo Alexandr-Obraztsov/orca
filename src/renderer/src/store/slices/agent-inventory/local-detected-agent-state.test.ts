@@ -66,17 +66,17 @@ describe('local detected agent context lifecycle', () => {
     const store = createTestStore([])
     const automaticReply = Promise.withResolvers<{ agents: string[] }>()
     refreshAgents.mockImplementation((args) =>
-      args?.userInitiated ? Promise.resolve({ agents: ['codex'] }) : automaticReply.promise
+      args?.userInitiated ? Promise.resolve({ agents: ['grok'] }) : automaticReply.promise
     )
     const automatic = store.getState().refreshDetectedAgents()
     const explicit = store.getState().refreshDetectedAgents(undefined, { userInitiated: true })
     expect(store.getState().refreshDetectedAgents(undefined, { userInitiated: true })).toBe(
       explicit
     )
-    expect(await explicit).toEqual(['codex'])
+    expect(await explicit).toEqual(['grok'])
     automaticReply.resolve({ agents: ['claude'] })
     await automatic
-    expect(store.getState().detectedAgentIds).toEqual(['codex'])
+    expect(store.getState().detectedAgentIds).toEqual(['grok'])
     expect(refreshAgents).toHaveBeenCalledWith(expect.objectContaining({ userInitiated: true }))
   })
 
@@ -95,25 +95,25 @@ describe('local detected agent context lifecycle', () => {
     resolveDetection.get(true)?.(['claude'])
     await automatic
     expect(store.getState().localDetectedAgentIdsByContext['host\u0000all-agents']).toBeNull()
-    resolveDetection.get(false)?.(['claude', 'qwen-code'])
+    resolveDetection.get(false)?.(['claude', 'kiro'])
     await settings
     expect(store.getState().detectedAgentIds).toEqual(['claude'])
     expect(store.getState().localDetectedAgentIdsByContext['host\u0000all-agents']).toEqual([
       'claude',
-      'qwen-code'
+      'kiro'
     ])
-    await expect(store.getState().ensureAllDetectedAgents()).resolves.toEqual(['claude', 'qwen-code'])
+    await expect(store.getState().ensureAllDetectedAgents()).resolves.toEqual(['claude', 'kiro'])
 
     store.getState().clearLocalDetectedAgents()
     const nextAutomatic = store.getState().ensureDetectedAgents()
     const nextSettings = store.getState().ensureAllDetectedAgents()
-    resolveDetection.get(false)?.(['codex', 'qwen-code'])
+    resolveDetection.get(false)?.(['codex', 'kiro'])
     await nextSettings
     resolveDetection.get(true)?.(['codex'])
     await nextAutomatic
     expect(store.getState().localDetectedAgentIdsByContext['host\u0000all-agents']).toEqual([
       'codex',
-      'qwen-code'
+      'kiro'
     ])
     expect(store.getState().detectedAgentIds).toEqual(['codex'])
   })
@@ -160,16 +160,16 @@ describe('local detected agent context lifecycle', () => {
     )
     const stale = store.getState().ensureDetectedAgents()
     const settings = store.getState().settings!
-    store.setState({ settings: { ...settings, disabledTuiAgents: ['qwen-code'] } })
+    store.setState({ settings: { ...settings, disabledTuiAgents: ['kiro'] } })
     detectAgents.mockResolvedValueOnce(['claude'])
     await store.getState().ensureDetectedAgents()
-    finishOld(['qwen-code'])
+    finishOld(['kiro'])
     await stale
     expect(store.getState().detectedAgentIds).toEqual(['claude'])
     store.setState({ settings: { ...settings, disabledTuiAgents: [] } })
     expect(store.getState().detectedAgentIds).toBeNull()
-    detectAgents.mockResolvedValueOnce(['claude', 'qwen-code'])
-    await expect(store.getState().ensureDetectedAgents()).resolves.toEqual(['claude', 'qwen-code'])
+    detectAgents.mockResolvedValueOnce(['claude', 'kiro'])
+    await expect(store.getState().ensureDetectedAgents()).resolves.toEqual(['claude', 'kiro'])
   })
 
   it('successful full refresh settles both modes with detects finishing last', async () => {
@@ -193,16 +193,16 @@ describe('local detected agent context lifecycle', () => {
     })
     const finishDetections = async () => {
       enabledDetection.resolve(['claude'])
-      fullDetection.resolve(['claude', 'qwen-code'])
+      fullDetection.resolve(['claude', 'kiro'])
       await Promise.all([enabled, full])
     }
-    fullRefresh.resolve({ agents: ['codex', 'qwen-code'] })
+    fullRefresh.resolve({ agents: ['codex', 'kiro'] })
     await refreshed
     await finishDetections()
 
     expect(store.getState().localDetectedAgentIdsByContext).toEqual({
-      host: ['codex', 'qwen-code'],
-      'host\u0000all-agents': ['codex', 'qwen-code']
+      host: ['codex', 'kiro'],
+      'host\u0000all-agents': ['codex', 'kiro']
     })
     expect(store.getState().isDetectingLocalAgentsByContext).toEqual({})
     expect(store.getState().isRefreshingLocalAgentsByContext).toEqual({})
@@ -231,7 +231,7 @@ describe('local detected agent context lifecycle', () => {
     })
     const finishDetections = async () => {
       enabledDetection.resolve(['claude'])
-      fullDetection.resolve(['claude', 'qwen-code'])
+      fullDetection.resolve(['claude', 'kiro'])
       await Promise.all([enabled, full])
     }
     fullRefresh.reject(new Error('shell unavailable'))
@@ -250,7 +250,7 @@ describe('local detected agent context lifecycle', () => {
 
   it('publishes a complete refresh to automatic readers without letting their late probe overwrite it', async () => {
     const store = createTestStore([])
-    store.setState({ settings: { ...store.getState().settings!, disabledTuiAgents: ['qwen-code'] } })
+    store.setState({ settings: { ...store.getState().settings!, disabledTuiAgents: ['kiro'] } })
     let finishOld: (ids: string[]) => void = () => {}
     detectAgents.mockReturnValueOnce(
       new Promise<string[]>((resolve) => {
@@ -269,13 +269,13 @@ describe('local detected agent context lifecycle', () => {
     expect(store.getState().refreshDetectedAgents()).toBe(automatic)
     finishOld(['claude'])
     await old
-    finishRefresh({ agents: ['codex', 'qwen-code'] })
-    await expect(settings).resolves.toEqual(['codex', 'qwen-code'])
+    finishRefresh({ agents: ['codex', 'kiro'] })
+    await expect(settings).resolves.toEqual(['codex', 'kiro'])
     await expect(automatic).resolves.toEqual(['codex'])
     expect(store.getState().detectedAgentIds).toEqual(['codex'])
     expect(store.getState().localDetectedAgentIdsByContext['host\u0000all-agents']).toEqual([
       'codex',
-      'qwen-code'
+      'kiro'
     ])
     expect(store.getState().isRefreshingLocalAgentsByContext).toEqual({})
   })
@@ -290,8 +290,8 @@ describe('local detected agent context lifecycle', () => {
     expect(store.getState().localDetectedAgentIdsByContext['host\u0000all-agents']).toEqual([])
     expect(store.getState().readLocalAgentInventory().state).toBe('failed')
     expect(store.getState().isRefreshingLocalAgentsByContext).toEqual({})
-    detectAgents.mockResolvedValueOnce(['claude', 'qwen-code'])
-    await expect(store.getState().ensureAllDetectedAgents()).resolves.toEqual(['claude', 'qwen-code'])
+    detectAgents.mockResolvedValueOnce(['claude', 'kiro'])
+    await expect(store.getState().ensureAllDetectedAgents()).resolves.toEqual(['claude', 'kiro'])
     expect(store.getState().localDetectedAgentIdsByContext.host).toEqual(['claude'])
   })
 
@@ -305,10 +305,10 @@ describe('local detected agent context lifecycle', () => {
     )
     const oldSettings = store.getState().refreshAllDetectedAgents()
     const oldAutomatic = store.getState().ensureDetectedAgents()
-    store.setState({ settings: { ...store.getState().settings!, disabledTuiAgents: ['qwen-code'] } })
+    store.setState({ settings: { ...store.getState().settings!, disabledTuiAgents: ['kiro'] } })
     detectAgents.mockResolvedValueOnce(['codex'])
     await store.getState().ensureDetectedAgents()
-    finishOld({ agents: ['claude', 'qwen-code'] })
+    finishOld({ agents: ['claude', 'kiro'] })
     await Promise.all([oldSettings, oldAutomatic])
     expect(store.getState().detectedAgentIds).toEqual(['codex'])
     expect(store.getState().localDetectedAgentIdsByContext['host\u0000all-agents']).toBeUndefined()
@@ -318,23 +318,23 @@ describe('local detected agent context lifecycle', () => {
   it('keeps native provider inventory across WSL selection and refresh', async () => {
     const store = createTestStore([makeRepo('repo-1')])
     const projects = store.getState().projects
-    detectAgents.mockResolvedValueOnce(['qwen-code']).mockResolvedValueOnce([])
+    detectAgents.mockResolvedValueOnce(['grok']).mockResolvedValueOnce([])
     await store.getState().ensureNativeDetectedAgents()
     expect(detectAgents).toHaveBeenNthCalledWith(1, { enabledOnly: true })
     await store.getState().ensureDetectedAgents()
     await store.getState().refreshDetectedAgents()
-    expect(readNativeDetectedAgents(store.getState())).toEqual(['qwen-code'])
+    expect(readNativeDetectedAgents(store.getState())).toEqual(['grok'])
     expect(store.getState().detectedAgentIds).toEqual(['codex'])
     const inventory = store.getState().readLocalAgentInventory(FLOATING_TERMINAL_WORKTREE_ID)
-    expect(inventory).toEqual({ ids: ['qwen-code'], state: 'successful' })
+    expect(inventory).toEqual({ ids: ['grok'], state: 'successful' })
     store.setState({ projects: [] })
     refreshAgents.mockRejectedValueOnce(new Error('native refresh failed'))
-    await expect(store.getState().refreshDetectedAgents()).resolves.toEqual(['qwen-code'])
-    expect(readNativeDetectedAgents(store.getState())).toEqual(['qwen-code'])
-    expect(store.getState().detectedAgentIds).toEqual(['qwen-code'])
+    await expect(store.getState().refreshDetectedAgents()).resolves.toEqual(['grok'])
+    expect(readNativeDetectedAgents(store.getState())).toEqual(['grok'])
+    expect(store.getState().detectedAgentIds).toEqual(['grok'])
     expect(store.getState().isRefreshingAgents).toBe(false)
     expect(store.getState().isRefreshingLocalAgentsByContext).toEqual({})
-    await expect(store.getState().ensureNativeDetectedAgents()).resolves.toEqual(['qwen-code'])
+    await expect(store.getState().ensureNativeDetectedAgents()).resolves.toEqual(['grok'])
 
     let finish: (result: { agents: string[] }) => void = () => {}
     refreshAgents.mockReturnValueOnce(
@@ -348,7 +348,7 @@ describe('local detected agent context lifecycle', () => {
     finish({ agents: ['codex'] })
     await wslRefresh
     expect(store.getState().detectedAgentIds).toEqual(['codex'])
-    expect(readNativeDetectedAgents(store.getState())).toEqual(['qwen-code'])
+    expect(readNativeDetectedAgents(store.getState())).toEqual(['grok'])
     store.setState({ projects: [] })
     await store.getState().refreshDetectedAgents()
     expect(readNativeDetectedAgents(store.getState())).toEqual(['codex'])
@@ -366,16 +366,16 @@ describe('local detected agent context lifecycle', () => {
     const first = store.getState().ensureNativeDetectedAgents()
     const settings = store.getState().settings!
 
-    store.setState({ settings: { ...settings, disabledTuiAgents: ['nessy'] } })
+    store.setState({ settings: { ...settings, disabledTuiAgents: ['pi'] } })
     store.setState({ settings: { ...settings, disabledTuiAgents: [] } })
-    reenabledDetection.resolve(['nessy', 'codex'])
+    reenabledDetection.resolve(['pi', 'codex'])
     await vi.waitFor(() =>
-      expect(readNativeDetectedAgents(store.getState())).toEqual(['nessy', 'codex'])
+      expect(readNativeDetectedAgents(store.getState())).toEqual(['pi', 'codex'])
     )
     disabledDetection.resolve(['codex'])
     firstDetection.resolve(['claude'])
     await first
-    expect(readNativeDetectedAgents(store.getState())).toEqual(['nessy', 'codex'])
+    expect(readNativeDetectedAgents(store.getState())).toEqual(['pi', 'codex'])
     expect(store.getState().detectedAgentIds).toBeNull()
     expect(store.getState().isDetectingLocalAgentsByContext).toEqual({})
   })
@@ -432,8 +432,8 @@ describe('local detected agent context lifecycle', () => {
     await expect(
       store.getState().refreshDetectedAgents(FLOATING_TERMINAL_WORKTREE_ID)
     ).resolves.toEqual([])
-    resolveDetection(['qwen-code'])
-    await expect(supersededDetect).resolves.toEqual(['qwen-code'])
+    resolveDetection(['grok'])
+    await expect(supersededDetect).resolves.toEqual(['grok'])
 
     await expect(
       store.getState().ensureDetectedAgents(FLOATING_TERMINAL_WORKTREE_ID)

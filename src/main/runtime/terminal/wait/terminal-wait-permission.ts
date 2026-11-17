@@ -64,7 +64,11 @@ export abstract class OrcaRuntimeWithResolveAuthoritativeTerminalWaitPermission 
     if (pty.launchToken === null && pty.launchAgent === null && pty.launchIncarnationId === null) {
       return 'pending' as const
     }
-    if (pty.launchIncarnationId !== incarnationId || pty.launchToken !== launchToken) {
+    if (
+      pty.launchIncarnationId !== incarnationId ||
+      pty.launchToken !== launchToken ||
+      (pty.launchAgent !== 'opencode' && pty.launchAgent !== 'opencode2')
+    ) {
       return null
     }
     return this.terminalRunFacts.read(ptyId, incarnationId)

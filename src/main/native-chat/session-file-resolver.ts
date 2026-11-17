@@ -1,4 +1,5 @@
 import { claudeProfileHistoryDirs } from '../claude-accounts/profiles/routing/claude-profile-installed-router'
+import { homedir } from 'node:os'
 import { extname, join } from 'node:path'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
 import {
@@ -10,16 +11,24 @@ import { forEachSessionFile } from '../ai-vault/discovery/session-scanner-discov
 import {
   claudeProjectsHostDirs,
   codexHomeSessionsDir,
+  ompSessionsRootDirs,
   uniqueDirs
 } from '../ai-vault/discovery/session-scanner-roots'
 import { resolveOrcaManagedCodexHomePath } from '../codex/configuration/homes/codex-home-paths'
+import {
+  findGrokChatHistoryBySessionId,
+  resolveGrokSessionsDir
+} from '../../shared/agent-hook-listener/providers/grok/grok-session-paths'
 import {
   hostAdditionalCodexHomePaths,
   needsWslHostResolution,
   toHostReadableTranscriptPath,
   wslAgentSessionsDirs
 } from './transcript-discovery/host-readable-transcript-path'
-import { SESSION_FILE_ID_LAYOUTS } from './transcript-discovery/session-file-id-layouts'
+import {
+  SESSION_FILE_ID_LAYOUTS,
+  type SessionIdLookupAgent
+} from './transcript-discovery/session-file-id-layouts'
 import { findWslSessionPath } from './transcript-discovery/wsl-session-path-scan'
 import { findClaudeSessionFile } from './transcript-discovery/session-file-resolver-claude-probe'
 import { parseSshTranscriptPath } from './transcript-filesystem/ssh-transcript-path'
@@ -47,6 +56,10 @@ function codexAccountSessionsDirs(): string[] {
   }
 }
 
+function grokSessionsDir(): string {
+  return resolveGrokSessionsDir(process.env, homedir())
+}
+
 export type ResolveSessionFileOptions = {
   strictErrors?: boolean
   claudeProjectsDir?: string
@@ -54,6 +67,8 @@ export type ResolveSessionFileOptions = {
   cwd?: string
   /** Defaults to managed Codex then CODEX_HOME/~/.codex, in order. */
   codexSessionsDirs?: string[]
+  grokSessionsDir?: string
+  ompSessionsDir?: string
   /** Hook paths are authoritative: Claude filenames may differ from its reported session ID. */
   transcriptPath?: string
   /** Restrict exact-path resolution to this attested guest. */
@@ -69,7 +84,7 @@ export async function resolveSessionFilePath(
 ): Promise<string | null> {
   signal?.throwIfAborted()
   const transcriptAgent = resolveNativeChatTranscriptAgent(agent)
-  if (!transcriptAgent) {
+  if (!transcriptAgent || transcriptAgent === 'opencode') {
     return null
   }
   let unavailable: WslTranscriptFsError | undefined
@@ -133,6 +148,9 @@ async function resolveSessionFileById(
   wslTier: boolean,
   signal?: AbortSignal
 ): Promise<string | null> {
+  if (transcriptAgent === 'opencode') {
+    return null
+  }
   const trimmedId = sessionId.trim()
   if (!trimmedId) {
     return null
@@ -157,13 +175,29 @@ async function resolveSessionFileById(
       strictErrors: options.strictErrors
     })
   }
+  if (transcriptAgent === 'grok') {
+    const override = options.grokSessionsDir
+    return resolveTiered('grok', trimmedId, [override ?? grokSessionsDir()], {
+      wslTier: wslTier && !override,
+      signal,
+      strictErrors: options.strictErrors
+    })
+  }
+  if (transcriptAgent === 'omp') {
+    const override = options.ompSessionsDir
+    return resolveTiered('omp', trimmedId, ompSessionsRootDirs({ ompSessionsDir: override }), {
+      wslTier: wslTier && override === undefined,
+      signal,
+      strictErrors: options.strictErrors
+    })
+  }
   transcriptAgent satisfies never
   return null
 }
 
 /** Search preferred host roots, account roots, then running WSL distros. */
 async function resolveTiered(
-  agent: 'claude' | 'codex',
+  agent: SessionIdLookupAgent,
   sessionId: string,
   hostDirs: readonly string[],
   options: {
@@ -195,7 +229,7 @@ type HostLookupOptions = { cwd?: string; signal?: AbortSignal; strictErrors?: bo
 
 // Each root finishes (cwd bucket, then every bucket) before the next, so account order still wins.
 async function findFirstInDirs(
-  agent: 'claude' | 'codex',
+  agent: SessionIdLookupAgent,
   sessionId: string,
   dirs: readonly string[],
   options: HostLookupOptions
@@ -226,12 +260,19 @@ async function findFirstInDirs(
 }
 
 async function findHostSessionFile(
-  agent: 'claude' | 'codex',
+  agent: SessionIdLookupAgent,
   root: string,
   sessionId: string,
   options: HostLookupOptions
 ): Promise<string | null> {
   const { signal, strictErrors } = options
+  if (agent === 'grok' && !strictErrors) {
+    // Bound main-thread work with direct-layout async lookup rather than a recursive scan.
+    signal?.throwIfAborted()
+    const history = await findGrokChatHistoryBySessionId(root, sessionId)
+    signal?.throwIfAborted()
+    return history
+  }
   if (agent === 'claude') {
     return findClaudeSessionFile(root, sessionId, options)
   }

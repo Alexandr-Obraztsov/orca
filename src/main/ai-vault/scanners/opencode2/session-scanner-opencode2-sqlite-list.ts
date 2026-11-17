@@ -1,7 +1,4 @@
-import type {
-  AiVaultAgent,
-  AiVaultScanIssue
-} from '../../../../shared/ai-vault/contracts/ai-vault-types'
+import type { AiVaultScanIssue } from '../../../../shared/ai-vault/contracts/ai-vault-types'
 import {
   buildOpenCodeSqliteCandidatePath,
   splitOpenCodeSqliteCandidate
@@ -60,8 +57,7 @@ function rowToCandidate(row: SessionRow, dbPath: string): SessionFileCandidate {
       ? row.time_updated
       : row.time_created
   return {
-    // OpenCode2 is no longer an AiVault agent, but the shared reader worker still enumerates its rows.
-    agent: 'opencode2' as AiVaultAgent,
+    agent: 'opencode2',
     file: {
       path: buildOpenCodeSqliteCandidatePath(dbPath, row.id),
       mtimeMs,
@@ -120,7 +116,7 @@ export async function listOpenCode2SqliteSessions(args: {
       }
     } catch (err) {
       args.issues.push({
-        agent: 'opencode2' as AiVaultAgent,
+        agent: 'opencode2',
         path: dbPath,
         message: errorMessage(err)
       })

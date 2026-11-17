@@ -4,10 +4,7 @@ import {
 } from '../../transcripts/remote-session-content-lines'
 import { consumeCompleteJsonlLines } from '../../parsing/session-scanner-jsonl-reader'
 import { MAX_SESSION_TRANSCRIPT_RECORD_BYTES } from '../../transcripts/session-transcript-record-budget'
-import type {
-  AiVaultAgent,
-  AiVaultSession
-} from '../../../../shared/ai-vault/contracts/ai-vault-types'
+import type { AiVaultSession } from '../../../../shared/ai-vault/contracts/ai-vault-types'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
 import {
   accumulatorFoldResumeState,
@@ -72,7 +69,7 @@ export function createAntigravitySessionResumeState(
   const sessionId = antigravityConversationIdFromTranscriptPath(file.path) ?? ''
   // Transcripts lack cwd/model; enrich cwd conservatively from history rather than unstable binary stores.
   return accumulatorFoldResumeState(
-    createAccumulator({ agent: 'antigravity' as AiVaultAgent, file, sessionId, messages }),
+    createAccumulator({ agent: 'antigravity', file, sessionId, messages }),
     consumeAntigravityRecordLine
   )
 }

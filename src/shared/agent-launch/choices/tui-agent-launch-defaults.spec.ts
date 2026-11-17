@@ -23,7 +23,16 @@ describe('tuiAgentArgsBypassPermissions', () => {
     ['codex', '--dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol', true],
     ['codex', '--model gpt-5.6-sol', false],
     ['codex', '--config "note=--dangerously-bypass-approvals-and-sandbox only as text"', false],
-    ['codex', '-- --dangerously-bypass-approvals-and-sandbox', false]
+    ['codex', '-- --dangerously-bypass-approvals-and-sandbox', false],
+    // Two-token bypass flags match as a token sequence, not one token.
+    ['grok', '--permission-mode bypassPermissions', true],
+    ['grok', '--model grok-4.7 --permission-mode bypassPermissions', true],
+    ['grok', '--permission-mode default', false],
+    ['grok', '--permission-mode', false],
+    ['grok', '--permission-mode "bypassPermissions now"', false],
+    ['grok', '-- --permission-mode bypassPermissions', false],
+    ['devin', '--permission-mode bypass --respect-workspace-trust false', true],
+    ['devin', '--permission-mode bypass', false]
   ] as const)('reads %s args %s as %s', (agent, args, expected) => {
     expect(tuiAgentArgsBypassPermissions(agent, args, 'posix')).toBe(expected)
   })

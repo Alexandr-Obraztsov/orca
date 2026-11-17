@@ -102,14 +102,6 @@ const isWinDaily = process.env.ORCA_WIN_DAILY === '1'
 const isWinAdhoc = process.env.ORCA_WIN_ADHOC === '1'
 const isWinDevChannel = isWinHourly || isWinDaily || isWinAdhoc
 const isMacRelease = process.env.ORCA_MAC_RELEASE === '1' || isMacHourly || isMacDaily || isMacAdhoc
-// Why: on local (non-release) macOS builds electron-builder auto-discovers a signing identity from
-// the keychain and signs the main .app with the personal `Apple Development` cert. macOS treats that
-// cert as revoked at exec time (syspolicyd "Malware rejection" deletes the whole app). Release builds
-// sign via `mac.sign` (Developer ID) and must keep the default. With auto-discovery off and no
-// CSC_LINK/CSC_NAME, electron-builder falls back to ad-hoc signing, matching the ad-hoc helpers.
-if (!isMacRelease && process.platform === 'darwin') {
-  process.env.CSC_IDENTITY_AUTO_DISCOVERY = 'false'
-}
 const isLinuxArm64Release = process.env.ORCA_LINUX_ARM64_RELEASE === '1'
 const localBuildVersion =
   isMacRelease || isWinDevChannel ? undefined : process.env.ORCA_LOCAL_BUILD_VERSION
@@ -947,13 +939,8 @@ function findInstalledMacSigningIdentity(keychainFile) {
     if (releaseMatch?.[1]) {
       return releaseMatch[1]
     }
-    // Why not `Apple Development` on local builds: macOS treats code signed with a personal
-    // Apple Development certificate as revoked at exec time (syspolicyd "Malware rejection"),
-    // which deletes the whole .app. The main bundle is ad-hoc signed by electron-builder on
-    // local builds, so standalone helpers must fall back to ad-hoc ("-") too, unless an
-    // explicit identity (e.g. CSC_NAME) was requested. Only release builds carry a Developer ID.
     if (!isMacRelease) {
-      return null
+      return output.match(/"([^"]*Apple Development:[^"]+)"/)?.[1] ?? null
     }
   } catch {}
   return null

@@ -1,3 +1,5 @@
+import { withFreshOmpLaunch, isFreshOmpLaunchCommand } from './omp-fresh-launch'
+import { withOmpDraftCleanup } from './omp-draft-launch'
 import '../../agent-status/process/shell-process-detection'
 import type { SleepingAgentLaunchConfig } from '../../agent-session/lifecycle/agent-session-resume'
 import {
@@ -66,7 +68,8 @@ export function buildAgentStartupPlan(args: {
   if (!baseCommand.ok) {
     return null
   }
-  const launchCommand = baseCommand.command
+  const launchCommand =
+    agent === 'omp' ? withFreshOmpLaunch(baseCommand.command, shell) : baseCommand.command
   // Hermes query launches splice agentArgs themselves; record them anyway so a resume keeps them.
   const recordedCommand = usesQuery
     ? resolveAgentLaunchCommand({
@@ -108,7 +111,10 @@ export function buildAgentStartupPlan(args: {
     const promptSeparator = config.argvPromptSeparator ? ` ${config.argvPromptSeparator}` : ''
     return {
       agent,
-      launchCommand: `${launchCommand}${promptSeparator} ${quotedPrompt}`,
+      launchCommand:
+        agent === 'omp'
+          ? withFreshOmpLaunch(baseCommand.command, shell, `${promptSeparator} ${quotedPrompt}`)
+          : `${launchCommand}${promptSeparator} ${quotedPrompt}`,
       expectedProcess: config.expectedProcess,
       followupPrompt: null,
       launchConfig,
@@ -239,7 +245,8 @@ export function buildAgentDraftLaunchPlan(args: {
   if (!baseCommand.ok) {
     return null
   }
-  const launchCommand = baseCommand.command
+  const launchCommand =
+    agent === 'omp' ? withFreshOmpLaunch(baseCommand.command, shell) : baseCommand.command
   const launchConfig = buildSleepingAgentLaunchConfig({
     ...args,
     ...baseCommand.resumeLaunch
@@ -265,7 +272,10 @@ export function buildAgentDraftLaunchPlan(args: {
     const clearVar = clearEnvCommand(config.draftPromptEnvVar, shell)
     plan = {
       agent,
-      launchCommand: `${launchCommand}${commandSeparator(shell)}${clearVar}`,
+      launchCommand:
+        agent === 'omp' && isFreshOmpLaunchCommand(launchCommand)
+          ? withOmpDraftCleanup(launchCommand, shell)
+          : `${launchCommand}${commandSeparator(shell)}${clearVar}`,
       expectedProcess: config.expectedProcess,
       launchConfig,
       ...appliedSessionOptionProps(baseCommand.appliedSessionOptions),

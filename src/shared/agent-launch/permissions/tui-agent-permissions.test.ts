@@ -15,7 +15,7 @@ describe('tui agent permissions', () => {
       const automatic = applyAgentPermissionMode({ mode: 'auto', ...previous })
 
       expect(automatic.agentDefaultArgs).toMatchObject(AUTO_TUI_AGENT_ARGS)
-      expect(automatic.agentDefaultArgs['qwen-code']).toBe(previous.agentDefaultArgs['qwen-code'])
+      expect(automatic.agentDefaultArgs.gemini).toBe(previous.agentDefaultArgs.gemini)
       expect(automatic.agentDefaultEnv).toEqual(previous.agentDefaultEnv)
       expect(resolveAgentPermissionModeSummary(automatic)).toBe('auto')
       expect(applyAgentPermissionMode({ mode, ...automatic })).toEqual(previous)
@@ -33,7 +33,8 @@ describe('tui agent permissions', () => {
       ...automatic
     })
     expect(manualOthers.agentDefaultArgs).toMatchObject(AUTO_TUI_AGENT_ARGS)
-    expect(manualOthers.agentDefaultArgs['qwen-code']).toBe('')
+    expect(manualOthers.agentDefaultArgs.gemini).toBe('')
+    expect(manualOthers.agentDefaultEnv.goose).toEqual({})
     expect(resolveAgentPermissionModeSummary(manualOthers)).toBe('auto')
     expect(resolveNonAutoAgentPermissionMode(manualOthers)).toBe('manual')
   })
@@ -50,5 +51,6 @@ describe('tui agent permissions', () => {
 
     expect(result.agentDefaultArgs.claude).toBe('')
     expect(result.agentDefaultArgs.codex).toBe('--model gpt-5')
+    expect(result.agentDefaultEnv.goose).toEqual({})
   })
 })

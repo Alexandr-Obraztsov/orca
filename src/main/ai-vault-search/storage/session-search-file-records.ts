@@ -27,7 +27,8 @@ export class SessionSearchFileRecords {
   /** Name each committed chunk immediately; the final decoded session replaces provisional metadata. */
   updateProvisionalSession(
     rowId: number,
-    identity: TranscriptSessionIdentity
+    identity: TranscriptSessionIdentity,
+    candidate: SessionFileCandidate
   ): void {
     this.db
       .prepare(
@@ -40,7 +41,7 @@ export class SessionSearchFileRecords {
         identity.cwd,
         cwdKey(identity.cwd),
         identity.createdAt,
-        identity.updatedAt ?? null,
+        identity.updatedAt ?? (candidate.agent === 'cursor' ? candidate.file.modifiedAt : null),
         rowId
       )
   }
@@ -63,7 +64,7 @@ export class SessionSearchFileRecords {
       cwdKey(session.cwd),
       session.branch,
       session.createdAt,
-      session.updatedAt ?? null,
+      session.updatedAt ?? (session.agent === 'cursor' ? session.modifiedAt : null),
       session.messageCount,
       session.resumeCommand,
       contentHash.hash,

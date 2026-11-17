@@ -240,7 +240,7 @@ it('updates mounted picker choice seeds and replaces retired host ownership', as
   rpc.call.mockImplementation(() => ({
     settings: projectAgentLaunchSettings({
       defaultTuiAgent: 'codex',
-      disabledTuiAgents: ['nessy'],
+      disabledTuiAgents: ['opencode'],
       agentLaunchChoices: { codex: { model: 'new-host-model', options: { effort: 'high' } } }
     })
   }))

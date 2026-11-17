@@ -1,14 +1,36 @@
 import {
   CLAUDE_IDLE,
+  GEMINI_IDLE,
+  GEMINI_PERMISSION,
+  GEMINI_SILENT_WORKING,
+  GEMINI_WORKING,
   containsAgentSpinnerGlyph
 } from './agent-title-glyphs'
-import { isClaudeIdentityFrameSegment, isClaudeManagementTitle } from './agent-title-core'
+import {
+  isClaudeIdentityFrameSegment,
+  isClaudeManagementTitle,
+  isCursorNativeAgentTitle,
+  isGrokRotatingWorkingTitle
+} from './agent-title-core'
+import {
+  isOpenCodeNativeTitle,
+  isOpenCodeNativeTitleHeader,
+  isDirectOpenCodeNativeTitle
+} from './providers/opencode-terminal-title'
 import {
   hasDeepSeekBuildWorkingTitlePrefix,
   isDeepSeekBuildWorkingTitle,
   isDeepSeekBuildTerminalTitle
 } from './providers/dsb-terminal-title'
 import { stripLeadingAgentTitleDecorationOrEmpty } from './agent-title-decoration'
+import {
+  getPiCompatibleSyntheticAgentLabel,
+  getPiCompatibleTitleBrand,
+  isLegacyPiCompatibleTitle
+} from './providers/pi-compatible-synthetic-title'
+import { isDshTerminalTitle } from './providers/dsh-terminal-title'
+import { hasQoderTitleLabelPayload, isQoderTerminalTitle } from './providers/qoder-terminal-title'
+import { isJcodeIdentityTerminalTitle } from './providers/jcode-terminal-title'
 import {
   SYNTHETIC_AGENT_TITLE_AGENTS,
   SYNTHETIC_AGENT_TITLE_PROFILES
@@ -42,6 +64,9 @@ export type AgentTitleEvidence = {
   readonly agent: TerminalAgent | null
   readonly reason: AgentTitleEvidenceReason
 }
+
+const GEMINI_GLYPHS = [GEMINI_WORKING, GEMINI_SILENT_WORKING, GEMINI_IDLE, GEMINI_PERMISSION]
+const ANTIGRAVITY_MODEL_TITLE_RE = /^(?:agy|antigravity)(?:\s*[\u00B7\u2014:-]\s*|\s+)gemini\s+\d/i
 
 /** Orca owns the final - <agent> suffix. Require leading whitespace to avoid treating hyphenated cwd names as ownership. */
 const OWNER_SUFFIX_RE = /\s-\s+([A-Za-z][\w-]*)\s*$/
@@ -97,6 +122,10 @@ function agentForSyntheticTitle(text: string): TerminalAgent | null {
 function collectVendorMarkers(segments: readonly string[]): TerminalAgent[] {
   const markers = new Set<TerminalAgent>()
   for (const segment of segments) {
+    // Only a leading identity-position sigil counts; the same glyph inside task text is decoration.
+    if (GEMINI_GLYPHS.some((glyph) => segment.startsWith(glyph))) {
+      markers.add('gemini')
+    }
     if (
       segment.startsWith(`${CLAUDE_IDLE} `) ||
       segment === CLAUDE_IDLE ||
@@ -104,6 +133,9 @@ function collectVendorMarkers(segments: readonly string[]): TerminalAgent[] {
       segment.startsWith('* ')
     ) {
       markers.add('claude')
+    }
+    if (isCursorNativeAgentTitle(segment)) {
+      markers.add('cursor')
     }
   }
   return [...markers]
@@ -115,9 +147,14 @@ function collectAnchoredNames(
 ): TerminalAgent[] {
   const anchored = new Set<TerminalAgent>()
   // Why: a native owner's task text can end with DSB's product-name suffix, including inside wrappers.
-  const allowDsbTitle = vendorMarkers.length === 0
+  const nativeOpenCode = segments.some(isOpenCodeNativeTitle)
+  const allowDsbTitle = vendorMarkers.length === 0 && !nativeOpenCode
 
   for (const segment of segments) {
+    // Native wrapped titles own their envelope even when session text names other agents.
+    if (isOpenCodeNativeTitle(segment)) {
+      anchored.add('opencode')
+    }
     if (allowDsbTitle && isDeepSeekBuildTerminalTitle(segment)) {
       anchored.add('dsb')
     }
@@ -145,6 +182,19 @@ function collectAnchoredNames(
     if (isClaudeIdentityFrameSegment(segment)) {
       anchored.add('claude')
     }
+
+    // Parse agy identity plus Gemini model metadata structurally instead of giving Gemini a competitor-specific exception.
+    const undecorated = stripLeadingAgentTitleDecorationOrEmpty(segment).trim()
+    if (ANTIGRAVITY_MODEL_TITLE_RE.test(undecorated)) {
+      anchored.add('antigravity')
+    }
+
+    const piCompatible = getPiCompatibleSyntheticAgentLabel(segment)
+    if (piCompatible === 'Pi') {
+      anchored.add('pi')
+    } else if (piCompatible === 'OMP') {
+      anchored.add('omp')
+    }
   }
 
   return [...anchored]
@@ -160,9 +210,14 @@ function observerFrameStart(title: string): number {
     const undecorated = stripLeadingAgentTitleDecorationOrEmpty(header).trim()
     const neutralWrapper = isNeutralAgentTitleWrapper(header)
     if (
+      isOpenCodeNativeTitleHeader(header) ||
+      hasQoderTitleLabelPayload(header) ||
       undecorated.startsWith('🐋') ||
+      getPiCompatibleTitleBrand(header) ||
+      isLegacyPiCompatibleTitle(header) ||
       hasDeepSeekBuildWorkingTitlePrefix(header) ||
       agentForNamedTitlePrefix(header) ||
+      ANTIGRAVITY_MODEL_TITLE_RE.test(undecorated) ||
       !neutralWrapper
     ) {
       break
@@ -182,23 +237,44 @@ function collectObserverAnchors(title: string): TerminalAgent[] {
     anchored.add(suffixAgent)
   }
   const segment = title.slice(observerFrameStart(title)).trim()
+  const undecorated = stripLeadingAgentTitleDecorationOrEmpty(segment).trim()
+  const nativeOpenCode = isOpenCodeNativeTitle(segment)
+  const piBrand = getPiCompatibleTitleBrand(segment)
   const genericClaude =
     segment === CLAUDE_IDLE ||
     segment.startsWith(`${CLAUDE_IDLE} `) ||
     segment.startsWith('. ') ||
     segment.startsWith('* ')
   let agent: TerminalAgent | null
-  if (genericClaude) {
+  if (!genericClaude && nativeOpenCode && isDirectOpenCodeNativeTitle(segment)) {
+    agent = 'opencode'
+  } else if (isDshTerminalTitle(segment) && undecorated.startsWith('🐋')) {
+    agent = 'dsh'
+  } else if (isQoderTerminalTitle(segment)) {
+    agent = segment.includes('Qoder CLI CN') ? 'qoder-cn' : 'qoder'
+  } else if (piBrand || isLegacyPiCompatibleTitle(segment)) {
+    agent = piBrand === 'OMP' ? 'omp' : 'pi'
+  } else if (GEMINI_GLYPHS.some((glyph) => segment.startsWith(glyph))) {
+    agent = 'gemini'
+  } else if (genericClaude) {
     agent = agentForNativeFrame(segment) === 'claude' ? 'claude' : null
   } else {
     agent =
+      (isGrokRotatingWorkingTitle(segment) ? 'grok' : null) ??
       (isDeepSeekBuildWorkingTitle(segment) ||
       (!segment.includes('|') && isDeepSeekBuildTerminalTitle(segment))
         ? 'dsb'
         : null) ??
       agentForNativeFrame(segment) ??
+      (isJcodeIdentityTerminalTitle(segment) ? 'jcode' : null) ??
       agentForWholeTitle(segment) ??
       agentForSyntheticTitle(segment) ??
+      (ANTIGRAVITY_MODEL_TITLE_RE.test(undecorated) ? 'antigravity' : null) ??
+      (getPiCompatibleSyntheticAgentLabel(segment) === 'OMP'
+        ? 'omp'
+        : getPiCompatibleSyntheticAgentLabel(segment) === 'Pi'
+          ? 'pi'
+          : null) ??
       (!suffixAgent ? agentForShellCommand(segment) : null)
   }
   if (agent) {

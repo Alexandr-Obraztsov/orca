@@ -19,8 +19,7 @@ function isClaudeResumeSelector(token: string): boolean {
 
 function isClaudeExecutableToken(token: string): boolean {
   const base = token.split(/[\\/]/).pop() ?? ''
-  // Claude runs through the tclaude wrapper (T-Bank harness); both accept the same resume selectors.
-  return /^(?:t)?claude(\.(exe|cmd|bat|ps1))?$/i.test(base)
+  return /^claude(\.(exe|cmd|bat|ps1))?$/i.test(base)
 }
 
 /** Accept claude only in command position (start, wrapper --, PowerShell &, or POSIX assignments); path-shaped arguments cannot claim execution. */

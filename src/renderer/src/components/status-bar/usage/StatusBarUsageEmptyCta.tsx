@@ -3,6 +3,7 @@ import { BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EyeOffDismissButton } from '@/components/dismiss/EyeOffDismissButton'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { AgentIcon } from '@/components/agent/icons/AgentIcon'
 import { useAppStore } from '../../../store/index'
 import { ClaudeIcon, GeminiIcon, OpenAIIcon, OpenCodeGoIcon } from '../accounts/provider-icons'
 import { useTranslate } from '@/i18n/use-translate'
@@ -104,6 +105,7 @@ export function StatusBarUsageEmptyCta({
                 <OpenAIIcon size={13} />
                 <GeminiIcon size={13} />
                 <OpenCodeGoIcon size={13} />
+                <AgentIcon agent="kimi" size={13} />
               </div>
             </>
           )}

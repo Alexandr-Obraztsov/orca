@@ -28,7 +28,7 @@ function dispatcher(): InstanceType<typeof RpcDispatcher> {
 }
 
 function writeSession(name: string): string {
-  const dir = join(home.dir, '.claude', 'projects', 'project-a')
+  const dir = join(home.dir, '.gemini', 'tmp', 'project-a')
   mkdirSync(dir, { recursive: true })
   const filePath = join(dir, name)
   writeFileSync(filePath, '{}')
@@ -41,14 +41,14 @@ afterAll(() => {
 
 describe('aiVault.deleteSession', () => {
   it("permanently deletes a transcript under this host's own roots", async () => {
-    const filePath = writeSession('session-1.jsonl')
+    const filePath = writeSession('session-1.json')
 
     const response = await dispatcher().dispatch({
       id: 'req-1',
       authToken: 'tok',
       method: 'aiVault.deleteSession',
       // A client host stamp is not trusted; the host deletes only its own files.
-      params: { agent: 'claude', sessionId: 'session-1', filePath, executionHostId: 'ssh:other' }
+      params: { agent: 'gemini', sessionId: 'session-1', filePath, executionHostId: 'ssh:other' }
     })
 
     expect(response).toMatchObject({ ok: true, result: { outcome: 'deleted' } })
@@ -63,7 +63,7 @@ describe('aiVault.deleteSession', () => {
       id: 'req-2',
       authToken: 'tok',
       method: 'aiVault.deleteSession',
-      params: { agent: 'claude', filePath: outside }
+      params: { agent: 'gemini', filePath: outside }
     })
 
     expect(response).toMatchObject({

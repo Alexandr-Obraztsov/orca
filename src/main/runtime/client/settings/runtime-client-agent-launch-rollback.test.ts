@@ -50,9 +50,9 @@ it.each([false, true])(
       if (newer) {
         // A generic writer owns this agent's entire newer tuple, independently of the batch.
         store.updateSettings({
-          agentDefaultArgs: { ...store.getSettings().agentDefaultArgs, codex: '--debug' },
-          agentLaunchChoices: { codex: { model: 'opaque-current' } },
-          agentDefaultEnv: { ...store.getSettings().agentDefaultEnv, codex: { KEEP: 'newer' } },
+          agentDefaultArgs: { ...store.getSettings().agentDefaultArgs, grok: '--debug' },
+          agentLaunchChoices: { grok: { model: 'opaque-current' } },
+          agentDefaultEnv: { ...store.getSettings().agentDefaultEnv, grok: { KEEP: 'newer' } },
           agentPermissionOverrides: {
             ...store.getSettings().agentPermissionOverrides,
             codex: 'own'
@@ -66,7 +66,7 @@ it.each([false, true])(
     await refused
     const check = (settings: ReturnType<typeof store.getSettings>) => {
       for (const agent of agents) {
-        if (newer && agent === 'codex') {
+        if (newer && agent === 'grok') {
           expect(resolveAgentPermission(agent, settings).choice).toBe('full-access')
         } else {
           expect(settings.agentPermissionOverrides).not.toHaveProperty(agent)
@@ -76,9 +76,9 @@ it.each([false, true])(
       if (newer) {
         expect(settings).toMatchObject({
           machineName: 'newer-host',
-          agentDefaultArgs: { codex: '--debug' },
-          agentLaunchChoices: { codex: { model: 'opaque-current' } },
-          agentDefaultEnv: { codex: { KEEP: 'newer' } },
+          agentDefaultArgs: { grok: '--debug' },
+          agentLaunchChoices: { grok: { model: 'opaque-current' } },
+          agentDefaultEnv: { grok: { KEEP: 'newer' } },
           agentPermissionOverrides: { codex: 'own' }
         })
       } else {

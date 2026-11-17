@@ -1,6 +1,7 @@
 import type { CommitMessageAgentSpec } from '../generation/commit-message-agent-spec'
 import { findOptionOccurrence } from '../../../command-option-occurrence'
 import { agentRequiredValueOptions } from '../../../agent-session/options/launch/agent-session-option-agent-args'
+import { KIMI_VALUE_OPTIONS } from '../generation/commit-message-generation-options'
 import {
   tokenizeCustomCommandTemplate,
   type CommandTemplateBackslash
@@ -21,6 +22,7 @@ export function removeSourceControlAiArgumentFlag(
   let unrecognized = false
   const valueOptions = [
     ...agentRequiredValueOptions(spec.id),
+    ...(spec.id === 'kimi' ? KIMI_VALUE_OPTIONS : []),
     ...spec.modelFlag.flatMap((flag) => flag.aliases),
     ...spec.effortFlag.flatMap((flag) => flag.aliases)
   ]

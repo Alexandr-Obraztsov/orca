@@ -36,6 +36,10 @@ import {
 } from '../../../../shared/agent-launch/startup/tui-agent-startup-shell'
 import { isTuiAgent } from '../../../../shared/agent-launch/catalog/tui-agent-config'
 import { resolveConfiguredWorkerAgent } from '../../orchestration/workers/launch/configured-worker-agent-selector'
+import { resolveAgentLaunchRuntime } from '../launch/agent-launch-scope-runtime'
+import { parseWslUncPath } from '../../../../shared/file-access/wsl-paths'
+import { resolveAgentStartupPlanInputs } from '../../../../shared/agent-launch/startup/agent-startup-plan-inputs'
+import { resolveOpenCodeModelLaunchRoute } from '../../../opencode/model-launch/opencode-model-startup-plan'
 import type { RuntimePtyWorktreeRecord } from '../records/runtime-terminal-state-records'
 import type { OrchestrationDb } from '../../orchestration/db/orchestration-db'
 
@@ -257,6 +261,55 @@ export abstract class OrcaRuntimeWithGetTerminalInteractiveWait extends OrcaRunt
       })
     )
     return this.resolveOrchestrationAgentLauncher(selector, platform, shell)
+  }
+
+  async probeOrchestrationOpenCodeModelLaunchSupport(target: {
+    worktree?: string
+    model?: string
+  }): Promise<boolean> {
+    if (!target.model || !target.worktree) {
+      return false
+    }
+    const workspace = await this.resolveTerminalWorkspaceLaunchScope(target.worktree)
+    const executionRepo = workspace?.repo
+    if (
+      workspace?.connectionId ||
+      (executionRepo?.executionHostId && executionRepo.executionHostId !== 'local')
+    ) {
+      return false
+    }
+    const store = this.requireStore()
+    const path = workspace?.path
+    if (!path) {
+      return false
+    }
+    // The launch's own platform, and `isWsl` from the path alone, as main read it.
+    let launchRuntime
+    try {
+      launchRuntime = resolveAgentLaunchRuntime(store, workspace, undefined, 'opencode')
+    } catch {
+      return false
+    }
+    if (
+      !target.model.trim() ||
+      launchRuntime.platform !== process.platform ||
+      parseWslUncPath(path)
+    ) {
+      return false
+    }
+    await resolveOpenCodeModelLaunchRoute({
+      inputs: resolveAgentStartupPlanInputs({
+        agent: 'opencode',
+        settings: store.getSettings(),
+        platform: launchRuntime.platform,
+        isRemote: false,
+        shell: undefined,
+        sessionOptions: { model: target.model }
+      }),
+      cwd: path,
+      hostIdentity: this.getRuntimeId()
+    })
+    return true
   }
 
   validateOrchestrationAgentLauncher(agent: TuiAgent): void {

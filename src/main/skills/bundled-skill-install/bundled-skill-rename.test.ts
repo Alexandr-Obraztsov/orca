@@ -65,7 +65,7 @@ describe('bundled skill rename', () => {
     const home = await makeSkillHome()
     await writeCopy(former(home.claude), FORMER_TEXT)
     await autoUpdateInstalledBundledSkills({
-      ...serviceInput(home, { agents: ['claude', 'codex'], installedOnly: true }),
+      ...serviceInput(home, { agents: ['claude', 'cursor'], installedOnly: true }),
       sources: [SOURCE],
       names: [FORMER_NAME]
     })

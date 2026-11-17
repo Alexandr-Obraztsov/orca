@@ -261,10 +261,10 @@ describe('skill placement transaction recovery', () => {
       stateDirectory,
       scope: 'global',
       homeDirectory: home,
-      detectedProviders: ['claude', 'codex'],
+      detectedProviders: ['claude', 'grok'],
       providerRootOverrides: {
         claude: join(root, 'new-claude', 'skills'),
-        codex: sharedRoot
+        grok: sharedRoot
       }
     })
     await expect(transaction.prepare(previous, next)).rejects.toThrow(

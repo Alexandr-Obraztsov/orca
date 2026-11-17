@@ -345,6 +345,20 @@ it.each([
       'model_reasoning_effort=high'
     ],
     { effort: 'high' }
+  ],
+  [
+    'cursor',
+    '--model gpt-5.3-codex',
+    { effort: 'low', fastMode: 'true' },
+    ['cursor-agent', '--model', 'gpt-5.3-codex-low-fast'],
+    { model: 'gpt-5.3-codex', effort: 'low', fastMode: 'true' }
+  ],
+  [
+    'cursor',
+    '--model claude-opus-4-8',
+    { effort: 'medium', thinking: 'true' },
+    ['cursor-agent', '--model', 'claude-opus-4-8-thinking-medium'],
+    { model: 'claude-opus-4-8', effort: 'medium', thinking: 'true' }
   ]
 ] as const)(
   'compiles current %s model context and deliberate dependent options without losing initial/resume intent',
@@ -396,7 +410,7 @@ it.each([
       shell: 'posix',
       ...compiled.resumeLaunch,
       providerSession: {
-        key: 'session_id',
+        key: agent === 'cursor' ? 'conversation_id' : 'session_id',
         id: 'provider-recorded-session'
       }
     })

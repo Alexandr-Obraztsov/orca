@@ -2,7 +2,6 @@ import type {
   AgentHookInstallStatus,
   AgentHookTarget
 } from '../../../shared/agent-hook-listener/configuration/agent-hook-types'
-import type { TuiAgent } from '../../../shared/agent-launch/catalog/tui-agent'
 import {
   getManagedAgentHookTarget,
   isManagedAgentHookTarget
@@ -61,7 +60,7 @@ export function shouldContinueManagedHookStartup(
   settings: ManagedHookSettings,
   agent: AgentHookTarget
 ): boolean {
-  return !isQuitting && isAgentStatusHooksEnabledForAgent(settings, agent as TuiAgent)
+  return !isQuitting && isAgentStatusHooksEnabledForAgent(settings, agent)
 }
 
 function errorStatus(agent: AgentHookTarget, error: unknown): AgentHookInstallStatus {
@@ -137,9 +136,7 @@ export async function installManagedAgentHooks(
 ): Promise<AgentHookInstallStatus[]> {
   await refreshExistingManagedScripts(options)
   const installers = selectedInstallers(options)
-  const disabled = new Set<AgentHookTarget>(
-    normalizeDisabledTuiAgents(settings?.disabledTuiAgents) as AgentHookTarget[]
-  )
+  const disabled = new Set(normalizeDisabledTuiAgents(settings?.disabledTuiAgents))
   const enabledInstallers = installers.filter(([agent]) => !disabled.has(agent))
   const targets = enabledInstallers.flatMap(([agent]) => {
     const target = getManagedAgentHookTarget(agent)
@@ -258,7 +255,7 @@ export async function applyAgentStatusHooksEnabled(
   }
   const disabled = normalizeDisabledTuiAgents(settings?.disabledTuiAgents).filter(
     isManagedAgentHookTarget
-  ) as AgentHookTarget[]
+  )
   const installed = await installManagedAgentHooks(settings, options)
   const disabledToRemove = options.shouldContinue
     ? disabled.filter((agent) => !options.shouldContinue?.(agent))

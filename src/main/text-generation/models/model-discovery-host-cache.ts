@@ -1,6 +1,7 @@
 import type { TuiAgent } from '../../../shared/agent-launch/catalog/tui-agent'
 import { InFlightPromiseDedupe, stableInFlightKey } from '../../../shared/in-flight-promise-dedupe'
 import { setBoundedScopeCacheEntry } from '../../../shared/native-chat/native-chat-scope-cache'
+import { PRIMARY_AGENT_DIR_ENV_BY_KIND } from '../../../shared/agent-launch/catalog/pi-agent-kind'
 import { onAgentsRefreshedOnHost } from '../../preflight/agents-refreshed-on-host'
 import type { CommitMessageModelDiscoveryLocalOptions } from './commit-message-model-discovery'
 import { SOURCE_CONTROL_GENERATION_TIMEOUT_MS } from '../execution/source-control-generation-limits'
@@ -9,7 +10,10 @@ import type { DiscoverCommitMessageModelsResult } from '../source-control-text-g
 // Pickers list these on open; Codex's listing starts an app-server. Each maps to the config-dir var
 // that picks its login (mirrors prepareShellConfigDirEnv).
 const ACCOUNT_DIR_VAR: Partial<Record<TuiAgent, string>> = {
-  codex: 'CODEX_HOME'
+  omp: PRIMARY_AGENT_DIR_ENV_BY_KIND.omp,
+  grok: 'GROK_HOME',
+  codex: 'CODEX_HOME',
+  cursor: 'CURSOR_CONFIG_DIR'
 }
 const TTL_MS = 10 * 60_000
 const MAX_ENTRIES = 32

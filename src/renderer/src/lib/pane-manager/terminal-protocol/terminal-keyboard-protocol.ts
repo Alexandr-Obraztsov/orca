@@ -15,10 +15,18 @@ export type TerminalKeyboardProtocolContext = WindowsPtyCompatibilityContext & {
   tuiAgent?: TuiAgent | null
 }
 
-/** Withhold KKP only for genuine local Windows ConPTY: some CLIs enable it but ignore CSI-u navigation (#2434). */
+/** Known CSI-u-capable ConPTY agents need modified Enter. Grok uses KKP for interject/newline, unlike CSI-u-blind CLIs targeted by #2434. */
+function prefersKittyKeyboardDespiteWindowsConpty(agent: TuiAgent | null | undefined): boolean {
+  return agent === 'grok'
+}
+
+/** Withhold KKP only for genuine local Windows ConPTY: some CLIs enable it but ignore CSI-u navigation (#2434). Preserve SSH/macOS/Linux support and known ConPTY-capable agents such as Grok, which needs modified Enter. */
 export function shouldDisableKittyKeyboardForTerminal(
   context: TerminalKeyboardProtocolContext
 ): boolean {
+  if (prefersKittyKeyboardDespiteWindowsConpty(context.tuiAgent)) {
+    return false
+  }
   return isLocalNativeWindowsConpty(context)
 }
 

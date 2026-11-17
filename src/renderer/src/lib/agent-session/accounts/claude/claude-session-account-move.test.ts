@@ -163,7 +163,7 @@ describe('findMovableClaudeSessions', () => {
       foregroundProcess: '2.1.258',
       hasChildProcesses: true
     })
-    vi.mocked(confirmRuntimeTerminalForegroundProcess).mockResolvedValue('tclaude')
+    vi.mocked(confirmRuntimeTerminalForegroundProcess).mockResolvedValue('claude')
   })
 
   it("keeps a shared session running after the other pane's sidebar row was dismissed", async () => {

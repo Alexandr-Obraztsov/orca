@@ -35,14 +35,14 @@ import {
 
 // Chats cannot adopt agy's terminal conversations.
 const ANTIGRAVITY_SESSION_HISTORY: StructuredAgentSessionHistory = {
-  rowAgents: ['antigravity' as unknown as StructuredAgentSessionHistory['rowAgents'][number]],
+  rowAgents: ['antigravity'],
   rowSessionId: (link) => link.handle.nativeId,
   parseResumeArgs: () => null
 }
 
 // Orca's managed ACP server keeps its own sign-in under <userData>/antigravity-chat.
 const ANTIGRAVITY_MANAGED_LAUNCH_SPEC = {
-  agent: 'antigravity' as unknown as AcpLaunchSpec['agent'],
+  agent: 'antigravity',
   command: ANTIGRAVITY_ACP_COMMAND,
   ignoreAgentCommandSetting: true,
   // Without --uid=, the Linux server drops root launches to nobody.

@@ -20,7 +20,22 @@ export type AiVaultDeleteSessionResult =
 
 // Allow only sessions whose complete unshared data is derivable from the scanned path.
 // Exclude Antigravity/Kimi registries (Antigravity lacks IDs), Codex indexes/hardlink aliases (one-sided deletion reappears), and OpenCode 1.17.x SQLite rows.
-export const AI_VAULT_DELETABLE_AGENTS = ['claude'] as const satisfies readonly AiVaultAgent[]
+export const AI_VAULT_DELETABLE_AGENTS = [
+  'gemini',
+  'copilot',
+  'cursor',
+  'hermes',
+  'devin',
+  'openclaw',
+  'droid',
+  'pi',
+  'omp',
+  'claude',
+  'codebuddy',
+  'rovo',
+  'grok',
+  'cline'
+] as const satisfies readonly AiVaultAgent[]
 
 export type AiVaultDeletableAgent = (typeof AI_VAULT_DELETABLE_AGENTS)[number]
 

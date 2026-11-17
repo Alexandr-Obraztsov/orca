@@ -1,10 +1,7 @@
 import { dirname, join } from 'node:path'
 import { wslGatedLstat } from '../../../native-chat/transcript-filesystem/wsl-transcript-fs-access'
 import { WslTranscriptFsError } from '../../../native-chat/transcript-filesystem/wsl-transcript-fs-error'
-import type {
-  AiVaultAgent,
-  AiVaultScanIssue
-} from '../../../../shared/ai-vault/contracts/ai-vault-types'
+import type { AiVaultScanIssue } from '../../../../shared/ai-vault/contracts/ai-vault-types'
 import { recordSessionScanIssue, scanIssueTextFromError } from '../../parsing/session-scan-issues'
 import type { FileWithMtime, SessionFileDiscovery } from '../../session-scanner-types'
 
@@ -92,7 +89,7 @@ export async function completeAntigravityTranscriptPairs(
     } catch (error) {
       if (error instanceof WslTranscriptFsError) {
         recordSessionScanIssue(issues, {
-          agent: 'antigravity' as AiVaultAgent,
+          agent: 'antigravity',
           path: sibling,
           ...scanIssueTextFromError(error)
         })

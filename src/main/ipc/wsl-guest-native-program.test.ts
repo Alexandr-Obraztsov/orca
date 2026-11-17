@@ -14,7 +14,7 @@ let drive: string
 
 function install(dir: string): string {
   mkdirSync(dir, { recursive: true })
-  const program = join(dir, 'tclaude')
+  const program = join(dir, 'claude')
   writeFileSync(program, '#!/bin/sh\n')
   chmodSync(program, 0o755)
   return program
@@ -38,8 +38,8 @@ describe.skipIf(process.platform === 'win32')('the Windows-copy check', () => {
 
   it('still finds a WSL install made after the verdict was cached', () => {
     install(join(drive, 'npm'))
-    expect(resolveGuestNativeProgram('tclaude', options(), undefined, [drive])).toBeNull()
+    expect(resolveGuestNativeProgram('claude', options(), undefined, [drive])).toBeNull()
     const own = install(native)
-    expect(resolveGuestNativeProgram('tclaude', options(), undefined, [drive])).toBe(own)
+    expect(resolveGuestNativeProgram('claude', options(), undefined, [drive])).toBe(own)
   })
 })

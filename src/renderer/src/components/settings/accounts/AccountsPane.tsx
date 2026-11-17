@@ -19,9 +19,13 @@ import { getAccountsClaudeSearchEntries } from './accounts-claude-search'
 import {
   getAccountsCodexSearchEntries,
   getAccountsGeminiSearchEntries,
+  getAccountsCursorSearchEntries,
+  getAccountsGrokSearchEntries,
+  getAccountsAntigravitySearchEntries,
   getAccountsLocationSearchEntries,
   getAccountsMiniMaxSearchEntries,
-  getAccountsOpencodeSearchEntries
+  getAccountsOpencodeSearchEntries,
+  getAccountsZcodePlanSearchEntries
 } from './accounts-search'
 import { getRemoteAccountsPaneScope } from '../../provider-accounts/provider-account-scope'
 import { ProviderHostScopeControl } from '../../provider-accounts/ProviderHostScopeControl'
@@ -34,8 +38,12 @@ import {
   providerAccountIsActiveInView,
   providerAccountMatchesView
 } from '../../provider-accounts/provider-account-visibility'
+import { GrokAccountsSection } from './providers/GrokAccountsSection'
+import { AntigravityAccountsSection } from './providers/AntigravityAccountsSection'
 import type { RuntimeClientTarget } from '../../../../../shared/remote-runtime/host-catalog/runtime-client-target'
 import { runtimeTargetEnvironmentId } from '@/runtime/rpc/targets/runtime-client-target'
+import { CursorAccountsSection } from './providers/CursorAccountsSection'
+import { ZcodePlanAccountsSection } from './usage/ZcodePlanAccountsSection'
 import type {
   AccountsPaneProps,
   AccountsPaneSectionModel,
@@ -333,6 +341,15 @@ export function AccountsPane({
     matchesSettingsSearch(searchQuery, getAccountsGeminiSearchEntries())
       ? renderGeminiAccountsSection(model, t)
       : null,
+    matchesSettingsSearch(searchQuery, getAccountsAntigravitySearchEntries()) ? (
+      <AntigravityAccountsSection
+        key={`antigravity:${accountOwnerKey}:${accountRuntime.runtime}:${accountRuntime.wslDistro ?? ''}`}
+        owner={accountOwner}
+        target={{ runtime: accountRuntime.runtime, wslDistro: accountRuntime.wslDistro }}
+        label={accountRuntimeSentenceLabel}
+        ownerPlatform={accountOwnerPlatform}
+      />
+    ) : null,
     matchesSettingsSearch(searchQuery, getAccountsOpencodeSearchEntries())
       ? renderOpenCodeAccountsSection(model, t)
       : null,
@@ -343,6 +360,19 @@ export function AccountsPane({
         usageSettings={usageHostSettings}
         miniMaxRateLimits={isRemoteAccountScope ? null : miniMaxRateLimits}
         recordFeatureInteraction={recordFeatureInteraction}
+      />
+    ) : null,
+    matchesSettingsSearch(searchQuery, getAccountsGrokSearchEntries()) ? (
+      <GrokAccountsSection key="grok" />
+    ) : null,
+    matchesSettingsSearch(searchQuery, getAccountsCursorSearchEntries()) ? (
+      <CursorAccountsSection key="cursor" />
+    ) : null,
+    matchesSettingsSearch(searchQuery, getAccountsZcodePlanSearchEntries()) ? (
+      <ZcodePlanAccountsSection
+        key={`zcode:${accountOwnerKey}`}
+        host={usageCredentialHost}
+        usageSettings={usageHostSettings}
       />
     ) : null
   ]

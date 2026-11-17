@@ -1,6 +1,5 @@
 import { expect } from 'vitest'
 import type { HookSessionBindingRendererFixture } from '../../../../../shared/agent-hook-listener/state/agent-hook-session-binding.test-fixture'
-import type { ResumableTuiAgent } from '../../../../../shared/agent-session/lifecycle/agent-session-resume'
 import { getAgentResumeArgv } from '../../../../../shared/agent-launch/startup/agent-resume-argv'
 import { resumeRecordFromStatus } from '../../../../../shared/agent-session/lifecycle/resume/agent-resume-record-from-status'
 import { createTestStore } from '../../testing/app-store-test-fixture'
@@ -56,7 +55,7 @@ export const expectReturnedRenderer: HookSessionBindingRendererFixture['expectRe
   if (!record) {
     throw new Error('No actual renderer resume record')
   }
-  expect(getAgentResumeArgv(agent as ResumableTuiAgent, record.providerSession)).toEqual(
+  expect(getAgentResumeArgv(agent, record.providerSession)).toEqual(
     agent === 'hermes' ? ['hermes', '--resume', id] : ['agy', '--conversation', id]
   )
   expect(store.getState().sleepingAgentSessionsByPaneKey[paneKey]?.providerSession.id).toBe(id)

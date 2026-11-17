@@ -8,9 +8,9 @@ import { AiVaultSessionVirtualList } from './AiVaultSessionVirtualList'
 
 function makeSession(index: number): AiVaultSession {
   return {
-    id: `local:codex:session-${index}:/tmp/session-${index}.jsonl`,
+    id: `local:omp:session-${index}:/tmp/session-${index}.jsonl`,
     executionHostId: 'local',
-    agent: 'codex',
+    agent: 'omp',
     sessionId: `session-${index}`,
     title: `Session ${index}`,
     cwd: '/repo',
@@ -26,7 +26,7 @@ function makeSession(index: number): AiVaultSession {
     previewMessages: [{ role: 'assistant', text: `Reply ${index}`, timestamp: null }],
     queuedMessageCount: 0,
     subagentTranscriptCount: 0,
-    resumeCommand: `codex resume session-${index}`,
+    resumeCommand: `omp resume session-${index}`,
     subagent: null
   }
 }

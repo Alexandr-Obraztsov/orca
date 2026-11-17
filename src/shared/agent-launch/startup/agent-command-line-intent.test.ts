@@ -36,15 +36,15 @@ it('bounds prefix scanning without truncating the launch arguments', () => {
 })
 
 it('does not turn a waiting shell process into live agent evidence', () => {
-  expect(recognizeAgentLaunchCommand('sleep 30 && tclaude')?.agent).toBe('claude')
-  expect(recognizeAgentProcessFromCommandLine('sleep 30 && tclaude')).toBeNull()
-  expect(recognizeAgentProcessFromCommandLine('/bin/zsh -c "sleep 30 && tclaude"')).toBeNull()
+  expect(recognizeAgentLaunchCommand('sleep 30 && claude')?.agent).toBe('claude')
+  expect(recognizeAgentProcessFromCommandLine('sleep 30 && claude')).toBeNull()
+  expect(recognizeAgentProcessFromCommandLine('/bin/zsh -c "sleep 30 && claude"')).toBeNull()
 })
 
 it('preserves headless filtering and interpreter recognition for launch intent', () => {
-  expect(recognizeAgentLaunchCommand('sleep 30 && tclaude -p task')).toBeNull()
+  expect(recognizeAgentLaunchCommand('sleep 30 && claude -p task')).toBeNull()
   expect(
-    recognizeAgentLaunchCommand('sleep 30 && tclaude -p task', {
+    recognizeAgentLaunchCommand('sleep 30 && claude -p task', {
       includeHeadlessOneShot: true
     })?.agent
   ).toBe('claude')

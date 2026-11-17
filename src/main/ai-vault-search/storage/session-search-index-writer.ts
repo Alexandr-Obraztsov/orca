@@ -248,7 +248,7 @@ export class SessionSearchIndexWriter {
                 this.records.updateSession(decoded, session, hash)
               } else if (named) {
                 // Committed chunks need searchable identity even if the read never finishes.
-                this.records.updateProvisionalSession(session, named)
+                this.records.updateProvisionalSession(session, named, candidate)
               }
               this.records.upsertFile(
                 candidate,

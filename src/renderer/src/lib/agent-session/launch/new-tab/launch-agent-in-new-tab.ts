@@ -265,6 +265,9 @@ function openAgentInNewTab(
       ...(startupPlan.startupCommandDelivery
         ? { startupCommandDelivery: startupPlan.startupCommandDelivery }
         : {}),
+      ...(agent === 'command-code' && hasPrompt && promptDelivery === 'auto-submit'
+        ? { initialAgentStatus: { agent, prompt: trimmedPrompt } }
+        : {}),
       telemetry: {
         agent_kind: tuiAgentToAgentKind(agent),
         launch_source: launchSource ?? 'tab_bar_quick_launch',
