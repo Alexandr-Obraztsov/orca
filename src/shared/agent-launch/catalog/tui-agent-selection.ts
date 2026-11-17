@@ -53,8 +53,52 @@ export const TUI_AGENT_AUTO_PICK_ORDER = [
   'tclaude'
 ] as const satisfies readonly TuiAgent[]
 
-// Fresh installs show Agent Teams; the migration separately preserves legacy hidden defaults.
-export const DEFAULT_DISABLED_TUI_AGENTS = [] as const satisfies readonly TuiAgent[]
+// Fresh installs show only the five supported harnesses; the rest remain in code and can be
+// re-enabled per-project via settings. This hides them from the UI by default without deleting them.
+export const DEFAULT_DISABLED_TUI_AGENTS = [
+  'openclaude',
+  'codebuddy',
+  'autohand',
+  'opencode',
+  'opencode2',
+  'mimo-code',
+  'pi',
+  'omp',
+  'qoder',
+  'qoder-cn',
+  'gemini',
+  'antigravity',
+  'aider',
+  'goose',
+  'amp',
+  'kilo',
+  'kiro',
+  'crush',
+  'aug',
+  'cline',
+  'codebuff',
+  'freebuff',
+  'command-code',
+  'continue',
+  'cursor',
+  'droid',
+  'kimi',
+  'mistral-vibe',
+  'rovo',
+  'hermes',
+  'openclaw',
+  'copilot',
+  'grok',
+  'devin',
+  'ante',
+  'trae',
+  'muse',
+  'zcode',
+  'prime-agent',
+  'dsh',
+  'jcode',
+  'tclaude'
+] as const satisfies readonly TuiAgent[]
 
 export function pickTuiAgent(
   preferred: TuiAgent | 'blank' | null | undefined,
