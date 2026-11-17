@@ -43,7 +43,9 @@ export const YOLO_TUI_AGENT_ARGS: Partial<Record<TuiAgent, string>> = {
   devin: '--permission-mode bypass --respect-workspace-trust false',
   ante: '--yolo',
   trae: '--yolo',
-  droid: '--auto high'
+  droid: '--auto high',
+  // Nessy's CLI caps out at `--approval-mode auto`; full access is the same auto mode.
+  nessy: '--approval-mode auto'
 }
 
 export const YOLO_TUI_AGENT_ENV: Partial<Record<TuiAgent, Record<string, string>>> = {
@@ -51,17 +53,15 @@ export const YOLO_TUI_AGENT_ENV: Partial<Record<TuiAgent, Record<string, string>
 }
 
 // Configurable agents are those with any preset permission args/env. Most are yolo-capable
-// (YOLO_TUI_AGENT_ARGS/ENV); auto-only agents (e.g. nessy, whose CLI caps out at --approval-mode
-// auto) are configurable for manual/auto but have no yolo mode.
+// (YOLO_TUI_AGENT_ARGS/ENV). Nessy's CLI caps out at --approval-mode auto, so its yolo and auto
+// presets are identical; resolveAgentPermissionMode treats that as auto.
 const PERMISSION_AGENT_IDS = Object.keys(TUI_AGENT_CONFIG).filter(
   (agent): agent is TuiAgent =>
     agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV || agent in AUTO_TUI_AGENT_ARGS
 )
 
 export function hasConfigurableTuiAgentPermissions(agent: TuiAgent): boolean {
-  return (
-    agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV || agent in AUTO_TUI_AGENT_ARGS
-  )
+  return agent in YOLO_TUI_AGENT_ARGS || agent in YOLO_TUI_AGENT_ENV || agent in AUTO_TUI_AGENT_ARGS
 }
 
 function normalizeArgs(value: string | null | undefined): string {
@@ -88,7 +88,9 @@ function resolveAgentPermissionMode(
   if (!args) {
     return 'manual'
   }
-  return args === yoloArgs ? 'yolo' : args === autoArgs ? 'auto' : 'mixed'
+  // Check auto first: for agents whose yolo and auto presets are identical (e.g. nessy,
+  // whose CLI caps at `--approval-mode auto`), full access is the same as auto.
+  return args === autoArgs ? 'auto' : args === yoloArgs ? 'yolo' : 'mixed'
 }
 
 function resolveAgentEnvPermissionMode(
