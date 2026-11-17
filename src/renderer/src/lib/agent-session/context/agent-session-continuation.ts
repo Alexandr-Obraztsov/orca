@@ -1,4 +1,3 @@
-import { splitOpenCodeSqliteCandidate } from '../../../../../shared/agent-session/lifecycle/provider-handles/opencode-sqlite-session-path'
 import { buildBoundedSessionTranscript } from '@/lib/agent-session/context/agent-session-fork-context'
 import type { LaunchSource } from '../../../../../shared/telemetry/schemas/telemetry-property-schemas'
 import type { TuiAgent } from '../../../../../shared/agent-launch/catalog/tui-agent'
@@ -42,13 +41,6 @@ export function resolveAgentSessionContinuationTranscriptPath(
 ): string | null {
   const path = source.transcriptPath?.trim() || null
   if (!path) {
-    return null
-  }
-  const agent = source.sourceAgent
-  if (
-    (agent === 'opencode' || agent === 'opencode2') &&
-    splitOpenCodeSqliteCandidate(path, agent)
-  ) {
     return null
   }
   return path

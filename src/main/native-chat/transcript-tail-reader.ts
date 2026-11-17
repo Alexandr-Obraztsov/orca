@@ -1,4 +1,3 @@
-import { readOpenCodeNativeChatTranscriptTail } from './transcript-history/opencode/transcript-opencode'
 import { isENOENT } from '../ipc/filesystem/access/filesystem-path-containment'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
 import type {
@@ -252,13 +251,6 @@ export async function readNativeChatTranscriptTail(
     }
   | { error: string; notFound?: true }
 > {
-  if (resolveNativeChatTranscriptAgent(args.agent) === 'opencode') {
-    return readOpenCodeNativeChatTranscriptTail(
-      { ...args, agent: args.agent === 'zcode' ? 'zcode' : undefined },
-      {},
-      signal
-    )
-  }
   const decode = nativeChatLineDecoderForAgent(args.agent)
   const decodeLifecycle = nativeChatTurnLifecycleDecoderForAgent(args.agent)
   if (!decode) {

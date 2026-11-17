@@ -35,13 +35,16 @@ export function isAgentPermissionChoice(value: unknown): value is AgentPermissio
 const ASK_TUI_AGENT_ARGS: Partial<Record<TuiAgent, string>> = {
   claude: '--permission-mode default',
   'claude-agent-teams': '--permission-mode default',
-  grok: '--permission-mode default',
-  codex: '-a on-request -s read-only -c approvals_reviewer=user'
+  codex: '-a on-request -s read-only -c approvals_reviewer=user',
+  // Nessy prompts for approval on every tool use by default.
+  nessy: '--approval-mode default'
 }
 
 const ACCEPT_EDITS_TUI_AGENT_ARGS: Partial<Record<TuiAgent, string>> = {
   claude: '--permission-mode acceptEdits',
-  'claude-agent-teams': '--permission-mode acceptEdits'
+  'claude-agent-teams': '--permission-mode acceptEdits',
+  // Nessy auto-approves edit tools while still asking for anything else.
+  nessy: '--approval-mode auto-edit'
 }
 
 const ARGS_BY_CHOICE: Record<AgentChatPermissionMode, Partial<Record<TuiAgent, string>>> = {

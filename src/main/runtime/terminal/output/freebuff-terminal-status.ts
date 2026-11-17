@@ -1,5 +1,4 @@
 import { FreebuffScreenStatusTracker } from '../../../../shared/freebuff-screen-status'
-import { recognizeAgentProcessFromCommandLine } from '../../../../shared/agent-status/process/agent-process-recognition'
 import type { HeadlessEmulator } from '../../../daemon/emulation/headless-emulator'
 
 const trackers = new WeakMap<HeadlessEmulator, FreebuffScreenStatusTracker>()
@@ -7,14 +6,12 @@ const trackers = new WeakMap<HeadlessEmulator, FreebuffScreenStatusTracker>()
 export function observeFreebuffTerminalStatus(
   emulator: HeadlessEmulator,
   data: string,
-  startupCommand: string | undefined,
+  _startupCommand: string | undefined,
   launchAgent?: string | null
 ) {
   let tracker = trackers.get(emulator)
   if (!tracker) {
-    const identified =
-      launchAgent === 'freebuff' ||
-      recognizeAgentProcessFromCommandLine(startupCommand)?.agent === 'freebuff'
+    const identified = launchAgent === 'freebuff'
     tracker = new FreebuffScreenStatusTracker(identified)
     trackers.set(emulator, tracker)
   }

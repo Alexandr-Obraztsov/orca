@@ -37,7 +37,6 @@ export abstract class OrcaRuntimeWithEmitDaemonPtyTransientFact extends OrcaRunt
           kind: 'command-finished',
           exitCode: fact.exitCode
         })
-        this.openCodeRunLifetime.onCommandFinished(ptyId, fact.exitCode)
         return
       case 'pr-link':
         this.recordTerminalSideEffectFact(ptyId, { kind: 'pr-link', link: fact.link })

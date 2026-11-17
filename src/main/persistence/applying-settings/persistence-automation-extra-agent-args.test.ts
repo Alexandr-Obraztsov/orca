@@ -118,7 +118,6 @@ describe('automation extra agent args persistence', () => {
     expect(() =>
       store.createAutomation({ ...BASE, reuseSession: true, extraAgentArgs: '--model opus' })
     ).toThrow('fresh session')
-    expect(() => store.updateAutomation(id, { agentId: 'gemini' })).toThrow("aren't supported")
     expect(
       store.updateAutomation(id, { extraAgentArgs: '', reuseSession: true }).reuseSession
     ).toBe(true)
@@ -220,7 +219,7 @@ describe('automation extra agent args persistence', () => {
     })
     expect(inherited.launchSetup).toEqual({})
     const rebound = store.updateAutomation(created.id, {
-      agentId: 'opencode',
+      agentId: 'codex',
       launchSetupPatch: {
         arguments: { kind: 'value', value: '--arbitrary-provider-argument' }
       }
@@ -249,7 +248,7 @@ describe('automation extra agent args persistence', () => {
     ).toEqual({ surface: 'terminal', extraAgentArgs: '--model sonnet' })
     expect(
       store.updateAutomation(created.id, {
-        agentId: 'opencode',
+        agentId: 'qwen-code',
         launchSetupPatch: { arguments: { kind: 'value', value: '--new' } }
       }).launchSetup?.agentArgs
     ).toBe('--new')

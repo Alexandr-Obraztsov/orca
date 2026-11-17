@@ -147,7 +147,7 @@ it('publishes every saved catalog while earlier refreshes are still pending', as
   const entries: AgentPickerEntry[] = [
     codex,
     { ...codex, agent: 'claude', label: 'Claude', rows: [{ agent: 'claude', kind: 'cli' }] },
-    { ...codex, agent: 'gemini', label: 'Gemini', rows: [{ agent: 'gemini', kind: 'cli' }] }
+    { ...codex, agent: 'qwen-code', label: 'Qwen Code', rows: [{ agent: 'qwen-code', kind: 'cli' }] }
   ]
   let published: AgentPickerEntry[] = []
   const stop = observeAgentPickerAcquisition(
@@ -173,7 +173,7 @@ it('publishes every saved catalog while earlier refreshes are still pending', as
       .toMatchObject([
         { models: [{ id: 'codex' }] },
         { models: [{ id: 'claude' }] },
-        { models: [{ id: 'gemini' }] }
+        { models: [{ id: 'qwen-code' }] }
       ])
   } finally {
     stop()

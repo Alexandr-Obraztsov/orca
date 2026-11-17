@@ -26,19 +26,19 @@ const CLAUDE_ACTIVITIES: readonly ClaudeActivity[] = [
 export function StatusesPage(props: { active: boolean; reducedMotion: boolean }): JSX.Element {
   const t = useTranslate()
   const { active, reducedMotion } = props
-  const [revealed, setRevealed] = useState({ claude: false, opencode: false, codex: false })
+  const [revealed, setRevealed] = useState({ claude: false, qwenCode: false, codex: false })
   const [claudeIdx, setClaudeIdx] = useState(0)
   const [claudeFading, setClaudeFading] = useState(false)
 
   useEffect(() => {
     if (!active) {
-      setRevealed({ claude: false, opencode: false, codex: false })
+      setRevealed({ claude: false, qwenCode: false, codex: false })
       setClaudeIdx(0)
       setClaudeFading(false)
       return
     }
     if (reducedMotion) {
-      setRevealed({ claude: true, opencode: true, codex: true })
+      setRevealed({ claude: true, qwenCode: true, codex: true })
       return
     }
     const timeouts: number[] = []
@@ -46,7 +46,7 @@ export function StatusesPage(props: { active: boolean; reducedMotion: boolean })
       timeouts.push(window.setTimeout(fn, delay))
     }
     schedule(() => setRevealed((r) => ({ ...r, claude: true })), 700)
-    schedule(() => setRevealed((r) => ({ ...r, opencode: true })), 1200)
+    schedule(() => setRevealed((r) => ({ ...r, qwenCode: true })), 1200)
     schedule(() => setRevealed((r) => ({ ...r, codex: true })), 1900)
 
     let idx = 0
@@ -121,8 +121,8 @@ export function StatusesPage(props: { active: boolean; reducedMotion: boolean })
               <Skel widthPct={78} />
             )}
           </AgentRow>
-          <AgentRow icon={<AgentIcon agent="opencode" size={18} />} name="OpenCode" state="done">
-            {revealed.opencode ? (
+          <AgentRow icon={<AgentIcon agent="qwen-code" size={18} />} name="Qwen" state="done">
+            {revealed.qwenCode ? (
               <span>
                 {t(
                   'auto.components.feature.wall.agents.orchestration.StatusesPage.139e3d7458',

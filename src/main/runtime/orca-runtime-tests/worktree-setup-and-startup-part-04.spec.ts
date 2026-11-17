@@ -73,7 +73,7 @@ describe('OrcaRuntimeService', () => {
       await runtime.createManagedWorktree({
         repoSelector: TEST_REPO_ID,
         name: 'runtime-cli-aider-shell',
-        startupAgent: 'aider',
+        startupAgent: 'codex',
         startupPrompt: 'fix it'
       })
 

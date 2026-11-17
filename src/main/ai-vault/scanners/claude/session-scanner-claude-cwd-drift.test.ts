@@ -48,7 +48,7 @@ describe('scanAiVaultSessions — Claude cwd drift', () => {
     expect(claude).toMatchObject({
       sessionId: 'drift-session',
       cwd: '/repo/app',
-      resumeCommand: "cd '/repo/app' && claude --resume 'drift-session'"
+      resumeCommand: "cd '/repo/app' && tclaude --resume 'drift-session'"
     })
   })
 })

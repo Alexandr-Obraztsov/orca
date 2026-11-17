@@ -122,14 +122,14 @@ async function readAcpLaunchInvocation(
     overlayEnvironmentVariables(base, deps.resolveLaunchEnv?.(spec.agent), process.platform)
   )
   const envToDelete = spec.scrubEnvironment?.(env, deps.inheritedEnv ?? process.env) ?? []
-  if (spec.agent === 'antigravity' && spec.managedRuntime) {
+  if (spec.agent as string === 'antigravity' && spec.managedRuntime) {
     await prepareAntigravityAcpProxyEnvironment(env, deps.inheritedEnv ?? process.env)
     assertStructuredAgentResolutionCurrent(deps.operation)
   }
   Object.assign(env, spec.env)
   const commandSettings = deps.resolveCommandSettings?.()
   // Orca's account-type setting selects only the managed server's sign-in.
-  const usesChatAuth = spec.agent === 'antigravity' && spec.authMethod !== undefined
+  const usesChatAuth = (spec.agent as string) === 'antigravity' && spec.authMethod !== undefined
   if (usesChatAuth) {
     assertAntigravityChatAuthPublished(commandSettings?.antigravityChatAuth)
   }

@@ -3,6 +3,7 @@ import { normalizeColorQueryReplyColors } from '../../shared/terminal/pty/ingres
 import { recognizeAgentLaunchCommand } from '../../shared/agent-launch/startup/agent-command-line-intent'
 import { isTuiAgent } from '../../shared/agent-launch/catalog/tui-agent-config'
 import { agentKindSchema } from '../../shared/telemetry/schemas/telemetry-property-schemas'
+import type { TerminalAgent } from '../../shared/agent-status/identity/terminal-agent'
 import type { SleepingAgentLaunchConfig } from '../../shared/agent-session/lifecycle/agent-session-resume'
 
 function isAgentLaunch(args: {
@@ -36,7 +37,7 @@ export function agentSkipsStartupOscColorQueryReplies(args: {
     return true
   }
   const command = args.launchConfig?.agentCommand?.trim() || args.command?.trim() || ''
-  return command.length > 0 && recognizeAgentLaunchCommand(command)?.agent === 'jcode'
+  return command.length > 0 && recognizeAgentLaunchCommand(command)?.agent === ('jcode' as TerminalAgent)
 }
 
 export function getStartupTerminalIngressIntent(args: {

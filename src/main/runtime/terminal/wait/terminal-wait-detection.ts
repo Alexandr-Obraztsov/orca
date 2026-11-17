@@ -1,4 +1,3 @@
-import { isQoderComposerReady } from './qoder-terminal-readiness'
 import { memoizeTitleClassification } from '../../../../shared/agent-status/title/terminal-title-classification-memo'
 import { detectAgentStatusFromTitle } from '../../../../shared/agent-status/title/agent-title-status'
 import type { AgentStatus } from '../../../../shared/agent-status/title/agent-title-core'
@@ -57,9 +56,6 @@ export function isKnownReadyPromptBody(
   readScreenLines: () => readonly string[] | null,
   hasOutputClock: boolean
 ): boolean {
-  if (agent === 'qoder' || agent === 'qoder-cn') {
-    return isQoderComposerReady(readScreenLines())
-  }
   // With an output clock, this agent settles only after quiet.
   if (hasOutputClock && holdsReadyTextToQuiet(agent)) {
     return false
@@ -75,7 +71,7 @@ export function isKnownReadyPromptBody(
   return isKnownReadyPromptSettled(waitText)
 }
 
-/** Mid-turn ready screens/text require quiet. Require Muse identity so pasted transcripts and pagers cannot settle unknown panes. */
+/** Mid-turn ready screens/text require quiet. Require a known agent so pasted transcripts and pagers cannot settle unknown panes. */
 export function isQuietReadyScreenBody(
   waitText: string,
   agent: TuiAgent | null,
@@ -88,7 +84,7 @@ export function isQuietReadyScreenBody(
     })
     return ruled !== null && isStrongIdle(ruled) && ruled.requiresQuiet
   }
-  return (agent === null || agent === 'muse') && isMuseReadyPromptPreview(waitText)
+  return agent === null && isMuseReadyPromptPreview(waitText)
 }
 
 function isStrongIdle(

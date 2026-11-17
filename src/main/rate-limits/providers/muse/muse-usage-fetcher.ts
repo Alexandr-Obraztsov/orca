@@ -92,10 +92,13 @@ export async function fetchMuseRateLimits(
   try {
     // Muse lives on the login-shell PATH, not Electron's.
     const env = { ...(await resolveEnvironment()), ...MUSE_PROBE_ENV }
-    const program = await resolve(TUI_AGENT_CONFIG.muse.detectCmd, {
-      platform: options.platform ?? process.platform,
-      env
-    })
+    const program = await resolve(
+      (TUI_AGENT_CONFIG as Record<string, { detectCmd: string }>).muse.detectCmd,
+      {
+        platform: options.platform ?? process.platform,
+        env
+      }
+    )
     if (options.signal?.aborted) {
       return cancelled()
     }

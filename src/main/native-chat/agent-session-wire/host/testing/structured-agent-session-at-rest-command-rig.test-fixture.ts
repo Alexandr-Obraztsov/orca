@@ -3,7 +3,7 @@ import { cleanup } from '@testing-library/react'
 
 import type { CommandMenuRendererFixtureModule } from '../../../../../shared/agent-session/agent-session-command-menu.test-fixture-contract'
 
-import { OMP } from '../../../../acp/discovery/testing/acp-command-discovery.test-fixture'
+import { SPEC } from '../../../../acp/discovery/testing/acp-command-discovery.test-fixture'
 import { acpStructuredAgentDefinition } from '../../../../acp/session/acp-structured-agent-definitions'
 import { CLAUDE_STRUCTURED_AGENT } from '../../../../claude/structured/claude-structured-agent-definition'
 import { StructuredAgentRegistry } from '../../providers/structured-agent-registry'
@@ -131,7 +131,7 @@ export async function openHost(
     implementation.atRestCommands = undefined
   }
   const agents = new StructuredAgentRegistry(
-    structuredAgentsDeclaringNothing([CLAUDE_STRUCTURED_AGENT, acpStructuredAgentDefinition(OMP)])
+    structuredAgentsDeclaringNothing([CLAUDE_STRUCTURED_AGENT, acpStructuredAgentDefinition(SPEC)])
       .definitions()
       .map((definition) => ({ definition, adapter: implementation }))
   )
@@ -205,14 +205,14 @@ afterEach(async () => {
   await rm(directory, { recursive: true, force: true })
 })
 
-export async function attachContext(provider: 'claude' | 'omp', index: number): Promise<string> {
+export async function attachContext(provider: 'claude' | 'nessy', index: number): Promise<string> {
   const sessionId = crypto.randomUUID()
-  if (provider === 'omp') {
+  if (provider === 'nessy') {
     await store.reserveOwner({
       sessionId,
       provider,
       location: { ...store.getRecord(SESSION)!.location, workspaceId: `workspace-${index}` },
-      accountHome: { variable: 'PI_CODING_AGENT_DIR', path: account },
+      accountHome: { variable: 'NESSY_HOME', path: account },
       expectedFence: null,
       spawnToken: crypto.randomUUID(),
       claimKeyId: 'key',
@@ -232,7 +232,7 @@ export async function attachContext(provider: 'claude' | 'omp', index: number): 
       accountHome:
         provider === 'claude'
           ? { variable: 'CLAUDE_CONFIG_DIR', path: account }
-          : { variable: 'PI_CODING_AGENT_DIR', path: account },
+          : { variable: 'NESSY_HOME', path: account },
       location: { ...store.getRecord(SESSION)!.location, workspaceId: `workspace-${index}` },
       providerHandle: { kind: 'claude', sessionId: crypto.randomUUID(), leafUuid: null }
     })

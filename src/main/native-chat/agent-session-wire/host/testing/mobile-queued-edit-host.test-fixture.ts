@@ -68,7 +68,7 @@ export const createMobileCommandMenuHostFixture: MobileCommandMenuHostFixtureMod
     const { join } = await import('node:path')
     const { ClaudeAtRestCommandCatalog } =
       await import('../../../../claude/command-catalog/claude-at-rest-commands')
-    const { commandDiscoveryRig, OMP, DISCOVERY_SESSION } =
+    const { commandDiscoveryRig, SPEC, DISCOVERY_SESSION } =
       await import('../../../../acp/discovery/testing/acp-command-discovery.test-fixture')
     const { acpStructuredAgentDefinition } =
       await import('../../../../acp/session/acp-structured-agent-definitions')
@@ -103,8 +103,8 @@ export const createMobileCommandMenuHostFixture: MobileCommandMenuHostFixtureMod
       }
       return cwd
     }
-    const omp =
-      provider === 'omp'
+    const discovery =
+      provider === 'nessy'
         ? await commandDiscoveryRig(
             (child) => {
               starts++
@@ -123,7 +123,7 @@ export const createMobileCommandMenuHostFixture: MobileCommandMenuHostFixtureMod
           )
         : undefined
     const catalog =
-      omp?.catalog ??
+      discovery?.catalog ??
       new ClaudeAtRestCommandCatalog({
         resolveWorkspacePath,
         probe: async () => {
@@ -133,7 +133,7 @@ export const createMobileCommandMenuHostFixture: MobileCommandMenuHostFixtureMod
       })
     const agents = new StructuredAgentRegistry(
       structuredAgentsDeclaringNothing([
-        provider === 'omp' ? acpStructuredAgentDefinition(OMP) : CLAUDE_STRUCTURED_AGENT
+        provider === 'nessy' ? acpStructuredAgentDefinition(SPEC) : CLAUDE_STRUCTURED_AGENT
       ])
         .registrations()
         .map((registration) => ({
@@ -151,7 +151,7 @@ export const createMobileCommandMenuHostFixture: MobileCommandMenuHostFixtureMod
         sessionId,
         provider,
         accountHome: {
-          variable: provider === 'claude' ? 'CLAUDE_CONFIG_DIR' : 'PI_CODING_AGENT_DIR',
+          variable: provider === 'claude' ? 'CLAUDE_CONFIG_DIR' : 'NESSY_HOME',
           path: root
         },
         location: {
@@ -221,7 +221,7 @@ export const createMobileCommandMenuHostFixture: MobileCommandMenuHostFixtureMod
         catalog.dispose()
         preparation.resolve()
         await host.flushAllStreamedEvents()
-        await omp?.dispose()
+        await discovery?.dispose()
         await closeTestJournalHostDatabase(root)
         await rm(root, { recursive: true, force: true })
       }

@@ -7,34 +7,34 @@ import {
 describe('selectForegroundProcessCandidate', () => {
   it('keeps a recognized ancestor over a different agent helper below a non-agent', () => {
     const candidates = [
-      { pid: 101, ppid: 100, depth: 1, stat: 'S+', command: 'omp' },
+      { pid: 101, ppid: 100, depth: 1, stat: 'S+', command: 'nessy' },
       { pid: 102, ppid: 101, depth: 2, stat: 'S+', command: 'vendor-ui' },
       { pid: 103, ppid: 102, depth: 3, stat: 'S+', command: 'codex' }
     ]
 
     expect(selectForegroundProcessCandidate(candidates)).toMatchObject({
       candidate: { pid: 101 },
-      recognized: { agent: 'omp' }
+      recognized: { agent: 'nessy' }
     })
   })
 
   it('traverses non-foreground helpers when checking ancestry', () => {
     const all = [
-      { pid: 101, ppid: 100, depth: 1, stat: 'S+', command: 'omp' },
+      { pid: 101, ppid: 100, depth: 1, stat: 'S+', command: 'nessy' },
       { pid: 102, ppid: 101, depth: 2, stat: 'S', command: 'vendor-helper' },
       { pid: 103, ppid: 102, depth: 3, stat: 'S+', command: 'codex' }
     ]
 
     expect(selectForegroundProcessCandidate([all[0], all[2]], all)).toMatchObject({
       candidate: { pid: 101 },
-      recognized: { agent: 'omp' }
+      recognized: { agent: 'nessy' }
     })
   })
 
   it('refuses different recognized agents on sibling lineages', () => {
     const candidates = [
       { pid: 101, ppid: 100, depth: 1, stat: 'S+', command: 'codex' },
-      { pid: 102, ppid: 100, depth: 1, stat: 'S+', command: 'gemini' }
+      { pid: 102, ppid: 100, depth: 1, stat: 'S+', command: 'nessy' }
     ]
 
     expect(selectForegroundProcessCandidate(candidates)).toBeNull()
@@ -43,7 +43,7 @@ describe('selectForegroundProcessCandidate', () => {
 
 it('terminates on a ppid cycle that never reaches the outer agent', () => {
   const cycle: ForegroundProcessCandidate[] = [
-    { pid: 1, ppid: 0, depth: 0, stat: 'S+', command: 'claude' },
+    { pid: 1, ppid: 0, depth: 0, stat: 'S+', command: 'tclaude' },
     { pid: 2, ppid: 3, depth: 1, stat: 'S+', command: 'codex' },
     { pid: 3, ppid: 2, depth: 2, stat: 'S+', command: 'bash -lc build' }
   ]
@@ -56,7 +56,7 @@ it('does not reuse ancestry after reparenting, spawning or exit', () => {
     ppid: 1,
     depth: 0,
     stat: 'S+',
-    command: 'claude'
+    command: 'tclaude'
   }
   const helper: ForegroundProcessCandidate = {
     pid: 11,
@@ -75,7 +75,7 @@ it('does not reuse ancestry after reparenting, spawning or exit', () => {
     ppid: 1,
     depth: 1,
     stat: 'S+',
-    command: 'opencode'
+    command: 'nessy'
   }
   expect(selectForegroundProcessCandidate([shell, helper, sibling])).toBeNull()
 

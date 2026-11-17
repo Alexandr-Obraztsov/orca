@@ -32,7 +32,7 @@ const resume = {
   launch: {
     resume: {
       sessionId: PROVIDER_SESSION,
-      key: 'acp:grok:saved',
+      key: 'acp:nessy:saved',
       mayBeUnsaved: async () => false,
       lossKeys: []
     }
@@ -118,46 +118,6 @@ describe('the reattach window', () => {
     await rig.acquire()
     await rig.settle()
     expect(await rig.rig.rows()).toEqual([])
-  })
-})
-
-describe('the context meter across a reopen', () => {
-  it('keeps the last reading the journal holds; the load only refreshes the window', async () => {
-    const models = {
-      currentModelId: 'grok-4.7',
-      availableModels: [
-        { modelId: 'grok-4.7', name: 'Grok 4.7', _meta: { totalContextTokens: 256_000 } }
-      ]
-    }
-    const rig = await openAcpAdapterRig({
-      ...resume,
-      initialize: RESUMES,
-      script: (agent) =>
-        agent.on('session/load', (frame) =>
-          agent.reply(frame, { configOptions: GROK_CONFIG_OPTIONS, models })
-        )
-    })
-    await rig.acquire()
-    await sendHello(rig, 'm1')
-    const prompt = await rig.frame('session/prompt')
-    const { agent } = rig.child()
-    agent.notify('session/update', replyChunk('prompt:m1', 'hi'))
-    agent.notify('session/update', {
-      sessionId: PROVIDER_SESSION,
-      update: { sessionUpdate: 'usage_update', used: 4_000, size: 200_000 }
-    })
-    agent.reply(prompt, { stopReason: 'end_turn' })
-    await rig.settle()
-    await rig.adapter.closeSession(SESSION)
-    await rig.acquire({ fence: 2 })
-    await rig.settle()
-    const usage = (await rig.rig.rows())
-      .flatMap((row) => readAgentJournalTurn(row.body) ?? [])
-      .at(-1)?.contextUsage
-    expect(usage).toMatchObject({
-      window: { tokens: 256_000 },
-      used: { usage: { inputTokens: 4_000 } }
-    })
   })
 })
 

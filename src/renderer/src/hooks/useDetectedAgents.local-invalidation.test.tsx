@@ -168,17 +168,17 @@ it('recovers mounted native consumers after availability changes alongside WSL l
       call: vi.fn(async () => ({
         id: 'registered-agents',
         ok: true,
-        result: { agents: [{ agent: 'pi', capabilities: {} }] }
+        result: { agents: [{ agent: 'nessy', capabilities: {} }] }
       }))
     }
   })
-  let nativeAgents = ['pi', 'codex']
+  let nativeAgents = ['nessy', 'codex']
   detectAgents.mockImplementation((context) =>
     Promise.resolve(
       context?.projectRuntime?.runtime.kind === 'wsl'
         ? context.enabledOnly
           ? ['claude']
-          : ['claude', 'kiro']
+          : ['claude', 'qwen-code']
         : nativeAgents
     )
   )
@@ -186,41 +186,41 @@ it('recovers mounted native consumers after availability changes alongside WSL l
     useHostStructuredAgentsSync()
     useSourceControlActionAgentInventory()
     return {
-      native: useSourceControlActionAgent('pi', 'codex'),
+      native: useSourceControlActionAgent('nessy', 'codex'),
       workspace: useDetectedAgents({ kind: 'local' }),
       settings: useDetectedAgents({ kind: 'local' }, 'all')
     }
   })
   await act(async () => {})
-  expect(result.current.native).toMatchObject({ status: 'ready', agent: 'pi' })
-  expect(readHostStructuredAgentsForRuntime('local', null)?.map((row) => row.agent)).toEqual(['pi'])
+  expect(result.current.native).toMatchObject({ status: 'ready', agent: 'nessy' })
+  expect(readHostStructuredAgentsForRuntime('local', null)?.map((row) => row.agent)).toEqual(['nessy'])
 
   nativeAgents = ['codex']
   await act(async () => {
-    useAppStore.setState({ settings: { ...settings, disabledTuiAgents: ['pi', 'kiro'] } })
+    useAppStore.setState({ settings: { ...settings, disabledTuiAgents: ['nessy', 'qwen-code'] } })
   })
   expect(readNativeDetectedAgents(useAppStore.getState())).toEqual(['codex'])
   expect(result.current.native).toMatchObject({ status: 'ready', agent: 'codex' })
   expect(result.current.workspace).toMatchObject({ detectedIds: ['claude'], isLoading: false })
   expect(result.current.settings).toMatchObject({
-    detectedIds: ['claude', 'kiro'],
+    detectedIds: ['claude', 'qwen-code'],
     isLoading: false
   })
   const probesAfterDisable = detectAgents.mock.calls.length
   await act(async () => {
-    useAppStore.setState({ settings: { ...settings, disabledTuiAgents: ['kiro', 'pi'] } })
+    useAppStore.setState({ settings: { ...settings, disabledTuiAgents: ['qwen-code', 'nessy'] } })
   })
   expect(detectAgents).toHaveBeenCalledTimes(probesAfterDisable)
 
-  nativeAgents = ['pi', 'codex']
+  nativeAgents = ['nessy', 'codex']
   await act(async () => {
-    useAppStore.setState({ settings: { ...settings, disabledTuiAgents: ['kiro'] } })
+    useAppStore.setState({ settings: { ...settings, disabledTuiAgents: ['qwen-code'] } })
   })
-  expect(readNativeDetectedAgents(useAppStore.getState())).toEqual(['pi', 'codex'])
-  expect(result.current.native).toMatchObject({ status: 'ready', agent: 'pi' })
+  expect(readNativeDetectedAgents(useAppStore.getState())).toEqual(['nessy', 'codex'])
+  expect(result.current.native).toMatchObject({ status: 'ready', agent: 'nessy' })
   expect(result.current.workspace).toMatchObject({ detectedIds: ['claude'], isLoading: false })
   expect(result.current.settings).toMatchObject({
-    detectedIds: ['claude', 'kiro'],
+    detectedIds: ['claude', 'qwen-code'],
     isLoading: false
   })
   expect(useAppStore.getState().detectedAgentIds).toEqual(['claude'])

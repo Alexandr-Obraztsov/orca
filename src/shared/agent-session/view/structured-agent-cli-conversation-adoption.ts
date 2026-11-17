@@ -2,13 +2,7 @@
  * Conversations stay on their recording host, which validates importer availability before adoption. */
 export const CLI_CONVERSATION_ADOPTING_AGENTS = {
   claude: ['claude'],
-  codex: ['codex'],
-  grok: ['grok'],
-  omp: ['omp'],
-  opencode: ['opencode'],
-  // OpenCode 2 chats require 2.x; ordinary OpenCode chats can adopt when their installed opencode is 2.x.
-  opencode2: ['opencode2', 'opencode'],
-  pi: ['pi']
+  codex: ['codex']
 } as const
 
 /** A Session History row agent whose conversations a chat can take over. */

@@ -4,7 +4,6 @@ import {
   resolveCompatibleAgentTypeForOwner,
   shareCompatibleTitleIdentityGroup
 } from '../title/agent-title-owner'
-import { isOpenCodeNativeTitle } from '../title/providers/opencode-terminal-title'
 import { resolvePaneAgentOwnerRecord } from './pane-agent-owner'
 import type { TerminalAgent } from './terminal-agent'
 import type { TuiAgent } from '../../agent-launch/catalog/tui-agent'
@@ -108,7 +107,7 @@ export function resolveTabAgentFromSignals(args: {
   const rawTitleAgent = resolveExplicitTerminalTitleAgentType(args.title)
   const explicitTitleAgent = resolveSignalAgentForLaunchOwner(rawTitleAgent, owner, ownerIsLaunch)
   const priorIdentity = idleFocusedIdentity ?? launchAgent
-  const nativeOpenCodeTitle = explicitTitleAgent === 'opencode' && isOpenCodeNativeTitle(args.title)
+  const nativeOpenCodeTitle = false
   // Why: native OpenCode titles can reclaim stale launch intent before any observed hook signal.
   // Raw title group, not the fallback-rewritten agent: inferred Pi owners would otherwise treat an OMP wrapper title as a different identity.
   const titleReclaimsReusedPane =

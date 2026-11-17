@@ -3,9 +3,7 @@ import type { SleepingAgentLaunchConfig } from '../../agent-session/lifecycle/ag
 import type { SessionOptionValue } from '../../native-chat/input/native-chat-session-options'
 import type { TuiAgent } from '../catalog/tui-agent'
 import { TUI_AGENT_CONFIG } from '../catalog/tui-agent-config'
-import { tokenizeStartupCommand, type AgentStartupShell } from './tui-agent-startup-shell'
-import { findOpenCodeRunCommand } from '../../agent-status/process/opencode-headless-command'
-import { openCodeStartupPromptEnv } from './opencode-startup-prompt'
+import type { AgentStartupShell } from './tui-agent-startup-shell'
 
 export function appliedSessionOptionProps(values: Record<string, SessionOptionValue>) {
   return Object.keys(values).length > 0 ? { sessionOptions: { ...values } } : {}
@@ -21,17 +19,7 @@ export function buildFlagPromptStartupPlan(args: {
   sessionOptions: Record<string, SessionOptionValue>
   agentEnv: Record<string, string> | null | undefined
 }): AgentStartupPlan {
-  const parsed = tokenizeStartupCommand(args.launchCommand, args.shell)
-  const openCodeRun =
-    (args.agent === 'opencode' || args.agent === 'opencode2') && parsed.ok
-      ? findOpenCodeRunCommand(parsed.tokens, args.shell)
-      : null
-  // OpenCode run takes a positional message; --prompt belongs to its TUI.
-  const promptSuffix = openCodeRun
-    ? openCodeRun.messageSeparatorIndex !== null
-      ? ` ${args.quotedPrompt}`
-      : ` -- ${args.quotedPrompt}`
-    : ` --prompt ${args.quotedPrompt}`
+  const promptSuffix = ` --prompt ${args.quotedPrompt}`
   return {
     agent: args.agent,
     launchCommand: `${args.launchCommand}${promptSuffix}`,
@@ -39,12 +27,6 @@ export function buildFlagPromptStartupPlan(args: {
     followupPrompt: null,
     launchConfig: args.launchConfig,
     ...appliedSessionOptionProps(args.sessionOptions),
-    ...openCodeStartupPromptEnv(
-      args.agent,
-      args.launchCommand,
-      args.shell,
-      args.prompt,
-      args.agentEnv
-    )
+    ...(args.agentEnv ? { env: { ...args.agentEnv } } : {})
   }
 }

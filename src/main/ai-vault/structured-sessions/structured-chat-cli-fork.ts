@@ -107,7 +107,7 @@ export async function prepareStructuredChatCliFork(
     requireCurrent()
     const result = await copyStructuredChatRecordConversation(record, providerSessionId)
     const copy = result.forkedSession
-    if (!copy || (agent === 'omp' && !copy.filePath)) {
+    if (!copy) {
       throw new Error('The agent did not return a saved conversation copy.')
     }
     return {

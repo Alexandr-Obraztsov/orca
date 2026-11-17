@@ -1,4 +1,3 @@
-import { assertOpenCodeModelLaunchPreferencesAbsent } from '../../../opencode/model-launch/opencode-model-startup-plan'
 import {
   formatAmbiguousCwdParentMessage,
   type WorktreeLineageInput,
@@ -62,11 +61,6 @@ export abstract class OrcaRuntimeWithCreateManagedWorktree extends OrcaRuntimeWi
     events: RuntimeWorkspaceCreateEvents
   ): Promise<CreateWorktreeResult> {
     this.requireStore()
-
-    assertOpenCodeModelLaunchPreferencesAbsent(
-      args.startup ? (args.startupAgent ?? args.createdWithAgent) : undefined,
-      args.startupSessionOptions ?? args.startupLaunchPreferences
-    )
 
     const repo = await this.resolveRepoSelector(args.repoSelector)
     return withProjectWorktreeCreate(repo, async () => {

@@ -1,6 +1,4 @@
 import { UNFLUSHED_SETTLE_MS } from './transcript-watching/transcript-watch-contract'
-import { subscribeOpenCodeNativeChatTranscript } from './transcript-history/opencode/transcript-opencode-subscribe'
-import { resolveNativeChatTranscriptAgent } from '../../shared/native-chat/native-chat-agent-support'
 import { extname } from 'node:path'
 import type { NativeChatMessage } from '../../shared/native-chat/native-chat-types'
 import {
@@ -235,14 +233,6 @@ export async function subscribeNativeChatTranscript(
   setupSignal?: AbortSignal
 ): Promise<NativeChatTranscriptSubscription> {
   setupSignal?.throwIfAborted()
-  if (resolveNativeChatTranscriptAgent(args.agent) === 'opencode') {
-    return subscribeOpenCodeNativeChatTranscript(
-      args,
-      setupSignal,
-      {},
-      args.agent === 'zcode' ? 'zcode' : undefined
-    )
-  }
   const decode = nativeChatLineDecoderForAgent(args.agent)
   if (!decode) {
     return { unsubscribe: () => {}, watching: false }

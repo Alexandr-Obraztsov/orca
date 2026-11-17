@@ -34,7 +34,6 @@ export type AiVaultSubagentResumeActions = {
 
 function isIndependentlyResumableSubagent(session: AiVaultSession): boolean {
   return (
-    session.agent === 'omp' &&
     Boolean(session.subagent) &&
     Boolean(session.sessionId.trim()) &&
     session.sessionId !== session.subagent?.parentSessionId &&
@@ -132,7 +131,6 @@ function SubagentBranchRow({
   const locator = subagentTranscriptKey(session)
   const key = JSON.stringify([...ancestors, locator])
   const expandable =
-    session.agent === 'omp' &&
     session.executionHostId === LOCAL_EXECUTION_HOST_ID &&
     session.subagentTranscriptCount > 0 &&
     !ancestors.includes(locator)

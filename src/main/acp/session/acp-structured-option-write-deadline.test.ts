@@ -94,7 +94,7 @@ it('applies restored effort after a withdrawn model control despite an interveni
     launch: {
       resume: {
         sessionId: PROVIDER_SESSION,
-        key: 'acp:grok:saved',
+        key: 'acp:nessy:saved',
         mayBeUnsaved: async () => false,
         lossKeys: []
       }
@@ -152,13 +152,13 @@ it.each([
     end: 'the agent exits on its own',
     trigger: (rig: AcpAdapterRig) => rig.child().exit(),
     closedByOrca: undefined,
-    reason: /^grok ACP agent exited/
+    reason: /^nessy ACP agent exited/
   },
   {
     end: 'Orca loses its connection to the agent',
     trigger: (rig: AcpAdapterRig) => rig.child().agent.stdin.destroy(),
     closedByOrca: true,
-    reason: /^grok ACP connection closed/
+    reason: /^nessy ACP connection closed/
   }
 ])(
   'keeps who ended the agent when its final journal write is refused: $end',

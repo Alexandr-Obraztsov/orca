@@ -21,16 +21,6 @@ describe('Canonical hook status readiness', () => {
   const BUSY_SCREEN = '⠋ Working...\r\n'
   // A Codex turn in progress, which Codex's screen rules read as busy.
 
-  // OpenCode 1.18's permission dialog, as the line tail keeps it after the prompt is answered.
-  const OPENCODE_PERMISSION_DIALOG = [
-    '△ Permission required',
-    '# Shell command',
-    '$ echo hi',
-    ' Allow once   Allow always   Reject     ctrl+f fullscreen  ⇆ select  enter confirm',
-    ''
-  ].join('\r\n')
-  // OpenCode 1.18's question tool, which paints no dialog wording the blocked layer knows.
-
   // Shorter than the 2 s poll, so only the synchronous verdict can settle a wait.
   const WAIT_MS = 150
 
@@ -41,7 +31,7 @@ describe('Canonical hook status readiness', () => {
       connectionId: null,
       state: 'done',
       prompt: '',
-      agentType: 'pi',
+      agentType: 'codex',
       receivedAt: now,
       stateStartedAt: now,
       ...overrides
@@ -58,9 +48,9 @@ describe('Canonical hook status readiness', () => {
     const pane = await createTranscriptPane(
       {
         paneTitle: 'Terminal',
-        foregroundProcess: options.launchAgent ?? 'pi',
+        foregroundProcess: options.launchAgent ?? 'codex',
         data: options.data ?? BUSY_SCREEN,
-        launchAgent: options.launchAgent ?? 'pi'
+        launchAgent: options.launchAgent ?? 'codex'
       },
       { getAgentStatusSnapshot: () => options.rows(handle) }
     )
@@ -98,25 +88,6 @@ describe('Canonical hook status readiness', () => {
         await waitOutcome({
           rows: () => [row({ receivedAt: Date.now() - 1000 })],
           data: `\x1b]133;A\x07OK\x1b]133;C\x07${BUSY_SCREEN}`
-        })
-      ).toBe('ready')
-    })
-
-    it("settles past a denied prompt's dialog text once the hook says the turn ended", async () => {
-      const options = { launchAgent: 'opencode' as const, data: OPENCODE_PERMISSION_DIALOG }
-      expect(await waitOutcome({ ...options, rows: () => [] })).toBe(
-        'blocked:agent-interactive-prompt'
-      )
-      expect(
-        await waitOutcome({
-          ...options,
-          rows: () => [row({ agentType: 'opencode', state: 'waiting', receivedAt: Date.now() + 1 })]
-        })
-      ).toBe('blocked:agent-interactive-prompt')
-      expect(
-        await waitOutcome({
-          ...options,
-          rows: () => [row({ agentType: 'opencode', receivedAt: Date.now() + 1 })]
         })
       ).toBe('ready')
     })

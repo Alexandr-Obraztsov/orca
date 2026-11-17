@@ -198,7 +198,7 @@ describe('submitFolderWorkspaceCreate on an Orca server', () => {
 it.each([
   { agent: 'codex', delivery: 'draft' },
   { agent: 'claude', delivery: null },
-  { agent: 'autohand', delivery: 'auto-submit' }
+  { agent: 'qwen-code', delivery: 'auto-submit' }
 ] as const)(
   'preserves the actual paired $agent delivery through schemas and the host starter ($delivery)',
   async ({ agent, delivery }) => {
@@ -325,7 +325,7 @@ it.each([
       expect(pasteDraft).not.toHaveBeenCalled()
       expect(sendFollowup).toHaveBeenCalledExactlyOnceWith(
         'agent',
-        { agent: 'autohand', prompt: 'Inspect regular task' },
+        { agent: 'qwen-code', prompt: 'Inspect regular task' },
         expect.objectContaining({ tabId: 'returned-agent-tab' })
       )
     } else {

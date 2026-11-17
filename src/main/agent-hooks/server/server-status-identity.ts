@@ -1,7 +1,10 @@
 import type { AgentKind } from '../../../shared/telemetry/schemas/telemetry-property-schemas'
 import { publishedOrcaSessionId } from '../identity/pane-agent-identities'
 import { getAgentResumeArgv } from '../../../shared/agent-launch/startup/agent-resume-argv'
-import type { AgentProviderSessionMetadata } from '../../../shared/agent-session/lifecycle/agent-session-resume'
+import type {
+  AgentProviderSessionMetadata,
+  ResumableTuiAgent
+} from '../../../shared/agent-session/lifecycle/agent-session-resume'
 import {
   parseLegacyNumericPaneKey,
   parsePaneKey
@@ -49,7 +52,7 @@ export function isValidPiProviderSessionOnly(
   providerSession: AgentProviderSessionMetadata | undefined,
   agentType: AgentType | undefined
 ): boolean {
-  return Boolean(providerSession && agentType === 'pi' && getAgentResumeArgv('pi', providerSession))
+  return Boolean(providerSession && agentType === 'pi' && getAgentResumeArgv('pi' as ResumableTuiAgent, providerSession))
 }
 
 export function toAgentStatusIpcPayload(

@@ -30,13 +30,13 @@ afterEach(() => {
 describe.skipIf(process.platform === 'win32')('agent CLI resolution on a WSL host', () => {
   const options = () => ({ pathEnv: `${native}:${drive}/npm`, homePath: join(root, 'home') })
 
-  it.each(['claude', 'codex'])('takes the WSL install of %s over a Windows copy', (name) => {
+  it.each(['tclaude', 'codex'])('takes the WSL install of %s over a Windows copy', (name) => {
     const own = install(native, name)
     install(join(drive, 'npm'), name)
     expect(resolveGuestNativeAgentCommand(name, options(), [drive])).toBe(own)
   })
 
-  it.each(['claude', 'codex'])(
+  it.each(['tclaude', 'codex'])(
     'reads a Windows-only %s as not installed: never a bare name the spawn would find',
     (name) => {
       install(join(drive, 'npm'), name)

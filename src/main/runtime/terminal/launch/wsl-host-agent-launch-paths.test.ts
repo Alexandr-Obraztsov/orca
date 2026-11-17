@@ -105,7 +105,7 @@ describe.skipIf(originalPlatform === 'win32')('WSL-host agent launch paths', () 
     } as const
 
     it('refuses a Windows-only agent', async () => {
-      fakeExecutable(windowsBin, 'claude')
+      fakeExecutable(windowsBin, 'tclaude')
       const { runtime } = makeRuntime()
       const createTerminal = vi.spyOn(runtime, 'createTerminal')
       await expect(runtime.ensureAgentSession(request, {})).rejects.toThrow(

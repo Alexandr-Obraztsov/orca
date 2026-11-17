@@ -71,12 +71,6 @@ export function discoveredModelsResult(
     }
     return { success: false, error: `${spec.label} returned no available models.` }
   }
-  if (spec.id === 'opencode' || spec.id === 'opencode2') {
-    const configuredDefault = spec.models.find((model) => model.id === 'default')
-    if (configuredDefault && !models.some((model) => model.id === 'default')) {
-      models = [configuredDefault, ...models]
-    }
-  }
   // Static default sentinels preserve the CLI's configured provider despite concrete discovered models.
   const defaultModelId =
     spec.defaultModelId === 'default' || models.some((model) => model.id === spec.defaultModelId)

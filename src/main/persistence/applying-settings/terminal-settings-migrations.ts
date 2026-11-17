@@ -210,9 +210,6 @@ export function migrateAgentYoloDefaults(
 ): Pick<GlobalSettings, 'agentDefaultArgs' | 'agentDefaultEnv' | 'agentYoloDefaultsMigrated'> {
   const existingArgs = normalizeTuiAgentArgsRecord(settings?.agentDefaultArgs)
   const existingEnv = normalizeTuiAgentEnvRecord(settings?.agentDefaultEnv)
-  if (existingArgs.devin === '--permission-mode bypass') {
-    existingArgs.devin = DEFAULT_TUI_AGENT_ARGS.devin
-  }
   if (settings?.agentYoloDefaultsMigrated === true) {
     // Pin newly added agents to manual; missing keys otherwise inherit current yolo defaults.
     for (const agent of Object.keys(DEFAULT_TUI_AGENT_ARGS)) {

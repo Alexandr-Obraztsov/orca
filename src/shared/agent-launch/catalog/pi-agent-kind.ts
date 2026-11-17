@@ -1,8 +1,3 @@
-import { isFreshOmpLaunchCommand } from '../startup/omp-fresh-launch'
-import { TUI_AGENT_CONFIG } from './tui-agent-config'
-import { getCommandTokenPathBasename, getFirstCommandToken } from '../../command-token-scanner'
-import { extractAgentLaunchCommand } from '../startup/agent-command-line-intent'
-
 /** Pi-compatible agents share PI_CODING_AGENT_DIR and extension APIs but have separate user directories.
  * Never cross-fallback: switching agents must not shadow the other agent’s extensions. */
 export type PiAgentKind = 'pi' | 'omp' | 'prime-agent'
@@ -26,44 +21,19 @@ export function isPiCompatibleAgentType(
   return agentType === 'pi' || agentType === 'omp' || agentType === 'prime-agent'
 }
 
-function getLaunchBinary(command: string): string {
-  return getCommandTokenPathBasename(getFirstCommandToken(command))
-    .toLowerCase()
-    .replace(/\.(?:cmd|exe|sh)$/, '')
-}
-
-const PI_LAUNCH_BINARY = getLaunchBinary(TUI_AGENT_CONFIG.pi.launchCmd)
-const OMP_LAUNCH_BINARY = getLaunchBinary(TUI_AGENT_CONFIG.omp.launchCmd)
-const PRIME_AGENT_LAUNCH_BINARY = getLaunchBinary(TUI_AGENT_CONFIG['prime-agent'].launchCmd)
+// pi/omp/prime-agent are no longer TuiAgents, so their launch binaries cannot be resolved
+// from TUI_AGENT_CONFIG and their kind detection is dead. These functions return only the
+// bare-shell 'pi' default.
 
 export function detectExplicitPiAgentKindFromCommand(
-  command: string | undefined
+  _command: string | undefined
 ): PiAgentKind | null {
-  const launchCommand = extractAgentLaunchCommand(command ?? '')
-  if (isFreshOmpLaunchCommand(launchCommand)) {
-    return 'omp'
-  }
-  const binary = getLaunchBinary(launchCommand)
-  if (binary === OMP_LAUNCH_BINARY) {
-    return 'omp'
-  }
-  if (binary === PRIME_AGENT_LAUNCH_BINARY) {
-    return 'prime-agent'
-  }
-  return binary === PI_LAUNCH_BINARY ? 'pi' : null
+  return null
 }
 
 /** Detect the launched Pi-compatible kind; retain pi as the bare-shell integration default.
  * Missing directories must create only the resolved kind’s extension directory, never substitute another agent’s. */
-export function detectPiAgentKindFromCommand(command: string | undefined): PiAgentKind {
-  const explicitKind = detectExplicitPiAgentKindFromCommand(command)
-  if (explicitKind) {
-    return explicitKind
-  }
-
-  // Why: PI launches and the no-command (bare-shell) fallback both resolve to
-  // 'pi'. A bare shell that later invokes `pi` keeps the historical default;
-  // if it later invokes `omp`, the status extension re-routes at runtime based
-  // on the executable name so attribution still lands on OMP.
+export function detectPiAgentKindFromCommand(_command: string | undefined): PiAgentKind {
+  // Why: PI launches and the no-command (bare-shell) fallback both resolve to 'pi'.
   return 'pi'
 }

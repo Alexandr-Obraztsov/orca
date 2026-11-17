@@ -6,7 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { AgentIcon } from '@/components/agent/icons/AgentIcon'
 import {
   ClaudeIcon,
   GeminiIcon,
@@ -81,18 +80,6 @@ export function StatusBarVisibilityMenu({
             {t('auto.components.status.bar.StatusBar.c1df0d67ec', 'Gemini Usage')}
           </DropdownMenuCheckboxItem>
         )}
-        {isStatusBarItemAvailable('antigravity', detectedAgentIds) && (
-          <DropdownMenuCheckboxItem
-            checked={statusBarItems.includes('antigravity')}
-            onCheckedChange={() => {
-              recordFeatureInteraction('usage-tracking')
-              toggleStatusBarItem('antigravity')
-            }}
-          >
-            <AgentIcon agent="antigravity" size={14} />
-            {t('auto.components.status.bar.StatusBar.antigravityUsage', 'Antigravity Usage')}
-          </DropdownMenuCheckboxItem>
-        )}
         <DropdownMenuCheckboxItem
           checked={statusBarItems.includes('opencode-go')}
           onCheckedChange={() => {
@@ -103,18 +90,6 @@ export function StatusBarVisibilityMenu({
           <OpenCodeGoIcon size={14} />
           {t('auto.components.status.bar.StatusBar.8c86cd77b0', 'OpenCode Go Usage')}
         </DropdownMenuCheckboxItem>
-        {isStatusBarItemAvailable('kimi', detectedAgentIds) && (
-          <DropdownMenuCheckboxItem
-            checked={statusBarItems.includes('kimi')}
-            onCheckedChange={() => {
-              recordFeatureInteraction('usage-tracking')
-              toggleStatusBarItem('kimi')
-            }}
-          >
-            <AgentIcon agent="kimi" size={14} />
-            {t('auto.components.status.bar.StatusBar.5e59007df4', 'Kimi Usage')}
-          </DropdownMenuCheckboxItem>
-        )}
         <DropdownMenuCheckboxItem
           checked={statusBarItems.includes('minimax')}
           onCheckedChange={() => {
@@ -124,52 +99,6 @@ export function StatusBarVisibilityMenu({
         >
           <MiniMaxIcon size={14} />
           {t('auto.components.status.bar.StatusBar.3bbf140864', 'MiniMax Usage')}
-        </DropdownMenuCheckboxItem>
-        {isStatusBarItemAvailable('grok', detectedAgentIds) && (
-          <DropdownMenuCheckboxItem
-            checked={statusBarItems.includes('grok')}
-            onCheckedChange={() => {
-              recordFeatureInteraction('usage-tracking')
-              toggleStatusBarItem('grok')
-            }}
-          >
-            <AgentIcon agent="grok" size={14} />
-            {t('auto.components.status.bar.StatusBar.grokUsageMenu', 'Grok Usage')}
-          </DropdownMenuCheckboxItem>
-        )}
-        {isStatusBarItemAvailable('zcode', detectedAgentIds) && (
-          <DropdownMenuCheckboxItem
-            checked={statusBarItems.includes('zcode')}
-            onCheckedChange={() => {
-              recordFeatureInteraction('usage-tracking')
-              toggleStatusBarItem('zcode')
-            }}
-          >
-            <AgentIcon agent="zcode" size={14} />
-            {t('auto.components.status.bar.StatusBar.zcodeUsageMenu', 'ZCode Usage')}
-          </DropdownMenuCheckboxItem>
-        )}
-        {isStatusBarItemAvailable('muse', detectedAgentIds) && (
-          <DropdownMenuCheckboxItem
-            checked={statusBarItems.includes('muse')}
-            onCheckedChange={() => {
-              recordFeatureInteraction('usage-tracking')
-              toggleStatusBarItem('muse')
-            }}
-          >
-            <AgentIcon agent="muse" size={14} />
-            {t('auto.components.status.bar.StatusBar.museUsageMenu', 'Muse Usage')}
-          </DropdownMenuCheckboxItem>
-        )}
-        <DropdownMenuCheckboxItem
-          checked={statusBarItems.includes('cursor')}
-          onCheckedChange={() => {
-            recordFeatureInteraction('usage-tracking')
-            toggleStatusBarItem('cursor')
-          }}
-        >
-          <AgentIcon agent="cursor" size={14} />
-          {t('auto.components.status.bar.StatusBar.cursorUsageMenu', 'Cursor Usage')}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={statusBarItems.includes('ssh')}

@@ -1,26 +1,11 @@
 import { AcpRpcError } from '../transport/acp-errors'
-import type { AcpStructuredConnection } from '../process/acp-structured-connection'
-import { GROK_TEXT_TASK_ENV } from '../../grok/grok-text-task'
 import { waitForPromiseWithSignal } from '../../../shared/abort-signal-reason'
 import type { AcpStructuredSessionAdapterDeps } from '../session/acp-structured-session-adapter-deps'
 import { STRUCTURED_CHILD_ENV_TO_DELETE } from '../../runtime/agent-session/environment/structured-session-child-env'
 import { z } from 'zod'
 import type { AcpLaunchSpec } from '../launch/acp-launch-contract'
-import type {
-  RequestPermissionRequest,
-  RequestPermissionResponse
-} from '../generated/acp-protocol.generated'
 
 const envelope = z.looseObject({ sessionId: z.string() })
-
-export function denyAcpTextTaskPermission(
-  request: RequestPermissionRequest
-): RequestPermissionResponse {
-  const denied = request.options.find((option) => option.kind === 'reject_once')
-  return {
-    outcome: denied ? { outcome: 'selected', optionId: denied.optionId } : { outcome: 'cancelled' }
-  }
-}
 
 export function acpTextTaskCompletion(
   dialect: AcpLaunchSpec['dialect'],
@@ -63,31 +48,11 @@ export async function cleanupAcpTextTaskProtocol(
 }
 
 export function acpTextTaskArgs(spec: AcpLaunchSpec): string[] {
-  const args = spec.args({ fullAccess: false, pluginDir: null })
-  if (spec.agent === 'grok') {
-    args.splice(1, 0, '--no-leader')
-    args.unshift('--permission-mode', 'default')
-  }
-  return args
+  return spec.args({ fullAccess: false, pluginDir: null })
 }
 
-export function acpTextTaskEnv(
-  agent: AcpLaunchSpec['agent'],
-  env: Record<string, string>
-): Record<string, string> {
-  return agent === 'grok' ? { ...env, ...GROK_TEXT_TASK_ENV } : env
-}
-
-export function cleanupGrokTextTaskSession(
-  server: AcpStructuredConnection,
-  sessionId: string,
-  cwd: string | undefined,
-  logger: AcpStructuredSessionAdapterDeps['logger']
-): Promise<void> {
-  return cleanupAcpTextTaskProtocol(
-    () => server.requestSessionFreeExtension('_x.ai/session/delete', { sessionId, cwd }, 2_000),
-    logger
-  )
+export function acpTextTaskEnv(env: Record<string, string>): Record<string, string> {
+  return env
 }
 
 export function rejectAcpTextTaskWork(failed: AbortController): never {

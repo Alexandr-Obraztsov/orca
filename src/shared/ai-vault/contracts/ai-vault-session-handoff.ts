@@ -1,12 +1,10 @@
 import type { ExecutionHostId } from '../../execution-host'
-import { resolveNativeChatTranscriptAgent } from '../../native-chat/native-chat-agent-support'
 import type { AiVaultAgent } from './ai-vault-types'
 
 /** Agents whose rows name one conversation inside an account-wide database. */
-export function isAiVaultDatabaseAgent(
-  agent: AiVaultAgent
-): agent is Extract<AiVaultAgent, 'opencode' | 'opencode2' | 'zcode'> {
-  return resolveNativeChatTranscriptAgent(agent) === 'opencode'
+export function isAiVaultDatabaseAgent(_agent: AiVaultAgent): boolean {
+  // OpenCode/OpenCode2/ZCode are no longer AiVault agents, so no AiVault row is account-wide.
+  return false
 }
 
 /** How long a hand-off waits for the host's saved copy before using the preview. */

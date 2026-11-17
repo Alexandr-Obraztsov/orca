@@ -10,6 +10,7 @@ import { resolveOpenCodeSourceConfigDir } from './pi-agent'
 import { restoreOrStripOverlayEnv } from '../../../../shared/agent-launch/startup/agent-overlay-env'
 import { selectOpenCodeHookAgent } from '../../../../shared/agent-launch/startup/opencode-launch-command'
 import { isTuiAgentEnabled } from '../../../../shared/agent-launch/catalog/tui-agent-selection'
+import type { TuiAgent } from '../../../../shared/agent-launch/catalog/tui-agent'
 import { resolveOpenCodeConfigDirectory } from '../../../../shared/agent-launch/plugins/opencode/opencode-config-directory'
 import { readSessionShellStartupEnvVar } from '../../../pty/shell-startup/shell-startup-env'
 import type { BuildPtyHostEnvOptions } from './types'
@@ -55,7 +56,8 @@ export function applyOpenCodeStatusPluginEnv(
     options.launchAgent,
     command,
     (candidate) =>
-      options.agentStatusHooksEnabled && isTuiAgentEnabled(candidate, options.disabledTuiAgents)
+      options.agentStatusHooksEnabled &&
+      isTuiAgentEnabled(candidate as TuiAgent, options.disabledTuiAgents)
   )
   restoreOrStripOverlayEnv(
     env,

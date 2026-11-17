@@ -19,14 +19,14 @@ describe.each(['runtime', 'relay'] as const)('missing search status over %s', (t
       }
       expect(LegacyRequestSchema.parse(params)).toEqual({
         ...query,
-        filters: { ...query.filters, agents: ['claude'] }
+        filters: { ...query.filters, agents: ['codex', 'claude'] }
       })
       return searchResults()
     })
     expect(
       await createSessionSearchClient(call, transport).searchSessions({
         ...query,
-        filters: { ...query.filters, agents: ['jcode', 'qoder', 'codebuddy', 'zcode', 'claude'] }
+        filters: { ...query.filters, agents: ['nessy', 'codex', 'claude'] }
       })
     ).toMatchObject({ kind: 'results' })
     expect(call).toHaveBeenCalledTimes(2)
@@ -39,7 +39,7 @@ describe.each(['runtime', 'relay'] as const)('missing search status over %s', (t
     expect(
       await createSessionSearchClient(call, transport).searchSessions({
         query: 'needle',
-        filters: { agents: ['jcode'] }
+        filters: { agents: ['nessy'] }
       })
     ).toEqual({ kind: 'unavailable', reason: 'unsupported-agent' })
     expect(call).toHaveBeenCalledExactlyOnceWith('aiVault.searchStatus', {})

@@ -77,18 +77,17 @@ describe('installedOnly', () => {
 
   it("writes the shared copy when an agent's existing link points at it", async () => {
     const home = await makeSkillHome()
-    await writeCopy(home.cursor, OLD_TEXT)
+    await writeCopy(home.shared, OLD_TEXT)
     await mkdir(dirname(home.claude), { recursive: true })
     await linkDirectory(
       process.platform === 'win32' ? home.shared : relative(dirname(home.claude), home.shared),
       home.claude
     )
-    const input = { ...serviceInput(home, { agents: ['claude', 'cursor'] }), installedOnly: true }
+    const input = { ...serviceInput(home, { agents: ['claude', 'codex'] }), installedOnly: true }
     const { plan } = await previewAndInstall(input)
     expect(opsOf(plan)).toEqual([
-      [home.shared, 'write', undefined],
-      [home.claude, 'keep', undefined],
-      [home.cursor, 'update', undefined]
+      [home.shared, 'update', undefined],
+      [home.claude, 'keep', undefined]
     ])
     expect(await readFile(join(home.claude, 'SKILL.md'), 'utf8')).toBe(NEW_TEXT)
   })
@@ -98,17 +97,17 @@ describe("force: 'all'", () => {
   it('replaces every replaceable copy left alone and keeps a backup of each', async () => {
     const home = await makeSkillHome()
     await writeCopy(home.shared, EDITED_TEXT)
-    await writeCopy(home.cursor, OTHER_TEXT)
-    const input = serviceInput(home, { agents: ['cursor'] })
+    await writeCopy(home.claude, OTHER_TEXT)
+    const input = serviceInput(home, { agents: ['claude', 'codex'] })
     expect(opsOf(await previewBundledSkillInstall(input))).toEqual([
       [home.shared, 'leave', 'edited'],
-      [home.cursor, 'leave', 'other']
+      [home.claude, 'leave', 'other']
     ])
 
     const { plan } = await previewAndInstall({ ...input, force: 'all' })
     expect(opsOf(plan)).toEqual([
       [home.shared, 'replace', undefined],
-      [home.cursor, 'replace', undefined]
+      [home.claude, 'replace', undefined]
     ])
     expect(await snapshot(home.shared)).toBe(`dir[SKILL.md]:${NEW_TEXT}`)
     const backups = join(home.home, '.agents', '.orca-skill-backups')

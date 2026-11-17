@@ -18,7 +18,6 @@ import type { AcpLaunchSpec } from '../../../acp/launch/acp-launch-contract'
 import { acpStructuredAgentDefinition } from '../../../acp/session/acp-structured-agent-definitions'
 import type { AcpSavedSessionReads } from '../../../acp/session/acp-structured-resume-history'
 import { createAcpAgentConnection } from '../../../acp/process/acp-agent-connection'
-import { createOpenCodeAcpConnection } from '../../../opencode/acp/opencode-acp-connection'
 import { acpStructuredLaunchPart } from '../../../acp/launch/acp-structured-launch-resolution'
 import { AcpStructuredSessionAdapter } from '../../../acp/session/acp-structured-session-adapter'
 import { PI_RPC_RUNTIME_REGISTRATION } from '../../../pi/rpc-runtime-registration'
@@ -192,11 +191,7 @@ function createAcpAdapter(
       readLaunch: composeStructuredLaunchRead(definition, sources, part),
       dataDirectory: deps.stateDirectory,
       resolveLaunchArgs: () => deps.resolveLaunchArgs(spec.agent),
-      connect:
-        deps.openAcpConnection ??
-        (spec.agent === 'opencode' || spec.agent === 'opencode2'
-          ? createOpenCodeAcpConnection
-          : createAcpAgentConnection),
+      connect: deps.openAcpConnection ?? createAcpAgentConnection,
       onChildWorkEvidence: (sessionId, evidence, producer) =>
         context.host()?.publishChildWorkEvidence(sessionId, evidence, producer),
       ...(deps.readProcessStartTime ? { readProcessStartTime: deps.readProcessStartTime } : {}),

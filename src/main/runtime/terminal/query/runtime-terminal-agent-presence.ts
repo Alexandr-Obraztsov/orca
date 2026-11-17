@@ -3,7 +3,6 @@ import {
   isExpectedAgentProcess,
   recognizeAgentProcess
 } from '../../../../shared/agent-status/process/agent-process-recognition'
-import { isOpenCodeNativeTitle } from '../../../../shared/agent-status/title/providers/opencode-terminal-title'
 import { isShellProcess } from '../../../../shared/agent-status/process/shell-process-detection'
 import { isKnownReadyPromptPreview } from '../wait/terminal-wait-detection'
 import { buildTerminalWaitText } from '../wait/terminal-wait-tail-state'
@@ -93,9 +92,8 @@ export class RuntimeTerminalAgentPresence {
       ) {
         return true
       }
-      const markerTitle = paneTitle ?? tabTitle
       const waitText = buildTerminalWaitText(leaf.tailBuffer, leaf.tailPartialLine, leaf.preview)
-      if (!isOpenCodeNativeTitle(markerTitle) && isKnownReadyPromptPreview(waitText)) {
+      if (isKnownReadyPromptPreview(waitText)) {
         return true
       }
       if (leaf.lastAgentStatus !== null && paneTitle === null && tabTitle === null) {
@@ -151,12 +149,8 @@ export class RuntimeTerminalAgentPresence {
       title: pty.managementTitle,
       updatedAt: pty.managementTitleAt
     })
-    const markerTitle = leafTitle ?? ptyTitle
-    if (isOpenCodeNativeTitle(markerTitle) && pty.launchAgent === 'opencode') {
-      return true
-    }
     const waitText = buildTerminalWaitText(pty.tailBuffer, pty.tailPartialLine, pty.preview)
-    if (!isOpenCodeNativeTitle(markerTitle) && isKnownReadyPromptPreview(waitText)) {
+    if (isKnownReadyPromptPreview(waitText)) {
       return true
     }
     if (

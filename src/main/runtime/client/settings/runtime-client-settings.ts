@@ -25,6 +25,7 @@ import { recordManagedHookInstallFailure } from '../../../agent-hooks/installati
 import { applyAgentStatusHooksEnabled } from '../../../agent-hooks/installation/managed-agent-hook-controls'
 import { isWslHostOrcadProcess } from '../../../ipc/wsl-guest-windows-drive-path'
 import { isAgentStatusHooksEnabledForAgent } from '../../../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
+import { isTuiAgent } from '../../../../shared/agent-launch/catalog/tui-agent-config'
 import type { RuntimeStore } from '../../construction/runtime-store-contract'
 import { normalizePRAutoRefreshCadence } from '../../../../shared/review-refresh-policy'
 import {
@@ -286,7 +287,11 @@ export class RuntimeClientSettingsController {
         onInstallError: recordManagedHookInstallFailure,
         shouldContinue: (agent) => {
           const current = this.store?.getSettings()
-          return current !== undefined && isAgentStatusHooksEnabledForAgent(current, agent)
+          return (
+            current !== undefined &&
+            isTuiAgent(agent) &&
+            isAgentStatusHooksEnabledForAgent(current, agent)
+          )
         }
       })
     })

@@ -3,17 +3,7 @@ import type { OrchestrationAddressableAgent } from './structured-worker-group-ad
 
 // Resolve per-recipient mail at send-time; candidates are Run-scoped except explicit @worktree addresses, never host-wide.
 
-const AGENT_NAME_GROUPS = [
-  'claude',
-  'openclaude',
-  'codex',
-  'opencode',
-  'mimo',
-  'gemini',
-  'droid',
-  'grok',
-  'cursor'
-] as const
+const AGENT_NAME_GROUPS = ['claude', 'codex'] as const
 
 type AgentNameGroup = (typeof AGENT_NAME_GROUPS)[number]
 
@@ -23,14 +13,7 @@ export function isGroupAddress(to: string): boolean {
 
 const GROUP_AGENT_IDS: Record<AgentNameGroup, TuiAgent> = {
   claude: 'claude',
-  openclaude: 'openclaude',
-  codex: 'codex',
-  opencode: 'opencode',
-  mimo: 'mimo-code',
-  gemini: 'gemini',
-  droid: 'droid',
-  grok: 'grok',
-  cursor: 'cursor'
+  codex: 'codex'
 }
 
 /** Route only by host-proven agent identity; titles may mention other agents, and unknown identity must fail closed. */

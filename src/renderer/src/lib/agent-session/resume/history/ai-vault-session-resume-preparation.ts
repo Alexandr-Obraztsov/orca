@@ -128,7 +128,7 @@ export async function prepareAiVaultSessionForFork(
     executionHostId: session.executionHostId,
     fork: true
   })
-  if (!result.forkedSession || (session.agent === 'omp' && !result.forkedSession.filePath)) {
+  if (!result.forkedSession) {
     // A host that predates chat copies makes none; resuming the chat's own would be a second writer.
     throw new Error(aiVaultCliForkHostTooOldMessage())
   }
@@ -169,9 +169,6 @@ async function prepareAiVaultSessionHome(
   return aiVaultSessionAfterResumePreparation(session, result)
 }
 
-// Kimi is folder-keyed: wrong cwd rejects resume or silently opens an empty same-ID session (1.52+).
-const RESUMES_ONLY_IN_RECORDED_CWD: ReadonlySet<AiVaultSession['agent']> = new Set(['kimi', 'muse'])
-
 /** After the session's remote host confirms missing cwd, drop it and its prebuilt cd command so resume starts at the workspace root (#17745, #26509). */
 export async function dropDeletedRemoteResumeCwd(
   session: AiVaultResumeCommandSession
@@ -180,8 +177,7 @@ export async function dropDeletedRemoteResumeCwd(
   const cwd = session.cwd
   if (
     (host?.kind !== 'ssh' && host?.kind !== 'runtime') ||
-    !cwd ||
-    RESUMES_ONLY_IN_RECORDED_CWD.has(session.agent)
+    !cwd
   ) {
     return session
   }

@@ -2,28 +2,7 @@ import type { AiVaultAgent } from '../contracts/ai-vault-types'
 import type { AiVaultSearchStatus } from './ai-vault-search-types'
 
 // Frozen to the v1.4.211 parser; extending the current catalog must not widen old-host requests.
-const LEGACY_SEARCH_AGENTS: readonly AiVaultAgent[] = [
-  'claude',
-  'codex',
-  'hermes',
-  'pi',
-  'omp',
-  'prime-agent',
-  'cursor',
-  'gemini',
-  'antigravity',
-  'rovo',
-  'copilot',
-  'opencode',
-  'opencode2',
-  'grok',
-  'openclaw',
-  'devin',
-  'droid',
-  'cline',
-  'kimi',
-  'muse'
-]
+const LEGACY_SEARCH_AGENTS: readonly AiVaultAgent[] = ['claude', 'codex']
 
 export function compatibleSearchAgents(
   agents: readonly AiVaultAgent[],

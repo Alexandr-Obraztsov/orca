@@ -14,7 +14,7 @@ describe('resolvePublishedPaneAgentIdentity', () => {
   describe('a task title cannot name the pane', () => {
     // Recorded task titles name other agents; substring routing previously misdelivered to these panes.
     it.each([
-      ['Switch Claude and Codex off the load balancer… - grok', 'grok'],
+      ['Switch Claude and Codex off the load balancer… - qwen-code', 'qwen-code'],
       ['Review the Claude session-history fix', 'codex'],
       ['✳ Fix the text cursor blink', 'claude']
     ])('keeps %j as its launched agent', (title, launchAgent) => {
@@ -33,9 +33,9 @@ describe('resolvePublishedPaneAgentIdentity', () => {
     })
 
     it('reads the owner suffix, not the agents named in the task text', () => {
-      expect(resolve({ title: 'Switch Claude and Codex off the load balancer… - grok' })).toBe(
-        'grok'
-      )
+      expect(
+        resolve({ title: 'Switch Claude and Codex off the load balancer… - qwen-code' })
+      ).toBe('qwen-code')
     })
 
     it('still declines a bare worktree name that merely contains an agent word', () => {

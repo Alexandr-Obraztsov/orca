@@ -44,11 +44,11 @@ export function agentLaunchPlatformForScope(
       )
 }
 
-/** Apply runtime policy with UNC path authority and temporary folder/OpenCode parity exceptions below. */
+/** Apply runtime policy with UNC path authority and temporary folder parity exceptions below. */
 export function agentLaunchProjectRuntime(
   store: LaunchScopeRuntimeStore,
   scope: TerminalWorkspaceLaunchScope,
-  agent: TuiAgent | undefined
+  _agent: TuiAgent | undefined
 ): ProjectExecutionRuntimeResolution | undefined {
   const runtime = resolveLocalLaunchScopeRuntime(store, scope)
   const onWindowsHost = runtime?.status === 'resolved' && runtime.runtime.kind === 'windows-host'
@@ -58,9 +58,7 @@ export function agentLaunchProjectRuntime(
     // UNC cwd proves WSL execution regardless of Windows-host settings; retain beyond the temporary exceptions.
     (onWindowsHost && isWslUncPath(scope.path)) ||
     // TEMPORARY (STA-10231): an explicit Windows host can't be told from the shipped default.
-    (onWindowsHost && mainHadNone) ||
-    // TEMPORARY (STA-10251): OpenCode models can't yet be verified inside WSL.
-    (agent === 'opencode' && mainHadNone)
+    (onWindowsHost && mainHadNone)
   return pathDecides ? undefined : runtime
 }
 

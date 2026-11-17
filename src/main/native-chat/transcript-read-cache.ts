@@ -1,5 +1,3 @@
-import { resolveNativeChatTranscriptAgent } from '../../shared/native-chat/native-chat-agent-support'
-import { readOpenCodeNativeChatTranscriptFull } from './transcript-history/opencode/transcript-opencode'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
 import { InFlightPromiseDedupe, stableInFlightKey } from '../../shared/in-flight-promise-dedupe'
 import { resolveSessionFilePath } from './session-file-resolver'
@@ -73,14 +71,6 @@ export async function readNativeChatTranscriptCached(
   sessionId: string,
   transcriptPath?: string
 ): Promise<ReadTranscriptResult> {
-  if (resolveNativeChatTranscriptAgent(agent) === 'opencode') {
-    return readOpenCodeNativeChatTranscriptFull(
-      sessionId,
-      {},
-      undefined,
-      agent === 'zcode' ? 'zcode' : undefined
-    )
-  }
   const epoch = cacheEpoch
   let filePath: string | null
   try {

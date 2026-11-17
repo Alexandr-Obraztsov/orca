@@ -337,10 +337,10 @@ describe('skill discovery', () => {
     const claudeSkills = join(home, '.claude', 'skills')
     await mkdir(join(claudeSkills, 'orchestration'), { recursive: true })
     await writeFile(join(claudeSkills, 'orchestration', 'SKILL.md'), '# orchestration')
-    await mkdir(join(home, '.grok'), { recursive: true })
+    await mkdir(join(home, '.nessy'), { recursive: true })
     await symlink(
       claudeSkills,
-      join(home, '.grok', 'skills'),
+      join(home, '.nessy', 'skills'),
       process.platform === 'win32' ? 'junction' : 'dir'
     )
 
@@ -351,7 +351,7 @@ describe('skill discovery', () => {
     const owners = skill?.rootPaths
       ?.map((rootPath) => result.sources.find((source) => source.path === rootPath))
       .map((source) => source?.owner)
-    expect(owners?.slice().sort()).toEqual(['claude', 'grok'])
+    expect(owners?.slice().sort()).toEqual(['claude', 'nessy'])
   })
 
   it('reports an SSH-backed repository as a remote-repo source instead of dropping it', async () => {

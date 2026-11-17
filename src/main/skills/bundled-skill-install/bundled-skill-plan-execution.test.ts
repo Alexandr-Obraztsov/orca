@@ -26,7 +26,7 @@ afterEach(async () => {
   await removeSkillHomes()
 })
 
-async function npxShared(home: SkillHome, agents: ('claude' | 'cursor')[] = ['claude']) {
+async function npxShared(home: SkillHome, agents: ('claude' | 'nessy')[] = ['claude']) {
   await writeCopy(home.shared, OLD_TEXT)
   await mkdir(dirname(home.claude), { recursive: true })
   await linkDirectory(home.shared, home.claude)
@@ -198,7 +198,7 @@ describe('the disk changing under a plan', () => {
 
   it('stops an op whose target changed after the re-plan and skips its links', async () => {
     const home = await makeSkillHome()
-    const input = await npxShared(home, ['claude', 'cursor'])
+    const input = await npxShared(home, ['claude', 'nessy'])
     const plan = await previewBundledSkillInstall(input)
     const filesystem: BundledSkillFilesystem = {
       ...nativeBundledSkillFilesystem,

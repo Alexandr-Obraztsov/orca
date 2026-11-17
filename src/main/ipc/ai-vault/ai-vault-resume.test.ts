@@ -15,11 +15,11 @@ afterEach(() => setStructuredAgentSessionHost(null))
 
 it('refuses the native owner while preserving forks and other execution hosts', async () => {
   installCopyingChat(
-    { transport: 'acp', agent: 'omp', nativeId: PROVIDER_SESSION },
+    { transport: 'acp', agent: 'codex', nativeId: PROVIDER_SESSION },
     vi.fn(async () => ({ sessionId: 'copy-1', filePath: '/sessions/copy-1.jsonl' }))
   )
   const local = {
-    agent: 'omp' as const,
+    agent: 'codex' as const,
     sessionId: PROVIDER_SESSION,
     filePath: '/sessions/conversation.jsonl',
     codexHome: null,
@@ -32,10 +32,6 @@ it('refuses the native owner while preserving forks and other execution hosts', 
     'agent_session_conflict'
   )
   expect(prepareSessionResume).not.toHaveBeenCalled()
-  await expect(prepareAiVaultSessionResume({ ...local, fork: true }, options)).resolves.toEqual({
-    useRealCodexHome: false,
-    forkedSession: { agent: 'omp', sessionId: 'copy-1', filePath: '/sessions/copy-1.jsonl' }
-  })
   const paired = { ...local, executionHostId: 'runtime:paired' as const }
   await expect(prepareAiVaultSessionResume(paired, options)).resolves.toEqual({
     useRealCodexHome: false

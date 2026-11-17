@@ -34,7 +34,7 @@ describe('accepted spawn followed by failed startup readiness', () => {
       const { runtime, handle, terminal } = await createTranscriptPane({
         paneTitle: 'shell',
         foregroundProcess: 'bash',
-        launchAgent: 'hermes',
+        launchAgent: 'codex',
         data: '\x1b]133;C\x07\x1b[31mTraceback: startup failed\x1b[0m\r\nImportError: broken client\r\n'
       })
       const exit = () => {
@@ -50,7 +50,7 @@ describe('accepted spawn followed by failed startup readiness', () => {
         exit()
       }
       const result = waitForWorkerAgentReady(runtime, handle, {
-        agent: 'hermes',
+        agent: 'codex',
         reusesTerminal: false,
         creation:
           context === 'wrong-incarnation'
@@ -70,7 +70,7 @@ describe('accepted spawn followed by failed startup readiness', () => {
   )
 
   it.each(
-    (['pi', 'codex', 'claude', 'opencode'] as const).flatMap((agent) =>
+    (['nessy', 'codex', 'claude', 'qwen-code'] as const).flatMap((agent) =>
       [true, false].map((exitBeforeWait) => ({ agent, exitBeforeWait }))
     )
   )(
@@ -121,7 +121,7 @@ describe('accepted spawn followed by failed startup readiness', () => {
         paneTitle: 'shell',
         foregroundProcess: 'bash',
         data: '',
-        launchAgent: 'pi',
+        launchAgent: 'nessy',
         ...(context === 'reattach' ? { isReattach: true } : {})
       })
       const creation =
@@ -142,7 +142,7 @@ describe('accepted spawn followed by failed startup readiness', () => {
       })
       vi.useFakeTimers()
       const worker = waitForWorkerAgentReady(runtime, handle, {
-        agent: 'pi',
+        agent: 'nessy',
         reusesTerminal: false,
         timeoutMs: 50,
         creation
@@ -150,7 +150,7 @@ describe('accepted spawn followed by failed startup readiness', () => {
       const prompt = waitForLaunchedAgentComposer(
         runtime,
         handle,
-        'pi',
+        'nessy',
         50,
         undefined,
         creation

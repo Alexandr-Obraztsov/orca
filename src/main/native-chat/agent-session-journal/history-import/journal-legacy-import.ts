@@ -1,8 +1,6 @@
 import { createImportedForkTip, observeOmpForkTip } from './imported-fork-tip'
-import { agentJournalItemKey } from '../../../../shared/agent-session/journal/agent-session-journal-item-key'
 import {
   adoptedTranscriptSourceObserver,
-  validateAdoptedOpenCodeSource,
   type AdoptedTranscriptSource
 } from './adopted-transcript-source'
 import type { AgentType } from '../../../../shared/agent-status/contracts/agent-status-types'
@@ -12,7 +10,6 @@ import type { NativeChatMessage } from '../../../../shared/native-chat/native-ch
 import { resolveNativeChatTranscriptAgent } from '../../../../shared/native-chat/native-chat-agent-support'
 import { resolveSessionFilePath, type ResolveSessionFileOptions } from '../../session-file-resolver'
 import { readLegacyImportTranscript, TRANSCRIPT_DECODERS } from './journal-legacy-transcript-stream'
-import { readOpenCodeNativeChatTranscriptFull } from '../../transcript-history/opencode/transcript-opencode'
 import { mayBeClaudeConversationRecord } from '../../transcript-decoding/transcript-line-decoders-claude'
 import { createLegacyIdentityTracker } from './journal-legacy-identity'
 import { createPiTranscriptCollector } from './journal-pi-active-branch'
@@ -100,9 +97,6 @@ export async function prepareLegacyTranscriptImport(input: {
   if (!transcriptAgent) {
     return { ok: false, error: `Unsupported agent for journal import: ${input.agent}` }
   }
-  if (transcriptAgent === 'opencode') {
-    return prepareOpenCodeImport({ ...input, limits })
-  }
   const filePath =
     options.filePath ?? (await resolveSessionFilePath(input.agent, input.sessionId, options))
   if (!filePath) {
@@ -127,68 +121,6 @@ export async function prepareLegacyTranscriptImport(input: {
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }
-}
-
-// OpenCode database message IDs are stable; reuse the existing transcript reader.
-async function prepareOpenCodeImport(input: {
-  agent: AgentType
-  sessionId: string
-  options?: LegacyImportOptions
-  limits: JournalPayloadLimits
-}): Promise<PreparedLegacyImport> {
-  const dbPath = input.options?.filePath
-  if (input.options?.source) {
-    if (!dbPath) {
-      return { ok: false, error: 'The conversation database is unavailable.' }
-    }
-    try {
-      await validateAdoptedOpenCodeSource(dbPath, input.options.source, input.options.signal)
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
-  }
-  const read = await readOpenCodeNativeChatTranscriptFull(
-    input.sessionId,
-    dbPath ? { resolveDbPath: async () => dbPath } : {}
-  )
-  if ('error' in read) {
-    return { ok: false, error: read.error }
-  }
-  const identities = read.messages.map((message): ids.AgentJournalItemIdentity => ({
-    provider: 'legacy',
-    agent: input.agent,
-    sessionId: input.sessionId,
-    recordId: message.id
-  }))
-  const items = replacementItems(read.messages, identities, input.limits)
-  return {
-    ok: true,
-    items,
-    sourceEmpty: read.sourceEmpty === true,
-    forkTipItemIds: read.forkTipItemIds?.map((recordId) =>
-      agentJournalItemKey({
-        provider: 'legacy',
-        agent: input.agent,
-        sessionId: input.sessionId,
-        recordId
-      })
-    )
-  }
-}
-
-function replacementItems(
-  messages: readonly NativeChatMessage[],
-  identities: readonly ids.AgentJournalItemIdentity[],
-  limits: JournalPayloadLimits
-): JournalReplacementItem[] {
-  const replacement: JournalReplacementItem[] = []
-  for (const [index, message] of messages.entries()) {
-    const identity = identities[index]
-    if (identity) {
-      replacement.push(replacementItem(message, identity, limits))
-    }
-  }
-  return replacement
 }
 
 function replacementItem(

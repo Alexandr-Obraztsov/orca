@@ -6,7 +6,6 @@ import {
   findCatalogOption,
   getAgentSessionOptionLaunchCatalog
 } from '../../agent-session/options/agent-session-option-catalog'
-import { isPiModelOptionId } from '../../agent-session/options/catalog-providers/agent-session-option-catalog-pi'
 import { resolveAgentSessionOptionLaunch } from '../../agent-session/options/launch/agent-session-option-launch'
 import type { TuiAgent } from '../catalog/tui-agent'
 
@@ -28,8 +27,6 @@ export type AgentLaunchModelPreferenceCheck =
 
 export function checkAgentLaunchModelPreferences(args: {
   agent: TuiAgent
-  /** OpenCode model choices need a fresh terminal on a supported execution host. */
-  openCodeModelLaunchSupported?: boolean
   createsWorktree?: boolean
   model?: string
   effort?: string
@@ -40,31 +37,12 @@ export function checkAgentLaunchModelPreferences(args: {
   if (!args.model) {
     return { preferences: undefined }
   }
-  if (args.agent === 'opencode' && args.createsWorktree) {
-    return refuse(
-      'capability_unsupported',
-      'OpenCode model selection requires an existing worktree. Use --worktree current or an existing worktree selector, or omit --model.'
-    )
-  }
-  if (args.agent === 'opencode' && args.openCodeModelLaunchSupported !== true) {
-    return refuse(
-      'capability_unsupported',
-      'OpenCode cannot apply a model choice on this execution host. Use a fresh local terminal in an existing workspace, or omit --model.'
-    )
-  }
 
   const catalog = getAgentSessionOptionLaunchCatalog(args.agent)
   if (!catalog?.supportsWorkerLaunchPreferences || !catalog.modelApply.launchArgs) {
     return refuse(
       'invalid_argument',
       `Agent ${args.agent} does not support launch-time model selection. Omit --model to run the model from its own config.`
-    )
-  }
-
-  if (args.agent === 'pi' && !isPiModelOptionId(args.model)) {
-    return refuse(
-      'invalid_argument',
-      `Agent pi needs a provider/id model, such as anthropic/claude-sonnet-4-5; got ${args.model}.`
     )
   }
 

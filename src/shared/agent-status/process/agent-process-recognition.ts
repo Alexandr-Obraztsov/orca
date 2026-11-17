@@ -193,17 +193,13 @@ export function isExpectedAgentProcess(
       /^(?:qoderclicn|qodercn)(?:-\d.*)?$/.test(normalizedProcess)) ||
     (['qoder', 'qodercli'].includes(normalizedExpected) &&
       /^(?:qoder|qodercli(?:-\d.*)?)$/.test(normalizedProcess)) ||
-    (normalizedExpected === 'muse' && normalizedProcess.startsWith('muse-bin-')) ||
-    (normalizedExpected === 'jcode' && agentForNormalizedProcess(normalizedProcess) === 'jcode')
+    (normalizedExpected === 'muse' && normalizedProcess.startsWith('muse-bin-'))
   )
 }
 
 /** Agents whose process names (orca, acli, cn, vibe) also belong to ordinary tools. */
 export const GENERIC_PROCESS_NAME_AGENTS: ReadonlySet<TerminalAgent> = new Set([
-  'claude-agent-teams',
-  'rovo',
-  'continue',
-  'mistral-vibe'
+  'claude-agent-teams'
 ])
 
 /** Before writing to `agent`: its expectedProcess, or a name it is recognized by (dsh-TUI 0.19 runs as `dsh-tui`, not `dsh`); generic names such as Agent Teams' `orca` launcher prove nothing. */

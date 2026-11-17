@@ -4,7 +4,6 @@ import type {
   NativeChatTranscriptFrame,
   NativeChatTranscriptPage
 } from '../../../../../shared/native-chat/native-chat-transcript-frames'
-import { resolveNativeChatTranscriptAgent } from '../../../../../shared/native-chat/native-chat-agent-support'
 import { subscribeNativeChatTranscript } from '../../../../native-chat/transcript-watch'
 import { readNativeChatTranscriptTail } from '../../../../native-chat/transcript-tail-reader'
 import type {
@@ -14,10 +13,6 @@ import type {
 import { nativeChatTranscriptPathOnExecutionHost } from '../../../../native-chat/transcript-filesystem/ssh-transcript-path'
 import { defineMethod, defineStreamingMethod, type RpcContext } from '../../core'
 import { sanitizeNativeChatRpcBlock } from './native-chat-rpc-block-sanitize'
-import {
-  boundNativeChatRpcPageByBytes,
-  nativeChatRpcAppendBatches
-} from './native-chat-rpc-page-bounds'
 import {
   MOBILE_NATIVE_CHAT_MAX_WINDOW,
   NativeChatSession,
@@ -59,26 +54,20 @@ function pageForClient(
   hasMore: boolean,
   beforeOffset: number,
   clientKind: RpcContext['clientKind'],
-  limit = MOBILE_NATIVE_CHAT_DEFAULT_WINDOW,
-  agent?: string
+  limit = MOBILE_NATIVE_CHAT_DEFAULT_WINDOW
 ): NativeChatTranscriptPage {
-  const isOpenCode = resolveNativeChatTranscriptAgent(agent) === 'opencode'
-  const sanitized = (isOpenCode ? messages : windowTranscript(messages, limit)).map((message) =>
+  const sanitized = windowTranscript(messages, limit).map((message) =>
     sanitizeMessage(message, clientKind)
   )
-  return isOpenCode
-    ? boundNativeChatRpcPageByBytes(sanitized, hasMore, beforeOffset)
-    : { messages: sanitized, hasMore, beforeOffset }
+  return { messages: sanitized, hasMore, beforeOffset }
 }
 
 /** Where the first page starts for a client holding `resumeAfter`; its offset and timestamp catch a rewritten file. */
 function resumeIndex(
   messages: readonly NativeChatMessage[],
-  resumeAfter: NativeChatResumePoint | undefined,
-  agent: string
+  resumeAfter: NativeChatResumePoint | undefined
 ): number {
-  // OpenCode rows can change after they are written, so holding the newest says nothing about the rest.
-  if (!resumeAfter || resolveNativeChatTranscriptAgent(agent) === 'opencode') {
+  if (!resumeAfter) {
     return -1
   }
   return messages.findLastIndex(
@@ -118,8 +107,7 @@ export const NATIVE_CHAT_METHODS = [
               result.hasMore,
               result.beforeOffset,
               clientKind,
-              limit,
-              params.agent
+              limit
             ),
             ...(result.lifecycle ? { lifecycle: result.lifecycle } : {})
           }
@@ -182,7 +170,7 @@ export const NATIVE_CHAT_METHODS = [
           if (closed) {
             return
           }
-          const resumeAt = resumeIndex(messages, params.resumeAfter, params.agent)
+          const resumeAt = resumeIndex(messages, params.resumeAfter)
           const resumed = resumeAt !== -1
           // Emit initial-read errors so a watching view cannot remain loading forever.
           emit({
@@ -192,8 +180,7 @@ export const NATIVE_CHAT_METHODS = [
               resumeAt > 0 || hasMore,
               resumed ? messages[resumeAt].transcriptOrder! : beforeOffset,
               clientKind,
-              limit,
-              params.agent
+              limit
             ),
             ...(resumed ? { resumed } : {}),
             ...(error ? { error } : {}),
@@ -215,7 +202,7 @@ export const NATIVE_CHAT_METHODS = [
           }
           emit({
             type: 'replacement',
-            ...pageForClient(messages, hasMore, beforeOffset, clientKind, limit, params.agent),
+            ...pageForClient(messages, hasMore, beforeOffset, clientKind, limit),
             ...(lifecycle ? { lifecycle } : {})
           })
         },
@@ -224,17 +211,11 @@ export const NATIVE_CHAT_METHODS = [
             return
           }
           const sanitized = sanitizeAppendForClient(messages, clientKind)
-          const batches =
-            sanitized.length > 0 && resolveNativeChatTranscriptAgent(params.agent) === 'opencode'
-              ? nativeChatRpcAppendBatches(sanitized)
-              : [sanitized]
-          for (const batch of batches) {
-            emit({
-              type: 'appended',
-              messages: batch,
-              ...(lifecycle && batch === batches.at(-1) ? { lifecycle } : {})
-            })
-          }
+          emit({
+            type: 'appended',
+            messages: sanitized,
+            ...(lifecycle ? { lifecycle } : {})
+          })
         }
       }
       let subscription: NativeChatTranscriptSubscription

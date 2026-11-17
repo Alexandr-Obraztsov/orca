@@ -1,4 +1,4 @@
-import { AGENT_HOOK_TARGETS, type AgentHookTarget } from './agent-hook-types'
+import { type AgentHookTarget } from './agent-hook-types'
 import {
   getTuiAgentDetectCommands,
   TUI_AGENT_CONFIG
@@ -11,7 +11,10 @@ export type ManagedAgentHookTarget = {
   executableCandidates: readonly string[]
 }
 
-function target(agent: AgentHookTarget): ManagedAgentHookTarget {
+/** Agents with managed status hooks; the kept TUI harnesses that ship hook services. */
+const MANAGED_AGENT_HOOK_KEYS = ['claude', 'codex', 'qwen-code'] as const satisfies readonly TuiAgent[]
+
+function target(agent: (typeof MANAGED_AGENT_HOOK_KEYS)[number]): ManagedAgentHookTarget {
   return {
     agent,
     tuiAgent: agent,
@@ -20,7 +23,7 @@ function target(agent: AgentHookTarget): ManagedAgentHookTarget {
 }
 
 export const MANAGED_AGENT_HOOK_TARGETS: readonly ManagedAgentHookTarget[] =
-  AGENT_HOOK_TARGETS.map(target)
+  MANAGED_AGENT_HOOK_KEYS.map(target)
 
 export function getManagedAgentHookTarget(
   agent: AgentHookTarget

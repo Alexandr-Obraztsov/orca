@@ -92,7 +92,7 @@ it.each(['local', 'runtime:server-1'] as const)(
     set(old)
     expect(resolve('claude', '/physical/orca')).toMatchObject({ available: false })
     expect(resolve('claude', target)).toMatchObject({ available: true })
-    expect(resolve('pi', '/physical/orca')).toMatchObject({ available: true })
+    expect(resolve('codex', '/physical/orca')).toMatchObject({ available: true })
     expect(resolve('codex', '/elsewhere')).toMatchObject({ available: true })
     set([...old, STRUCTURED_AGENT_SESSION_RESUME_LINKED_CWD_RUNTIME_CAPABILITY])
     expect(resolve('claude', '/physical/orca')).toMatchObject({ available: true })

@@ -93,7 +93,11 @@ function startScan(scan: ScanGeneration): void {
   try {
     const { directoryPredicate } = SESSION_FILE_ID_LAYOUTS[scan.agent]
     const wanted = (id: string): boolean => scan.sessionIdRefCounts.has(id)
-    const promise = walkSessionFiles(scan.root, scan.agent, [], {
+    const promise = walkSessionFiles(
+      scan.root,
+      scan.agent as 'claude' | 'codex' | 'nessy',
+      [],
+      {
       extensions: new Set(['.jsonl']),
       filePredicate: (path) => matchesRequestedSession(scan, path),
       directoryPredicate: directoryPredicate

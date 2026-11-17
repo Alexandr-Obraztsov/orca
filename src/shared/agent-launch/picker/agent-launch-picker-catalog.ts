@@ -158,9 +158,9 @@ export function agentPickerModels(
 /** Terminal discovery is a separate change; these menus keep their existing catalog policy. */
 export function agentPickerUsesComposerModelMenu(
   entry: ModelMenuEntry,
-  surface: AgentPickerSurface
+  _surface: AgentPickerSurface
 ) {
-  return !entry.textGeneration && !(entry.agent === 'antigravity' && surface === 'terminal')
+  return !entry.textGeneration
 }
 
 export function agentPickerModelFromCatalogModel(model: CatalogModel): AgentPickerModel {

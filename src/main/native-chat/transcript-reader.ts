@@ -1,4 +1,3 @@
-import { readOpenCodeNativeChatTranscriptFull } from './transcript-history/opencode/transcript-opencode'
 import { isENOENT } from '../ipc/filesystem/access/filesystem-path-containment'
 import type { AgentType } from '../../shared/agent-status/contracts/agent-status-types'
 import type {
@@ -37,14 +36,6 @@ export async function readNativeChatTranscript(
   sessionId: string,
   options: ReadTranscriptOptions = {}
 ): Promise<ReadTranscriptResult> {
-  if (resolveNativeChatTranscriptAgent(agent) === 'opencode') {
-    return readOpenCodeNativeChatTranscriptFull(
-      sessionId,
-      {},
-      undefined,
-      agent === 'zcode' ? 'zcode' : undefined
-    )
-  }
   let filePath: string | null
   try {
     filePath = options.filePath ?? (await resolveSessionFilePath(agent, sessionId, options))

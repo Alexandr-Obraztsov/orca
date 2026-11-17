@@ -7,6 +7,7 @@ import { basename, dirname, extname, join } from 'node:path'
 import { LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
 import type { SubagentTranscriptPartition } from '../claude/session-scanner-subagent-transcripts'
 import type { ResumableSessionParseState } from '../../session-scanner-types'
+import type { AiVaultAgent } from '../../../../shared/ai-vault/contracts/ai-vault-types'
 
 // Infer lineage from stamp_UUID artifact directories: task transcripts are label-named and omit parentSession (#9330).
 const OMP_SESSION_DIR_NAME = String.raw`\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`
@@ -90,7 +91,7 @@ export function withOmpSubagentTranscriptCount(
       const session = await state.finalize(platform, options)
       const ownsTranscriptDisk =
         !options?.executionHostId || options.executionHostId === LOCAL_EXECUTION_HOST_ID
-      if (session?.agent !== 'omp' || !ownsTranscriptDisk) {
+      if (session?.agent !== ('omp' as AiVaultAgent) || !ownsTranscriptDisk) {
         return session
       }
       return {

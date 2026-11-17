@@ -3,33 +3,7 @@ import type { TuiAgent } from '../../agent-launch/catalog/tui-agent'
 import type { AgentSessionAccountHome } from '../../agent-session/lifecycle/accounts/agent-session-account-home'
 import type { ExecutionHostId, ExecutionHostScope } from '../../execution-host'
 
-export const AI_VAULT_AGENTS = [
-  'claude',
-  'codebuddy',
-  'qoder',
-  'codex',
-  'hermes',
-  'pi',
-  'omp',
-  'prime-agent',
-  'cursor',
-  'gemini',
-  'antigravity',
-  'rovo',
-  'copilot',
-  'opencode',
-  'opencode2',
-  'zcode',
-  'grok',
-  'openclaw',
-  'devin',
-  'droid',
-  'cline',
-  'kimi',
-  'muse',
-  'jcode',
-  'kiro'
-] as const satisfies readonly TuiAgent[]
+export const AI_VAULT_AGENTS = ['claude', 'codex', 'nessy'] as const satisfies readonly TuiAgent[]
 
 // RPC clamps scopePaths to this bound because paths only widen discovery; matching producer-side caps are optional.
 export const AI_VAULT_SCOPE_PATHS_MAX_COUNT = 64
@@ -52,8 +26,7 @@ export function isAiVaultAgent(value: unknown): value is AiVaultAgent {
 
 /** The agents Session History may list `agent`'s sessions under. */
 export function aiVaultHistoryAgents(agent: AiVaultAgent): AiVaultAgent[] {
-  // One OpenCode store holds both versions' sessions, and the scanner labels current ones `opencode2`.
-  return agent === 'opencode' || agent === 'opencode2' ? ['opencode', 'opencode2'] : [agent]
+  return [agent]
 }
 
 export type AiVaultScope = 'workspace' | 'project' | 'all'
@@ -65,30 +38,8 @@ export type AiVaultGroup = 'project' | 'folder' | 'agent'
 
 export const AI_VAULT_AGENT_LABELS = {
   claude: 'Claude',
-  codebuddy: 'CodeBuddy',
-  qoder: 'Qoder',
   codex: 'Codex',
-  hermes: 'Hermes',
-  pi: 'Pi',
-  omp: 'OMP',
-  'prime-agent': 'Prime Agent',
-  cursor: 'Cursor',
-  gemini: 'Gemini',
-  antigravity: 'Antigravity',
-  rovo: 'Rovo Dev',
-  copilot: 'GitHub Copilot',
-  opencode: 'OpenCode',
-  opencode2: 'OpenCode 2',
-  zcode: 'ZCode',
-  grok: 'Grok',
-  openclaw: 'OpenClaw',
-  devin: 'Devin',
-  droid: 'Droid',
-  cline: 'Cline',
-  kimi: 'Kimi',
-  muse: 'Muse',
-  jcode: 'Jcode',
-  kiro: 'Kiro'
+  nessy: 'Nessy'
 } as const satisfies Record<AiVaultAgent, string>
 
 export type AiVaultSessionPreviewMessage = {

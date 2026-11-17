@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { closeProviderTimelineRigs } from '../../native-chat/agent-session-timeline/provider-timeline-assembler-test-support'
-import { GROK, openAcpAdapterRig } from '../session/testing/acp-structured-adapter.test-support'
+import { NESSY, openAcpAdapterRig } from '../session/testing/acp-structured-adapter.test-support'
 
 const ownedDirectories = new Set<string>()
 
@@ -26,11 +26,11 @@ it('gives each process its own temp folder, removed at exit, and clears an earli
     process.platform === 'win32' ? join(tmpdir(), 'orca-acp-temp-') : '/tmp/oa-'
   )
   ownedDirectories.add(dataDirectory)
-  const root = join(dataDirectory, 'acp-temp', 'grok')
+  const root = join(dataDirectory, 'acp-temp', 'nessy')
   const leftover = join(root, 'run-earlier-host', 'bundle')
   await mkdir(leftover, { recursive: true })
   const rig = await openAcpAdapterRig({
-    spec: { ...GROK, privateTempDirectory: true },
+    spec: { ...NESSY, privateTempDirectory: true },
     deps: { dataDirectory }
   })
   await rig.acquire()
@@ -49,11 +49,11 @@ it.skipIf(process.platform === 'win32')(
     const base = await mkdtemp('/tmp/oa-')
     ownedDirectories.add(base)
     const dataDirectory = join(base, '界'.repeat(6))
-    const legacyRoot = join(dataDirectory, 'acp-temp', 'grok')
+    const legacyRoot = join(dataDirectory, 'acp-temp', 'nessy')
     const legacyLeftover = join(legacyRoot, 'run-earlier-build', 'bundle')
     await mkdir(legacyLeftover, { recursive: true })
     const rig = await openAcpAdapterRig({
-      spec: { ...GROK, privateTempDirectory: true },
+      spec: { ...NESSY, privateTempDirectory: true },
       deps: { dataDirectory }
     })
     await rig.acquire()
@@ -83,7 +83,7 @@ it.skipIf(process.platform === 'win32')(
 
     await mkdir(legacyLeftover, { recursive: true })
     const second = await openAcpAdapterRig({
-      spec: { ...GROK, privateTempDirectory: true },
+      spec: { ...NESSY, privateTempDirectory: true },
       deps: { dataDirectory }
     })
     await second.acquire()

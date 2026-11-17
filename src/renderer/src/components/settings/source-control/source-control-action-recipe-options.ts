@@ -66,21 +66,16 @@ export const getActionDescriptions = createLocalizedCatalog((): Record<AiActionI
 }))
 
 // Their CLIs can't take the read-only tool policy, so they run only naming tasks (source-control-read-only-policy.ts).
-const NAMING_ONLY_TEXT_AGENT_IDS = new Set<string>(['amp', 'muse'])
+const NAMING_ONLY_TEXT_AGENT_IDS = new Set<string>([])
 
 const FALLBACK_AGENT_ARGS_PLACEHOLDER = '--model sonnet'
 
 const AGENT_ARGS_PLACEHOLDER_OVERRIDES: Partial<Record<TuiAgent, string>> = {
-  antigravity: '--effort low',
   // Short, reviewable Source Control prompts default to the mini model.
-  codex: '--model gpt-5.4-mini',
-  copilot: '--model gpt-5.4-mini',
-  omp: '--model <provider/model>'
+  codex: '--model gpt-5.4-mini'
 }
 
-const MODEL_FLAG_BY_AGENT: Partial<Record<TuiAgent, string>> = {
-  amp: '--mode'
-}
+const MODEL_FLAG_BY_AGENT: Partial<Record<TuiAgent, string>> = {}
 
 export function getSourceControlAgentArgsPlaceholder(
   agentId: TuiAgent | CustomAgentId | null | undefined

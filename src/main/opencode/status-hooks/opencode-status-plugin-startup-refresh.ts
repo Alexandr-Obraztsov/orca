@@ -1,15 +1,16 @@
 import { isAgentStatusHooksEnabledForAgent } from '../../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
 import type { ManagedHookDetectionSettings } from '../../agent-hooks/installation/managed-hook-detection-commands'
+import type { TuiAgent } from '../../../shared/agent-launch/catalog/tui-agent'
 import { openCode2HookService, openCodeHookService } from './hook-service'
 
 // Refresh running OpenCode 2 services on upgrade without waiting for a pane to rewrite the plugin.
 export function refreshInstalledOpenCodeStatusPlugins(
   settings: ManagedHookDetectionSettings
 ): void {
-  if (isAgentStatusHooksEnabledForAgent(settings, 'opencode')) {
+  if (isAgentStatusHooksEnabledForAgent(settings, 'opencode' as TuiAgent)) {
     openCodeHookService.refreshInstalledPlugins()
   }
-  if (isAgentStatusHooksEnabledForAgent(settings, 'opencode2')) {
+  if (isAgentStatusHooksEnabledForAgent(settings, 'opencode2' as TuiAgent)) {
     openCode2HookService.refreshInstalledPlugins()
   }
 }

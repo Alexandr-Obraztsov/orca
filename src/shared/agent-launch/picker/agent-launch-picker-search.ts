@@ -11,9 +11,7 @@ export type AgentPickerSetup = {
   label: string
 }
 
-const AGENT_SEARCH_ALIASES: Partial<Record<TuiAgent, readonly string[]>> = {
-  antigravity: ['agy']
-}
+const AGENT_SEARCH_ALIASES: Partial<Record<TuiAgent, readonly string[]>> = {}
 
 function agentPickerEntryAliases(
   entry: Pick<AgentPickerEntry, 'agent' | 'aliases'>

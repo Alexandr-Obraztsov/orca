@@ -6,10 +6,7 @@ import { getAccountsClaudeSearchEntries } from './accounts-claude-search'
 
 export const ACCOUNTS_SECTION_IDS = {
   codex: 'accounts-codex',
-  minimax: 'accounts-minimax',
-  grok: 'accounts-grok',
-  antigravity: 'accounts-antigravity',
-  cursor: 'accounts-cursor'
+  minimax: 'accounts-minimax'
 } as const
 
 export const getAccountsLocationSearchEntries = createLocalizedCatalog(() => [
@@ -185,122 +182,11 @@ export const getAccountsMiniMaxSearchEntries = createLocalizedCatalog(() => [
   }
 ])
 
-export const getAccountsGrokSearchEntries = createLocalizedCatalog(() => [
-  {
-    targetSectionId: ACCOUNTS_SECTION_IDS.grok,
-    title: translate('auto.components.settings.accounts.search.f4a8c2e1b7', 'Grok (xAI) Usage'),
-    description: translate(
-      'auto.components.settings.accounts.search.e3b7d1f9a2',
-      'OAuth sign-in via Grok CLI (grok login) for weekly credit usage.'
-    ),
-    keywords: [
-      ...translateSearchKeyword('auto.components.settings.accounts.search.d2c6a0e8f1', 'grok'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.c1b5f9d7e0', 'xai'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.b0a4e8c6d9', 'oauth'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.a9f3d7b5c8', 'login'),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.e949b08ffb',
-        'rate limit'
-      ),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.86edc96bc9', 'status bar')
-    ]
-  }
-])
-
-export const getAccountsAntigravitySearchEntries = createLocalizedCatalog(() => [
-  {
-    targetSectionId: ACCOUNTS_SECTION_IDS.antigravity,
-    title: translate('accounts.antigravity.fd47b5a5dd', 'Antigravity accounts'),
-    description: translate(
-      'accounts.antigravity.searchDescription',
-      'Save and select native agy Google accounts on the execution host.'
-    ),
-    keywords: [
-      ...translateSearchKeyword('accounts.antigravity.keyword.antigravity', 'antigravity'),
-      ...translateSearchKeyword('accounts.antigravity.keyword.agy', 'agy'),
-      ...translateSearchKeyword('accounts.antigravity.keyword.google', 'google'),
-      ...translateSearchKeyword('accounts.antigravity.keyword.accounts', 'accounts'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.a9f3d7b5c8', 'login'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.cursor.kw.usage', 'usage')
-    ]
-  }
-])
-
-export const getAccountsCursorSearchEntries = createLocalizedCatalog(() => [
-  {
-    targetSectionId: ACCOUNTS_SECTION_IDS.cursor,
-    title: translate('auto.components.settings.accounts.search.cursor.39bbdebe13', 'Cursor usage'),
-    description: translate(
-      'auto.components.settings.accounts.search.cursor.description',
-      'Plan usage read from the Cursor sign-in already on this computer (cursor-agent login).'
-    ),
-    keywords: [
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.cursor.kw.cursor',
-        'cursor'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.cursor.kw.usage',
-        'usage'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.cursor.kw.spend',
-        'spend'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.cursor.kw.rateLimit',
-        'rate limit'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.cursor.kw.statusBar',
-        'status bar'
-      )
-    ]
-  }
-])
-
-export const getAccountsZcodePlanSearchEntries = createLocalizedCatalog(() => [
-  {
-    title: translate(
-      'auto.components.settings.accounts.search.zcodePlan.0db9d0465f',
-      'GLM coding plan'
-    ),
-    description: translate(
-      'auto.components.settings.accounts.search.zcodePlan.description',
-      'Track Z.AI or Zhipu (BigModel) GLM Coding Plan usage. Pick the site and save the plan API key.'
-    ),
-    keywords: [
-      ...translateSearchKeyword('auto.components.settings.accounts.search.zcodePlan.kw.glm', 'glm'),
-      ...translateSearchKeyword('auto.components.settings.accounts.search.zcodePlan.kw.zai', 'zai'),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.zcodePlan.kw.zhipu',
-        'zhipu'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.zcodePlan.kw.bigmodel',
-        'bigmodel'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.zcodePlan.kw.codingPlan',
-        'coding plan'
-      ),
-      ...translateSearchKeyword(
-        'auto.components.settings.accounts.search.zcodePlan.kw.rateLimit',
-        'rate limit'
-      )
-    ]
-  }
-])
-
 export const getAccountsPaneSearchEntries = createLocalizedCatalog((): SettingsSearchEntry[] => [
   ...getAccountsLocationSearchEntries(),
   ...getAccountsClaudeSearchEntries(),
   ...getAccountsCodexSearchEntries(),
   ...getAccountsGeminiSearchEntries(),
   ...getAccountsOpencodeSearchEntries(),
-  ...getAccountsMiniMaxSearchEntries(),
-  ...getAccountsGrokSearchEntries(),
-  ...getAccountsAntigravitySearchEntries(),
-  ...getAccountsCursorSearchEntries(),
-  ...getAccountsZcodePlanSearchEntries()
+  ...getAccountsMiniMaxSearchEntries()
 ])

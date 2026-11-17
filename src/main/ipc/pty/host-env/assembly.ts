@@ -76,12 +76,10 @@ export function buildPtyHostEnv(
   })
 
   const shouldPrepareOmpShadow = piAgentKind === 'omp' || !hasLaunchCommand
-  const shouldInstallPiExtensions =
-    opts.agentStatusHooksEnabled && isTuiAgentEnabled('pi', opts.disabledTuiAgents)
-  const shouldInstallOmpExtensions =
-    opts.agentStatusHooksEnabled && isTuiAgentEnabled('omp', opts.disabledTuiAgents)
-  const shouldInstallPrimeAgentExtensions =
-    opts.agentStatusHooksEnabled && isTuiAgentEnabled('prime-agent', opts.disabledTuiAgents)
+  // Pi/OMP/Prime-Agent harnesses are removed; their managed extensions are no longer installed.
+  const shouldInstallPiExtensions = false
+  const shouldInstallOmpExtensions = false
+  const shouldInstallPrimeAgentExtensions = false
   // Pi/OMP source shadows are agent-scoped to avoid cross-agent extension state.
   const preexistingPiAgentDir = resolvePiAgentSourceDir(baseEnv, 'pi')
   const preexistingOmpAgentDir =

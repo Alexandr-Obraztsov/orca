@@ -27,12 +27,12 @@ vi.mock('@/runtime/rpc/compatibility/runtime-capability-proof', () => ({
   runtimeEnvironmentSupportsCapability: rpc.supports
 }))
 vi.mock('@/hooks/useDetectedAgents', () => ({
-  useDetectedAgents: () => ({ detectedIds: ['claude', 'codex', 'opencode'] })
+  useDetectedAgents: () => ({ detectedIds: ['claude', 'codex', 'nessy'] })
 }))
 const initial = useAppStore.getState()
 export const server = projectAgentLaunchSettings({
   defaultTuiAgent: 'codex',
-  disabledTuiAgents: ['opencode'],
+  disabledTuiAgents: ['nessy'],
   agentLaunchChoices: { codex: { model: 'host-model', options: { effort: 'low' } } }
 })
 export const raw = {
@@ -75,7 +75,7 @@ beforeEach(() => {
     ...initial,
     settings: {
       ...getDefaultSettings('/home/me'),
-      defaultTuiAgent: 'opencode',
+      defaultTuiAgent: 'nessy',
       disabledTuiAgents: ['codex'],
       nativeChatProviders: {}
     },

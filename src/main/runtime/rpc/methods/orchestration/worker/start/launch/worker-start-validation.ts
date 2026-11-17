@@ -52,7 +52,6 @@ export function prepareLocalWorkerStart(args: {
   params: WorkerStartInput
   createsWorktree: boolean
   runtime: OrcaRuntimeService
-  openCodeModelLaunchSupported?: boolean
 }): { agent: TuiAgent | undefined; launch: WorkerStartLaunch } {
   const { params, createsWorktree, runtime } = args
   assertWorkerLaunchPreferencesCreateTerminal(params)
@@ -73,7 +72,6 @@ export function prepareLocalWorkerStart(args: {
   }
   return resolveWorkerStartAgent({
     runtime,
-    openCodeModelLaunchSupported: args.openCodeModelLaunchSupported,
     createsWorktree,
     terminal: params.terminal,
     agent: params.agent,
@@ -87,7 +85,6 @@ export function prepareFederationAttachmentWorkerStart(args: {
   params: FederationAttachStartInput
   createsWorktree: boolean
   runtime: OrcaRuntimeService
-  openCodeModelLaunchSupported?: boolean
 }): { agent: TuiAgent | undefined; launch: WorkerStartLaunch } {
   const { params, createsWorktree, runtime } = args
   assertWorkerLaunchPreferencesCreateTerminal(params)
@@ -117,7 +114,6 @@ export function prepareFederationAttachmentWorkerStart(args: {
   }
   return resolveWorkerStartAgent({
     runtime,
-    openCodeModelLaunchSupported: args.openCodeModelLaunchSupported,
     createsWorktree,
     terminal: params.terminal,
     agent: params.agent,
@@ -130,7 +126,6 @@ export function prepareFederationAttachmentWorkerStart(args: {
 
 function resolveWorkerStartAgent(args: {
   runtime: OrcaRuntimeService
-  openCodeModelLaunchSupported?: boolean
   createsWorktree: boolean
   terminal?: string
   agent?: string
@@ -152,7 +147,6 @@ function resolveWorkerStartAgent(args: {
       agent,
       launch: resolveWorkerLaunchPreferences({
         agent,
-        openCodeModelLaunchSupported: args.openCodeModelLaunchSupported,
         createsWorktree: args.createsWorktree,
         model: args.model,
         effort: args.effort

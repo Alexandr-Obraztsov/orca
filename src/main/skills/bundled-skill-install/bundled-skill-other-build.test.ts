@@ -63,11 +63,11 @@ describe("another Orca build's copy on the same host", () => {
     await writeCopy(home.shared, NEWER_TEXT)
     await autoUpdateAs(home, NEWER_SOURCE)
 
-    const input = { ...serviceInput(home, { agents: ['cursor'] }), sources: [NEW_SOURCE] }
+    const input = { ...serviceInput(home, { agents: ['claude'] }), sources: [NEW_SOURCE] }
     await previewAndInstall(input)
 
-    expect((await lstat(home.cursor)).isSymbolicLink()).toBe(true)
-    expect(await readFile(join(home.cursor, 'SKILL.md'), 'utf8')).toBe(NEWER_TEXT)
+    expect((await lstat(home.claude)).isSymbolicLink()).toBe(true)
+    expect(await readFile(join(home.claude, 'SKILL.md'), 'utf8')).toBe(NEWER_TEXT)
   })
 
   it('automatically migrates a former-name agent copy to a recognized shared copy', async () => {

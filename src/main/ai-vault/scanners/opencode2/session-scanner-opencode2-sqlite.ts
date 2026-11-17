@@ -3,6 +3,7 @@ import {
   OPENCODE_CAPTURE_TEXT_LIMIT
 } from '../opencode/sqlite/opencode-transcript-capture-limits'
 import type {
+  AiVaultAgent,
   AiVaultSession,
   AiVaultSessionPreviewMessage
 } from '../../../../shared/ai-vault/contracts/ai-vault-types'
@@ -237,7 +238,7 @@ export async function parseOpenCode2SqliteSession(args: {
         ? row.time_updated
         : row.time_created
     const accumulator = createAccumulator({
-      agent: 'opencode2',
+      agent: 'opencode2' as AiVaultAgent,
       file: {
         path: dbPath,
         mtimeMs,

@@ -1,4 +1,3 @@
-import { randomUUID, createHash } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -11,7 +10,6 @@ import {
   enforceLocalPtySpawnEnvironmentOverrides
 } from '../../providers/local-pty/local-pty-spawn-environment'
 import { assemblePtySpawnEnvDeletions } from './spawn-options-assembly'
-import { applyManagedDataAccountEnvironment } from '../../managed-data-accounts/launch-environment'
 import { buildPtyIpcSpawnOptions } from './ipc/spawn-options'
 import { createPtyIpcSpawnState } from './ipc/spawn-state'
 import type { PtySpawnIpcDeps } from './ipc/spawn-types'
@@ -19,10 +17,7 @@ import { buildRuntimePtySpawnOptions } from './runtime/spawn-options'
 import { createRuntimePtySpawnState } from './runtime/spawn-state'
 import type { PtyRuntimeControllerDeps } from './runtime/controller-deps'
 import type * as ServiceModule from '../../managed-data-accounts/service'
-import {
-  MANAGED_DATA_ACCOUNT_BASELINE_ENV_KEYS,
-  restoreManagedDataAccountEnvironment
-} from '../../../shared/agent-launch/environment/managed-data-account-environment'
+import { MANAGED_DATA_ACCOUNT_BASELINE_ENV_KEYS } from '../../../shared/agent-launch/environment/managed-data-account-environment'
 
 const selected = vi.hoisted(() => {
   const value: Record<string, string> = {}
@@ -156,10 +151,6 @@ describe('independent pane agent session environments', () => {
   )
 })
 
-function hash(value: string | undefined): string | undefined {
-  return value === undefined ? undefined : createHash('sha256').update(value).digest('hex')
-}
-
 async function spawnDeletions(
   route: string,
   env: Record<string, string>,
@@ -213,57 +204,5 @@ describe.each(['renderer', 'runtime'])('%s managed account daemon environment', 
         expect(child[key]).toBe(value)
       }
     }
-  })
-
-  it('keeps inline System authentication out of every selected child marker', async () => {
-    const secret = randomUUID()
-    const baseline = JSON.stringify({ fixture: { key: secret } })
-    vi.stubEnv('OPENCODE_AUTH_CONTENT', baseline)
-    selected.value = {
-      XDG_DATA_HOME: join(tmpdir(), 'selected-account', 'data'),
-      XDG_STATE_HOME: join(tmpdir(), 'selected-account', 'state'),
-      OPENCODE_AUTH_CONTENT: '',
-      OPENCODE_DB: 'opencode.db'
-    }
-    const env: Record<string, string> = {}
-    applyManagedDataAccountEnvironment(env, { launchAgent: 'opencode' })
-    const envToDelete = await spawnDeletions(route, env)
-    const child = createDaemonPtyEnvironment({
-      sessionId: 'pane',
-      cols: 80,
-      rows: 24,
-      env,
-      envToDelete
-    })
-    expect(child.OPENCODE_AUTH_CONTENT).toBe('')
-    expect(Object.values(child).some((value) => value.includes(secret))).toBe(false)
-    selected.value = {}
-    vi.stubEnv('OPENCODE_AUTH_CONTENT', undefined)
-    const copied = { ...child }
-    applyManagedDataAccountEnvironment(copied, { launchAgent: 'opencode' })
-    expect(hash(copied.OPENCODE_AUTH_CONTENT) === hash(baseline)).toBe(true)
-    for (const key of MANAGED_DATA_ACCOUNT_BASELINE_ENV_KEYS) {
-      vi.stubEnv(key, child[key])
-    }
-    for (const key of [
-      'ORCA_DATA_ACCOUNT_DATA_HOME',
-      'ORCA_DATA_ACCOUNT_STATE_HOME',
-      'ORCA_DATA_ACCOUNT_PROVIDER',
-      'ORCA_DATA_ACCOUNT_ORIGINAL_ENV'
-    ]) {
-      vi.stubEnv(key, child[key])
-    }
-    const systemDeletions = await spawnDeletions(route, copied)
-    const systemChild = createDaemonPtyEnvironment({
-      sessionId: 'pane',
-      cols: 80,
-      rows: 24,
-      env: copied,
-      envToDelete: systemDeletions
-    })
-    expect(hash(systemChild.OPENCODE_AUTH_CONTENT) === hash(baseline)).toBe(true)
-    expect(systemChild.ORCA_DATA_ACCOUNT_DATA_HOME).toBeUndefined()
-    restoreManagedDataAccountEnvironment(copied)
-    expect(hash(copied.OPENCODE_AUTH_CONTENT) === hash(baseline)).toBe(true)
   })
 })

@@ -1,12 +1,11 @@
 import { conversationNameTaskPrompt } from '../../../shared/source-control/ai/generation/conversation-name-generation'
 import { randomUUID } from 'node:crypto'
-import { mkdtemp, realpath, rm } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { waitForPromiseWithSignal } from '../../../shared/abort-signal-reason'
 import type { StructuredAgentSessionAdapter } from '../../native-chat/agent-session-wire/providers/structured-agent-session-adapter'
 import { ProviderAcquisitionStarts } from '../../provider-process/provider-acquisition-starts'
-import { removeAntigravitySignInSessionFiles } from '../../antigravity/antigravity-sign-in-session-files'
 import { SOURCE_CONTROL_GENERATION_TIMEOUT_MS } from '../../text-generation/execution/source-control-generation-limits'
 import { resolveAcpLaunchInvocation } from '../launch/acp-structured-launch-resolution'
 import { acpLaunchSpecForAccount } from '../launch/acp-launch-command'
@@ -17,14 +16,11 @@ import {
   acpTextTaskArgs,
   acpTextTaskEnv,
   cleanupAcpTextTaskProtocol,
-  cleanupGrokTextTaskSession,
-  denyAcpTextTaskPermission,
   rejectAcpTextTaskWork,
   TASK_ENV_TO_DELETE
 } from './acp-text-task-policy'
 import type { AcpStructuredConnection } from '../process/acp-structured-connection'
 import type { AcpStructuredSessionAdapterDeps } from '../session/acp-structured-session-adapter-deps'
-import { grokTextTaskPreservesAccount, runGrokTextTask } from '../../grok/grok-text-task'
 
 type TextInput = Parameters<NonNullable<StructuredAgentSessionAdapter['generateText']>>[0]
 
@@ -70,7 +66,6 @@ export class AcpTextTasks {
   ): Promise<string | null> {
     const { spec } = this.deps
     const namingPrompt = conversationNameTaskPrompt(input.prompt)
-    const deadlineAt = Date.now() + SOURCE_CONTROL_GENERATION_TIMEOUT_MS
     const deadline = new AbortController()
     const timer = setTimeout(
       () => deadline.abort(new Error('Chat naming timed out')),
@@ -86,11 +81,9 @@ export class AcpTextTasks {
     }
     let connection: AcpStructuredConnection | undefined
     let cwd: string | undefined
-    let home = ''
     let sessionId = ''
     let modeConfigId = 'mode'
     let completed = false
-    let headless = false
     let starting = false
     let done = false
     let disposed = false
@@ -101,9 +94,6 @@ export class AcpTextTasks {
       }
       disposed = true
       try {
-        if (spec.agent === 'antigravity') {
-          await removeAntigravitySignInSessionFiles(home, sessionId, cwd)
-        }
         await rm(cwd, { recursive: true, force: true })
       } catch (error) {
         this.deps.logger?.warn('Naming helper files could not be removed', {
@@ -129,11 +119,7 @@ export class AcpTextTasks {
         ),
         signal
       )
-      home = launch.env.GEMINI_HOME ?? ''
       cwd = await mkdtemp(join(tmpdir(), 'orca-chat-name-'))
-      if (spec.agent === 'grok') {
-        cwd = await realpath(cwd)
-      }
       checkCurrent()
       const failed = new AbortController()
       const taskSignal = AbortSignal.any([signal, failed.signal])
@@ -150,7 +136,7 @@ export class AcpTextTasks {
         connection = connect(
           {
             ...launch,
-            env: acpTextTaskEnv(spec.agent, launch.env),
+            env: acpTextTaskEnv(launch.env),
             cwd,
             args: acpTextTaskArgs(spec),
             envToDelete: [...launch.envToDelete, ...TASK_ENV_TO_DELETE]
@@ -158,8 +144,7 @@ export class AcpTextTasks {
           {
             clientInfo: { name: 'orca-chat-naming', version: '1' },
             signIn: spec.signIn,
-            onPermission: (request) =>
-              spec.agent === 'antigravity' ? denyAcpTextTaskPermission(request) : reject(),
+            onPermission: () => reject(),
             onRequest: reject,
             onExtensionNotification: notification
           }
@@ -212,27 +197,6 @@ export class AcpTextTasks {
         env: launch.env,
         antigravityChatAuth: launch.antigravityChatAuth
       })
-      if (spec.agent === 'grok' && grokTextTaskPreservesAccount(initialized, authMethodId)) {
-        headless = true
-        sessionId = promptId
-        if (authMethodId) {
-          await waitForPromiseWithSignal(server.authenticate(authMethodId), taskSignal)
-        }
-        checkCurrent()
-        return await runGrokTextTask({
-          launch: {
-            ...launch,
-            args: [],
-            env: acpTextTaskEnv(spec.agent, launch.env),
-            envToDelete: [...launch.envToDelete, ...TASK_ENV_TO_DELETE]
-          },
-          cwd,
-          prompt: namingPrompt,
-          sessionId,
-          signal: taskSignal,
-          timeoutMs: Math.max(1, deadlineAt - Date.now())
-        })
-      }
       starting = true
       await waitForPromiseWithSignal(
         server
@@ -240,8 +204,7 @@ export class AcpTextTasks {
             cwd,
             mcpServers: [],
             authMethodId,
-            authMethodUnavailableMessage: spec.authMethodUnavailableMessage,
-            ...(spec.agent === 'grok' ? { _meta: { yoloMode: false, autoMode: false } } : {})
+            authMethodUnavailableMessage: spec.authMethodUnavailableMessage
           })
           .then((started) => {
             sessionId = started.sessionId
@@ -287,11 +250,8 @@ export class AcpTextTasks {
       deadline.abort()
       if (connection && sessionId) {
         const server = connection
-        if (!completed && !headless) {
+        if (!completed) {
           await cleanupAcpTextTaskProtocol(() => server.cancel(), this.deps.logger)
-        }
-        if (spec.agent === 'grok') {
-          await cleanupGrokTextTaskSession(server, sessionId, cwd, this.deps.logger)
         }
       }
       if (connection && !(await connection.close().catch(() => false))) {

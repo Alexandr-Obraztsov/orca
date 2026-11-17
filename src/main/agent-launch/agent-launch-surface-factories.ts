@@ -14,8 +14,6 @@ import type { StructuredAgentId } from '../../shared/agent-session/lifecycle/pro
 import type { StructuredAgentSessionFirstMessage } from '../../shared/agent-session/structured-agent-session-create'
 import type { TuiAgent } from '../../shared/agent-launch/catalog/tui-agent'
 import type { AgentLaunchParams } from '../../shared/rpc-contract/agent-launch/agent-launch-params'
-import { toAgentLaunchPreferences } from '../../shared/agent-launch/choices/agent-launch-preferences'
-import { assertOpenCodeModelLaunchPreferencesAbsent } from '../opencode/model-launch/opencode-model-startup-plan'
 
 /** Inject creation so orchestration can add subscriptions without duplicating launch sequencing. */
 export type AgentLaunchSurfaceFactory = {
@@ -131,18 +129,11 @@ function terminalLaunchOptions(intent: Pick<AgentLaunchIntent, 'sessionOptions' 
   return intent.sessionOptions ?? intent.chatOptions
 }
 
-/** Refuses, before anything exists, an OpenCode terminal its host cannot verify, read as that
- *  terminal will receive it, after the shared preflight determines the actual route. */
+/** OpenCode was removed from the TuiAgent catalog, so there are no model preferences to refuse up front. */
 export function assertTerminalLaunchAdmissible(
-  intent: AgentLaunchIntent | AgentLaunchParams,
-  mode: AgentLaunchMode
-): void {
-  if (intent.reuseTerminal || intent.target.kind === 'create-worktree') {
-    const options = mode === 'terminal' ? terminalLaunchOptions(intent) : intent.sessionOptions
-    const preferences = toAgentLaunchPreferences(options, intent.agent)
-    assertOpenCodeModelLaunchPreferencesAbsent(intent.agent, preferences)
-  }
-}
+  _intent: AgentLaunchIntent | AgentLaunchParams,
+  _mode: AgentLaunchMode
+): void {}
 
 /** What every route that builds a terminal agent passes on, so the startup terminal of a new
  *  workspace and the terminal of an existing one start the same agent. */

@@ -1,57 +1,16 @@
-import { antigravitySessionOrigin } from '../../../shared/agent-session/lifecycle/provider-handles/antigravity-session-origin'
 import type { AiVaultSession } from '../../../shared/ai-vault/contracts/ai-vault-types'
 import {
   codexSessionAliasKey,
   codexSessionAliasBeats
 } from '../scanners/codex/codex-session-root-dedup'
-import { sessionSortTime } from './session-scanner-accumulator'
 
 function sessionAliasKey(session: AiVaultSession): string | null {
-  if (session.agent === 'antigravity') {
-    const root = session.filePath
-      .split(/[\\/]+/)
-      .slice(0, -4)
-      .join('/')
-    return `antigravity\0${session.executionHostId}\0${antigravitySessionOrigin(session.filePath) ?? 'cli'}\0${root}\0${session.sessionId}`
-  }
-  if (session.agent !== 'devin') {
-    const codexKey = codexSessionAliasKey(session)
-    return codexKey ? `codex\0${codexKey}` : null
-  }
-  // Sibling exports share an index; different installs and WSL distros do not.
-  const cliDir = session.filePath.split(/[\\/]/).slice(0, -2).join('/')
-  return `devin\0${session.executionHostId}\0${cliDir}\0${session.sessionId}`
+  const codexKey = codexSessionAliasKey(session)
+  return codexKey ? `codex\0${codexKey}` : null
 }
 
 function sessionAliasBeats(candidate: AiVaultSession, best: AiVaultSession): boolean {
-  if (candidate.agent === 'antigravity') {
-    if (candidate.messageCount > 0 !== best.messageCount > 0) {
-      return candidate.messageCount > 0
-    }
-    const full = (path: string): boolean => path.split(/[\\/]+/).at(-1) === 'transcript_full.jsonl'
-    if (full(candidate.filePath) !== full(best.filePath)) {
-      return full(candidate.filePath)
-    }
-    return sessionSortTime(candidate) > sessionSortTime(best)
-  }
-  if (candidate.agent !== 'devin') {
-    return codexSessionAliasBeats(candidate, best)
-  }
-  const candidateTime = sessionSortTime(candidate)
-  const bestTime = sessionSortTime(best)
-  if (candidateTime !== bestTime) {
-    return candidateTime > bestTime
-  }
-  // The database can give both exports the same activity time.
-  if (candidate.modifiedAt !== best.modifiedAt) {
-    return Date.parse(candidate.modifiedAt) > Date.parse(best.modifiedAt)
-  }
-  const candidateCurrent = candidate.filePath.split(/[\\/]/).at(-2) === 'agent_logs'
-  const bestCurrent = best.filePath.split(/[\\/]/).at(-2) === 'agent_logs'
-  if (candidateCurrent !== bestCurrent) {
-    return candidateCurrent
-  }
-  return candidate.filePath < best.filePath
+  return codexSessionAliasBeats(candidate, best)
 }
 
 export function dedupeScannedSessions(sessions: readonly AiVaultSession[]): AiVaultSession[] {

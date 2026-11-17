@@ -18,7 +18,7 @@ import {
 } from './federation-setup'
 import { FederationAttachStartParams } from '../../../../shared/rpc-contract/orchestration/orchestration-federation-start-params'
 import { failFederatedAttachmentWithReceipt } from './federation-start-receipt'
-import { prepareFederationWorkerLaunchOnHost } from '../../rpc/methods/orchestration/worker/start/launch/worker-opencode-model-preflight'
+import { prepareFederationConfiguredWorkerStart } from '../../rpc/methods/orchestration/worker/start/launch/worker-configured-agent-preflight'
 import { reusedWorkerLaunchReceipt } from '../../rpc/methods/orchestration/worker/start/launch/worker-launch-preferences'
 import {
   isWorkerStartTimeoutWithinTimerLimit,
@@ -62,7 +62,7 @@ export const ORCHESTRATION_FEDERATION_ATTACH_METHODS = [
         )
       }
       const createsWorktree = params.worktree === 'new-top-level'
-      const { agent, launch } = await prepareFederationWorkerLaunchOnHost({
+      const { agent, launch } = await prepareFederationConfiguredWorkerStart({
         params,
         createsWorktree,
         runtime

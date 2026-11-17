@@ -1,9 +1,3 @@
-import {
-  assertAntigravityReferenceTarget,
-  buildAntigravityReferenceStartup
-} from './ai-vault-antigravity-reference-startup'
-import { isAntigravityReferenceSession } from '../../../../../../shared/agent-session/lifecycle/provider-handles/antigravity-session-origin'
-import { normalizeAiVaultResumeFilePath } from '../../../../../../shared/ai-vault/resume/ai-vault-resume-path'
 import type { AiVaultSessionDragPayload } from '@/lib/agent-session/resume/history/ai-vault-session-drag'
 import { resolveAiVaultResumeStartupShell } from '@/lib/agent-session/resume/history/ai-vault-resume-shell'
 import {
@@ -78,28 +72,11 @@ function buildAiVaultResumeForWorktree(
   /** Copied lines strip env from the agent command; spawned startups use envToDelete. */
   clearEnvNames?: readonly string[]
 ): AiVaultResumeStartup {
-  assertAntigravityReferenceTarget(args)
   const remote = buildAiVaultRemoteResumeStartup(args.session, args.commandOverride)
   if (remote) {
     return remote
   }
   const host = resolveAiVaultResumeHost(args)
-  if (isAntigravityReferenceSession(args.session)) {
-    const reference = buildAntigravityReferenceStartup({
-      session: {
-        ...args.session,
-        filePath: normalizeAiVaultResumeFilePath(args.session.filePath, host.platform)
-      },
-      cwd: embedCwd ? args.session.cwd : null,
-      platform: host.platform,
-      shell: host.liveShell,
-      commandOverride: args.commandOverride,
-      settings: args.state.settings
-    })
-    if (reference) {
-      return { ...reference, ...(!embedCwd && args.session.cwd ? { cwd: args.session.cwd } : {}) }
-    }
-  }
   return buildAiVaultLocalResumeStartup({
     session: args.session,
     host,

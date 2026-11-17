@@ -44,19 +44,23 @@ export async function resolveOpenCodeModelLaunchRoute(
   options: Pick<StartupScope, 'inputs' | 'cwd' | 'hostIdentity'>
 ) {
   const { inputs } = options
+  const openCodeConfig = TUI_AGENT_CONFIG['opencode' as TuiAgent]
+  if (!openCodeConfig) {
+    refuseModel(OPENCODE_MODEL_CONFIG_REFUSAL)
+  }
   const command =
-    inputs.cmdOverrides.opencode ||
-    getTuiAgentLaunchCommand(TUI_AGENT_CONFIG.opencode, inputs.platform)
+    inputs.cmdOverrides['opencode' as TuiAgent] ||
+    getTuiAgentLaunchCommand(openCodeConfig, inputs.platform)
   const env: Record<string, string> = {}
   for (const [key, value] of Object.entries({ ...process.env, ...inputs.agentEnv })) {
     if (value !== undefined) {
       env[key] = value
     }
   }
-  applyManagedDataAccountEnvironment(env, { launchAgent: 'opencode' })
+  applyManagedDataAccountEnvironment(env, { launchAgent: 'opencode' as TuiAgent })
   const capabilities = await probeOpenCodeLaunchCapabilities({
     command,
-    agent: 'opencode',
+    agent: 'opencode' as TuiAgent,
     cwd: options.cwd,
     env,
     hostIdentity: options.hostIdentity
@@ -74,7 +78,7 @@ export async function prepareOpenCodeModelStartupInputs(
   const { inputs } = options
   const model = inputs.sessionOptions?.model
   if (
-    inputs.agent !== 'opencode' ||
+    (inputs.agent as string) !== 'opencode' ||
     !Object.values(inputs.sessionOptions ?? {}).some((value) => value !== undefined)
   ) {
     return { inputs }
@@ -181,7 +185,7 @@ export function assertOpenCodeModelLaunchPreferencesAbsent(
   preferences: Readonly<Record<string, unknown>> | undefined
 ): void {
   if (
-    agent === 'opencode' &&
+    (agent as string) === 'opencode' &&
     Object.values(preferences ?? {}).some((value) => value !== undefined)
   ) {
     refuseModel()

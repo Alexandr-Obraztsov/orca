@@ -20,30 +20,8 @@ import type {
 
 export const SELF_CONTAINED_TRANSCRIPT_AGENTS = {
   claude: true,
-  qoder: true,
-  codebuddy: true,
   codex: false, // session_index.jsonl can override titles.
-  gemini: true,
-  copilot: true,
-  cursor: false, // Sibling chat metadata enriches the transcript.
-  antigravity: false, // Workspace history enriches the transcript separately.
-  opencode: false, // SQLite or a separate message directory.
-  opencode2: false,
-  zcode: false,
-  grok: false, // chat_history.jsonl supplies messages.
-  hermes: true,
-  rovo: false, // session_context.json supplies messages.
-  openclaw: true,
-  pi: true,
-  omp: true,
-  'prime-agent': true,
-  droid: true,
-  cline: false, // A .messages.json sidecar supplies messages.
-  devin: false, // sessions.db supplies metadata.
-  kimi: false, // agents/main/wire.jsonl supplies messages.
-  muse: true,
-  jcode: true,
-  kiro: false // A .jsonl sidecar supplies messages.
+  nessy: true
 } satisfies Record<AiVaultAgent, boolean>
 
 /** Proven index gaps need whole reads; declined transfers leave committed coverage unchanged. */

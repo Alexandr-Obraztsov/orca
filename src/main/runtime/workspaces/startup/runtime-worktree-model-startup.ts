@@ -1,30 +1,17 @@
-import { OrchestrationError } from '../../orchestration/orchestration-error'
-import {
-  OPENCODE_MODEL_TRANSPORT_REFUSAL,
-  OPENCODE_MODEL_CONFIG_REFUSAL,
-  OPENCODE_MODEL_VERSION_REFUSAL
-} from '../../../../shared/agent-launch/choices/agent-launch-model-preferences'
-import { prepareOpenCodeModelStartupInputs } from '../../../opencode/model-launch/opencode-model-startup-plan'
+import type { AgentStartupPlanInputs } from '../../../../shared/agent-launch/startup/agent-startup-plan-inputs'
+import type { SleepingAgentLaunchConfig } from '../../../../shared/agent-session/lifecycle/agent-session-resume'
 
+type WorktreeModelStartupScope = {
+  inputs: AgentStartupPlanInputs
+  cwd: string
+  isWsl?: boolean
+  hostIdentity?: string
+  signal?: AbortSignal
+}
+
+/** OpenCode was removed from the TuiAgent catalog, so startup inputs pass through unchanged. */
 export async function prepareWorktreeModelStartupInputs(
-  options: Parameters<typeof prepareOpenCodeModelStartupInputs>[0]
-): ReturnType<typeof prepareOpenCodeModelStartupInputs> {
-  try {
-    return await prepareOpenCodeModelStartupInputs(options)
-  } catch (error) {
-    // Compilation precedes creation: retain the legacy recipe here without repeating the plugin hook or RPC.
-    if (
-      !options.signal?.aborted &&
-      error instanceof OrchestrationError &&
-      error.code === 'capability_unsupported' &&
-      [
-        OPENCODE_MODEL_TRANSPORT_REFUSAL,
-        OPENCODE_MODEL_CONFIG_REFUSAL,
-        OPENCODE_MODEL_VERSION_REFUSAL
-      ].includes(error.message)
-    ) {
-      return { inputs: options.inputs }
-    }
-    throw error
-  }
+  options: WorktreeModelStartupScope
+): Promise<{ inputs: AgentStartupPlanInputs; launchConfig?: SleepingAgentLaunchConfig }> {
+  return { inputs: options.inputs }
 }

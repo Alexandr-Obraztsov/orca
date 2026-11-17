@@ -48,7 +48,6 @@ import {
   scopeWalksAgentFiles
 } from './session-scope-cwd'
 import { sidecarUnchanged } from '../parse-cache/session-sidecar-stat'
-import { prioritizeAntigravityTranscriptCandidates } from '../scanners/antigravity/antigravity-transcript-candidates'
 
 type ScopeScanArgs = {
   inventory: CwdBucketInventory[]
@@ -195,10 +194,7 @@ async function walkCandidates(
       remaining.push(candidate)
     }
   }
-  return prioritizeAntigravityTranscriptCandidates(
-    remaining,
-    (candidate) => candidate.agent === 'antigravity'
-  )
+  return remaining
 }
 
 export async function prepareScopeScan(

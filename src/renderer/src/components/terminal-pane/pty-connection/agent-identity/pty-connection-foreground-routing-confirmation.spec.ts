@@ -141,7 +141,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
           isVisibleRef
         })
         mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-          agent: 'pi',
+          agent: 'qwen-code',
           routingTrusted: true,
           shellForeground: false
         }
@@ -152,7 +152,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
         await flushAsyncTicks()
 
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'pi',
+          agent: 'qwen-code',
           routingRevoked: true,
           shellForeground: false
         })
@@ -168,7 +168,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
           tabId
         })
         mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-          agent: 'pi',
+          agent: 'qwen-code',
           routingRevoked: true,
           shellForeground: false
         }
@@ -176,7 +176,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
         binding.sampleForegroundAgentOnFocus()
 
         expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-          agent: 'pi',
+          agent: 'qwen-code',
           routingRevoked: true,
           shellForeground: false
         })
@@ -201,7 +201,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
             tabId
           })
           mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-            agent: 'pi',
+            agent: 'qwen-code',
             routingTrusted: true,
             shellForeground: false
           }
@@ -215,7 +215,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
           await flushAsyncTicks()
 
           expect(mockStoreState.paneForegroundAgentByPaneKey[cacheKey]).toEqual({
-            agent: 'pi',
+            agent: 'qwen-code',
             routingRevoked: true,
             shellForeground: false
           })
@@ -225,7 +225,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
         }
       )
 
-      it('replaces pending Pi routing when confirmation finds another agent', async () => {
+      it('replaces pending Qwen Code routing when confirmation finds another agent', async () => {
         vi.useFakeTimers()
         vi.mocked(window.api.pty.confirmForegroundProcess).mockResolvedValue('codex')
         const ptyId = 'pty-pi-reconfirm-codex'
@@ -235,7 +235,7 @@ export function registerPtyConnectionForegroundRoutingConfirmationTests(): void 
           tabId
         })
         mockStoreState.paneForegroundAgentByPaneKey[cacheKey] = {
-          agent: 'pi',
+          agent: 'qwen-code',
           routingTrusted: true,
           shellForeground: false
         }

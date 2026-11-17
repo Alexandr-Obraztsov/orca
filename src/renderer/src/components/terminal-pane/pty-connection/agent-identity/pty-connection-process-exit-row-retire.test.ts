@@ -249,7 +249,7 @@ describe('connectPanePty confirmed process exit retires the live agent row', () 
   })
 
   it('drops the row and retires main latches when Claude exits in a pane without command marks', async () => {
-    let foreground: string | null = 'claude'
+    let foreground: string | null = 'tclaude'
     let children = true
     vi.mocked(window.api.pty.getForegroundProcess).mockImplementation(async () => foreground)
     vi.mocked(window.api.pty.hasChildProcesses).mockImplementation(async () => children)

@@ -237,21 +237,20 @@ describe('notice rows', () => {
       {
         kind: 'status',
         tone: 'error',
-        ...agentSessionFailureWords({ kind: 'notSignedIn' }, { agentName: 'Grok', surface: 'row' })
+        ...agentSessionFailureWords(
+          { kind: 'notSignedIn' },
+          { agentName: 'Codex', surface: 'row' }
+        )
       },
       null,
       false,
       false,
-      'Grok'
+      'Codex'
     )
-    expect(
-      screen.getByText('Sign in to Grok with `grok login` on the computer running this chat.')
-    ).toBeInTheDocument()
+    expect(screen.getByText("Codex isn't signed in. Run `codex login`.")).toBeInTheDocument()
     await act(() => i18n.changeLanguage('fr'))
     expect(
-      screen.getByText(
-        'Connectez-vous à Grok avec `grok login` sur l’ordinateur qui exécute ce chat.'
-      )
+      screen.getByText('Codex n’est pas connecté. Exécutez `codex login`.')
     ).toBeInTheDocument()
   })
 })

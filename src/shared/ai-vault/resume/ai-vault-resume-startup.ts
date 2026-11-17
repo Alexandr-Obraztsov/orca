@@ -31,8 +31,6 @@ import {
   TUI_AGENT_CONFIG
 } from '../../agent-launch/catalog/tui-agent-config'
 import { findOptionOccurrence } from '../../command-option-occurrence'
-import { assertOpenCodeCopyUsesLocalStore } from '../../agent-launch/startup/opencode-launch-command'
-import { CLI_CONVERSATION_ADOPTING_AGENTS } from '../../agent-session/view/structured-agent-cli-conversation-adoption'
 import type { GlobalSettings } from '../../global-settings-types'
 import { parseWslUncPath } from '../../file-access/wsl-paths'
 import { managedDataAccountResumeEnv } from '../../agent-launch/environment/managed-data-account-resume'
@@ -94,14 +92,6 @@ export function getAiVaultAgentProviderSession(
   if (isAntigravityReferenceSession(session)) {
     return null
   }
-  if (session.agent === 'antigravity' || session.agent === 'cursor') {
-    return { key: 'conversation_id', id: session.sessionId }
-  }
-  if (session.agent === 'pi' || session.agent === 'prime-agent') {
-    return session.filePath
-      ? { key: 'session_id', id: session.sessionId, transcriptPath: session.filePath }
-      : null
-  }
   return { key: 'session_id', id: session.sessionId }
 }
 
@@ -154,32 +144,18 @@ export function buildAiVaultLocalResumeStartup(
         ...resolveTuiAgentLaunchEnv(session.agent, settings, platform),
         ...managedDataAccountResumeEnv(session)
       },
-      resumeInLaunchCwd: true,
-      ...(session.agent === 'omp' && resumeFilePath ? { ompResumeFilePath: resumeFilePath } : {})
+      resumeInLaunchCwd: true
     })
     if (startupPlan) {
       return {
-        command:
-          session.agent === 'omp'
-            ? buildAiVaultResumeCommand({
-                agent: session.agent,
-                sessionId: session.sessionId,
-                resumeFilePath,
-                cwd,
-                platform,
-                commandOverride: startupPlan.launchConfig.agentCommand,
-                codexHome,
-                shell: liveShell,
-                clearEnvNames
-              })
-            : buildAiVaultResumeShellCommand({
-                resumeCommand: startupPlan.launchCommand,
-                cwd,
-                platform,
-                codexHome,
-                shell: liveShell,
-                clearEnvNames
-              }),
+        command: buildAiVaultResumeShellCommand({
+          resumeCommand: startupPlan.launchCommand,
+          cwd,
+          platform,
+          codexHome,
+          shell: liveShell,
+          clearEnvNames
+        }),
         ...(startupPlan.env ? { env: startupPlan.env } : {}),
         ...realHomeCodexResumeEnvDeletion(session),
         ...startupCwd,
@@ -305,24 +281,6 @@ export function resolveAiVaultCopiedSessionAgentArgs(
 }
 
 /** Check every possible chat-owning CLI before copying: OpenCode copies live in the local store and launch args must not redirect them. */
-export function assertAiVaultCopiedSessionStoreAllowed(args: AiVaultResumeStartupArgs): void {
-  const row = args.session.agent
-  if (row !== 'opencode' && row !== 'opencode2') {
-    return
-  }
-  const { platform, liveShell } = args.host
-  for (const agent of CLI_CONVERSATION_ADOPTING_AGENTS[row]) {
-    const command =
-      (agent === row ? args.commandOverride?.trim() : undefined) ||
-      args.settings?.agentCmdOverrides?.[agent] ||
-      getTuiAgentLaunchCommand(TUI_AGENT_CONFIG[agent], platform)
-    const parsed = tokenizeStartupCommand(
-      `${command} ${resolveTuiAgentLaunchRawArgs(agent, args.settings, undefined, resolveStartupShell(platform, liveShell))}`,
-      resolveStartupShell(platform, liveShell)
-    )
-    if (!parsed.ok) {
-      throw new Error('This session cannot be opened in the CLI.')
-    }
-    assertOpenCodeCopyUsesLocalStore(parsed.tokens.slice(1))
-  }
+export function assertAiVaultCopiedSessionStoreAllowed(_args: AiVaultResumeStartupArgs): void {
+  // OpenCode/OpenCode2 are no longer AiVault agents, so no AiVault copied session can be OpenCode.
 }

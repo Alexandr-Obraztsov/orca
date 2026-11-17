@@ -13,10 +13,9 @@ export type ForegroundAgentCandidate = {
 }
 
 export function shouldInspectOuterWrapperForegroundProcess(
-  process: RecognizedAgentProcess
+  _process: RecognizedAgentProcess
 ): boolean {
-  // Why: only Pi is currently embedded by a same-group wrapper; scanning OMP would add a subprocess to every relay poll.
-  return process.agent === 'pi'
+  return false
 }
 
 /** Same gate for a bare process name, recognizing it first. */

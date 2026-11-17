@@ -191,29 +191,9 @@ export const getAgentLabel: (title: string) => string | null =
   memoizeTitleClassification(computeAgentLabel)
 
 const TITLE_LABEL_TO_AGENT: Partial<Record<string, TerminalAgent>> = {
-  'DeepSeek Harness': 'dsh',
   'Claude Code': 'claude',
-  OpenClaude: 'openclaude',
   Codex: 'codex',
-  'Qoder CLI': 'qoder',
-  'Qoder CLI CN': 'qoder-cn',
-  'Qoder CLI China': 'qoder-cn',
-  'Gemini CLI': 'gemini',
-  'GitHub Copilot': 'copilot',
-  Grok: 'grok',
-  Devin: 'devin',
-  Jcode: 'jcode',
-  Antigravity: 'antigravity',
-  OpenCode: 'opencode',
-  'OpenCode 2': 'opencode2',
-  'MiMo Code': 'mimo-code',
-  Aider: 'aider',
-  Cursor: 'cursor',
-  Droid: 'droid',
-  Hermes: 'hermes',
-  'DeepSeek Build': 'dsb',
-  Pi: 'pi',
-  OMP: 'omp'
+  'DeepSeek Build': 'dsb'
 }
 
 export function resolveTerminalTitleAgentType(title: string): TerminalAgent | null {

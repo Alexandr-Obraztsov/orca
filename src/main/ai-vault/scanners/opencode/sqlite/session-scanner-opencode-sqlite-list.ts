@@ -1,4 +1,7 @@
-import type { AiVaultScanIssue } from '../../../../../shared/ai-vault/contracts/ai-vault-types'
+import type {
+  AiVaultAgent,
+  AiVaultScanIssue
+} from '../../../../../shared/ai-vault/contracts/ai-vault-types'
 import {
   buildOpenCodeSqliteCandidatePath,
   splitOpenCodeSqliteCandidate
@@ -73,7 +76,7 @@ function rowToCandidate(
       ? row.time_updated
       : row.time_created
   return {
-    agent,
+    agent: agent as AiVaultAgent,
     file: {
       path: buildOpenCodeSqliteCandidatePath(dbPath, row.id),
       mtimeMs,

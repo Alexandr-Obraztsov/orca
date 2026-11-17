@@ -19,6 +19,7 @@ import type { AgentAwakeService } from '../power/agent-awake-service'
 import { sanitizeFloatingWorkspaceDirectorySetting } from './floating-workspace-directory'
 import { applyAgentStatusHooksEnabled } from '../agent-hooks/installation/managed-agent-hook-controls'
 import { isAgentStatusHooksEnabledForAgent } from '../../shared/agent-hook-listener/configuration/agent-status-hooks-setting'
+import { isTuiAgent } from '../../shared/agent-launch/catalog/tui-agent-config'
 import { recordManagedHookInstallFailure } from '../agent-hooks/installation/install-telemetry'
 import { applyElectronProxySettings } from '../network/proxy-settings'
 import { applyBrowserSessionProxies } from '../browser/sessions/proxy/browser-session-proxy'
@@ -239,7 +240,8 @@ export function registerSettingsHandlers(
           userInitiated: true,
           shouldHydrateShellPath: app.isPackaged,
           onInstallError: recordManagedHookInstallFailure,
-          shouldContinue: (agent) => isAgentStatusHooksEnabledForAgent(store.getSettings(), agent)
+          shouldContinue: (agent) =>
+            isTuiAgent(agent) && isAgentStatusHooksEnabledForAgent(store.getSettings(), agent)
         })
       } catch (error) {
         console.warn('[settings] failed to reconcile managed agent hooks:', error)
