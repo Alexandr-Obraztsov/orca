@@ -37,6 +37,12 @@ export function primaryAgentCatalogEntries(): AgentCatalogEntry[] {
       homepageUrl: 'https://github.com/openai/codex'
     },
     {
+      id: 'nessy',
+      label: translate('auto.lib.agent.catalog.nessy', 'Nessy'),
+      cmd: 'nessy',
+      homepageUrl: 'https://nessy.cli'
+    },
+    {
       id: 'grok',
       label: translate('auto.lib.agent.catalog.0baad2d5d2', 'Grok'),
       cmd: 'grok',
