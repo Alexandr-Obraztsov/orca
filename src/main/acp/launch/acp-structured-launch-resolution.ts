@@ -249,7 +249,9 @@ export function acpStructuredLaunchPart(
     )
     const instructions = delivered.launch
     const visualsLoaded = skillLoaded ?? (delivered.visuals ? visuals : null)
-    const fullAccess = basis.permissionMode === 'full-access'
+    const fullAccess = (spec.fullAccessModes ?? ['full-access']).some(
+      (mode) => mode === basis.permissionMode
+    )
     // A managed release's receipt names its version; other programs answer the check.
     const launchedVersion = version ?? launchVersion.version
     const botServers = toolsOff ? [] : acpBotMcpServers(tools)

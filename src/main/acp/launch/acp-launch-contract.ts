@@ -77,6 +77,10 @@ export type AcpLaunchSpec = {
     /** The modes govern only some requests; under full access Orca answers the rest itself. */
     fullAccessAnswersRequests?: true
   }
+  /** Chat modes for which Orca auto-approves the agent's permission requests, as under Full
+   *  access. Defaults to Full access only; agents whose own engine is already permissive (e.g.
+   *  nessy's auto-edit) can widen this to stop prompting on those modes too. */
+  fullAccessModes?: readonly AgentChatPermissionMode[]
   /** Enables /compact as a prompt command. */
   compaction?: true
   /** The agent's `/compact` honours text after the command; others would silently drop it. */
