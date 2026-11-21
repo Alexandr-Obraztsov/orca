@@ -29,6 +29,9 @@ export const NESSY_LAUNCH_SPEC: AcpLaunchSpec = {
   loginCommand: agentSessionSetupFor('nessy')?.loginCommand ?? [],
   account: directoryAccountBinding('NESSY_HOME', (homePath) => join(homePath, '.nessy')),
   installDirectories: ({ homePath }) => [join(homePath, '.nessy', 'bin')],
+  // Nessy's own engine defers every permission to Orca in ACP (its `*` allow-list is ignored), so
+  // Orca auto-approves under auto-edit as under full access to stop the prompts.
+  fullAccessModes: ['full-access', 'accept-edits'],
   modelDiscovery: {
     kind: 'session',
     // Nessy lists models inside a disposable ACP session; it advertises model-specific reasoning efforts.

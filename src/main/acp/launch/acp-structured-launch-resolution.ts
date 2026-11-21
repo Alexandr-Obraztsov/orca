@@ -186,7 +186,9 @@ export function acpStructuredLaunchPart(
           inherited: deps.inheritedEnv ?? process.env
         })
       : null
-    const fullAccess = basis.permissionMode === 'full-access'
+    const fullAccess = (spec.fullAccessModes ?? ['full-access']).some(
+      (mode) => mode === basis.permissionMode
+    )
     const head = agentSessionProviderHandleChainHead(record.providerHandleChain)
     // A load restores the conversation's own model, and a stale role there would stop the agent
     // before it opens; resumed chats apply their model through the session instead.
