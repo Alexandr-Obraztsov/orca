@@ -1,5 +1,5 @@
 import { createInterface } from 'node:readline'
-import type { ExecutionHostId } from '../../../../shared/execution-host'
+import type { ExecutionHostId } from '../../../../shared/execution-host/execution-host'
 import { openTranscriptReadStream } from '../../../native-chat/transcript-filesystem/wsl-transcript-fs-access'
 import {
   accumulatorSessionIdentity,
@@ -12,7 +12,7 @@ import {
   finalizeClaudeSessionParseState,
   type ClaudeSessionParseState
 } from '../claude/session-scanner-primary-parsers'
-import { extractString } from '../../../../shared/trimmed-string'
+import { extractString } from '../../../../shared/text/trimmed-string'
 import { parseJsonObject } from '../../parsing/session-json-object'
 import {
   remoteSessionContentLines,

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { agentSessionRecordFixture } from '../../native-chat/testing/agent-session-record-test-fixture'
 import { createAcpStructuredLaunchResolver } from '../../runtime/agent-session/launch/structured-agent-launch-composition.test-support'
 import type { AgentSessionRecord } from '../../../shared/agent-session/lifecycle/agent-session-record'
-import { LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
+import { LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host/execution-host'
 import { NESSY_LAUNCH_SPEC } from '../../nessy/nessy-acp-launch-spec'
 
 const SESSION_ID = 'session-1'
