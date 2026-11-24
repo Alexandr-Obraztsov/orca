@@ -19,7 +19,10 @@ export function acpStructuredPermissionHandler(
     }
     // Do not auto-approve questions or permissions enforced by the agent's own mode.
     const claimed = spec.dialect.request?.('session/request_permission', request)
-    if (child.permission === 'full-access' && acpAnswersRequests(spec) && !claimed) {
+    const fullAccess =
+      (spec.fullAccessModes ?? ['full-access']).some((mode) => mode === child.permission) &&
+      acpAnswersRequests(spec)
+    if (fullAccess && !claimed) {
       const allow = request.options.find((option) => option.kind === 'allow_once')
       if (allow) {
         return { outcome: { outcome: 'selected', optionId: allow.optionId } }
